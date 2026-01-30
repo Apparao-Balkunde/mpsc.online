@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Subject, LoadingState } from '../types';
 import { generateStudyNotes, generateConciseExplanation } from '../services/gemini';
-import { Book, Send, Loader2, ArrowLeft, Lightbulb, Search, ListFilter, GraduationCap, ChevronDown, ChevronUp, ArrowRight } from 'lucide-react';
+import { Book, Send, Loader2, ArrowLeft, Lightbulb, Search, ListFilter, GraduationCap, ChevronDown, ChevronUp, ArrowRight, Save, Check } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 interface StudyModeProps {
@@ -51,6 +51,9 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
   const [expandedRule, setExpandedRule] = useState<string | null>(null);
   const [ruleExplanations, setRuleExplanations] = useState<Record<string, string>>({});
   const [loadingExplanation, setLoadingExplanation] = useState(false);
+  
+  // Logic for saving notes
+  const [isSaved, setIsSaved] = useState(false);
 
   const generateNotes = async (topicToUse: string) => {
     if (!topicToUse.trim()) return;
@@ -58,6 +61,7 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
     setStatus('loading');
     setNotes('');
     setTopic(topicToUse);
+    setIsSaved(false); // Reset saved state for new content
     
     // Reset manual search field if triggered from rules
     if (activeTab === 'rules') {
@@ -98,6 +102,31 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
       } finally {
         setLoadingExplanation(false);
       }
+    }
+  };
+
+  const handleSaveNotes = () => {
+    if (!notes || !topic) return;
+
+    const newNote = {
+      id: Date.now().toString(),
+      subject,
+      topic,
+      content: notes,
+      createdAt: new Date().toISOString()
+    };
+
+    try {
+      const existingNotesStr = localStorage.getItem('mpsc_saved_notes');
+      const existingNotes = existingNotesStr ? JSON.parse(existingNotesStr) : [];
+      localStorage.setItem('mpsc_saved_notes', JSON.stringify([newNote, ...existingNotes]));
+      
+      setIsSaved(true);
+      // Reset the saved indicator after 2 seconds
+      setTimeout(() => setIsSaved(false), 2000);
+    } catch (e) {
+      console.error("Failed to save note", e);
+      alert("Failed to save note. Storage might be full.");
     }
   };
 
@@ -268,13 +297,28 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
       {status === 'success' && notes && (
         <div className="bg-white rounded-xl shadow-lg border border-slate-100 overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-500">
             <div className="bg-gradient-to-r from-indigo-50 to-white px-6 py-4 border-b border-indigo-100 flex justify-between items-center sticky top-0 bg-white/95 backdrop-blur z-10">
-                <h3 className="font-bold text-indigo-900 text-lg flex items-center">
-                  <GraduationCap className="mr-2 h-5 w-5" />
-                  {topic}
-                </h3>
-                <span className="text-xs font-semibold px-2.5 py-1 bg-indigo-100 text-indigo-700 rounded-full border border-indigo-200">
-                  {subject}
-                </span>
+                <div className="flex items-center gap-3">
+                    <h3 className="font-bold text-indigo-900 text-lg flex items-center">
+                    <GraduationCap className="mr-2 h-5 w-5" />
+                    {topic}
+                    </h3>
+                    <span className="text-xs font-semibold px-2.5 py-1 bg-indigo-100 text-indigo-700 rounded-full border border-indigo-200 hidden md:inline-block">
+                    {subject}
+                    </span>
+                </div>
+                
+                <button
+                    onClick={handleSaveNotes}
+                    disabled={isSaved}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm ${
+                        isSaved 
+                        ? 'bg-green-100 text-green-700 border border-green-200' 
+                        : 'bg-white text-indigo-600 border border-indigo-200 hover:bg-indigo-50 hover:border-indigo-300'
+                    }`}
+                >
+                    {isSaved ? <Check size={16} /> : <Save size={16} />}
+                    {isSaved ? 'Saved!' : 'Save Notes'}
+                </button>
             </div>
           <div className="p-6 prose prose-slate max-w-none prose-headings:text-indigo-800 prose-a:text-indigo-600 prose-strong:text-indigo-900 prose-code:bg-slate-100 prose-code:px-1 prose-code:rounded prose-code:text-pink-600">
             <ReactMarkdown>{notes}</ReactMarkdown>

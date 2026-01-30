@@ -1,12 +1,42 @@
 import React, { useState } from 'react';
 import { Subject, LoadingState, QuizQuestion } from '../types';
 import { generateQuiz } from '../services/gemini';
-import { HelpCircle, CheckCircle2, XCircle, ArrowRight, Loader2, ArrowLeft, RefreshCcw } from 'lucide-react';
+import { HelpCircle, CheckCircle2, XCircle, Loader2, ArrowLeft, RefreshCcw, Sparkles, Search, Play } from 'lucide-react';
 
 interface QuizModeProps {
   initialSubject?: Subject;
   onBack: () => void;
 }
+
+const SUGGESTED_TOPICS: Record<Subject, string[]> = {
+  [Subject.MARATHI]: [
+    "संधी (Sandhi)",
+    "समास (Samas)",
+    "प्रयोग (Prayog)",
+    "अलंकार (Alankar)",
+    "समानार्थी शब्द (Synonyms)",
+    "विरुद्धार्थी शब्द (Antonyms)",
+    "म्हणी व वाक्प्रचार (Idioms)",
+    "विभक्ती (Vibhakti)"
+  ],
+  [Subject.ENGLISH]: [
+    "Articles",
+    "Tenses",
+    "Active & Passive Voice",
+    "Direct & Indirect Speech",
+    "Synonyms & Antonyms",
+    "Idioms & Phrases",
+    "Prepositions",
+    "One Word Substitution"
+  ],
+  [Subject.GS]: [
+    "History of Maharashtra",
+    "Indian Constitution",
+    "Physical Geography",
+    "Indian Economy",
+    "Current Affairs"
+  ]
+};
 
 export const QuizMode: React.FC<QuizModeProps> = ({ initialSubject = Subject.MARATHI, onBack }) => {
   const [subject, setSubject] = useState<Subject>(initialSubject);
@@ -58,9 +88,13 @@ export const QuizMode: React.FC<QuizModeProps> = ({ initialSubject = Subject.MAR
     setShowResults(false);
   }
 
+  const handleSuggestionClick = (suggestion: string) => {
+    setTopic(suggestion);
+  };
+
   return (
     <div className="max-w-3xl mx-auto p-4 md:p-6">
-      <button onClick={onBack} className="flex items-center text-slate-500 hover:text-indigo-600 mb-4">
+      <button onClick={onBack} className="flex items-center text-slate-500 hover:text-indigo-600 mb-4 transition-colors">
         <ArrowLeft size={16} className="mr-1" /> Back to Dashboard
       </button>
 
@@ -68,22 +102,28 @@ export const QuizMode: React.FC<QuizModeProps> = ({ initialSubject = Subject.MAR
         <div className="bg-white rounded-xl shadow-md p-6 border border-slate-100">
            <h2 className="text-2xl font-bold text-slate-800 mb-6 flex items-center">
             <HelpCircle className="mr-2 text-indigo-600" />
-            Start Quiz
+            Topic Quiz Generator
           </h2>
-          <form onSubmit={startQuiz} className="space-y-6">
-             <div>
+          
+             <div className="mb-6">
               <label className="block text-sm font-medium text-slate-700 mb-2">Select Subject</label>
               <div className="grid grid-cols-2 gap-4">
                 <button
                     type="button"
-                    onClick={() => setSubject(Subject.MARATHI)}
+                    onClick={() => {
+                        setSubject(Subject.MARATHI);
+                        setTopic(''); // Clear topic when switching subject
+                    }}
                     className={`p-4 rounded-lg border-2 text-center transition-all ${subject === Subject.MARATHI ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-200 hover:border-indigo-300'}`}
                 >
                     <span className="text-lg font-bold">मराठी</span>
                 </button>
                  <button
                     type="button"
-                    onClick={() => setSubject(Subject.ENGLISH)}
+                    onClick={() => {
+                        setSubject(Subject.ENGLISH);
+                        setTopic('');
+                    }}
                     className={`p-4 rounded-lg border-2 text-center transition-all ${subject === Subject.ENGLISH ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-200 hover:border-indigo-300'}`}
                 >
                     <span className="text-lg font-bold">English</span>
@@ -91,25 +131,53 @@ export const QuizMode: React.FC<QuizModeProps> = ({ initialSubject = Subject.MAR
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Topic (Optional but Recommended)</label>
-              <input
-                type="text"
-                value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-                placeholder="e.g. Synonyms, Grammar Rules, History of Maharashtra"
-                className="w-full rounded-lg border-slate-300 border p-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={!topic.trim()}
-              className="w-full bg-indigo-600 text-white py-3 rounded-lg font-medium hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Generate Quiz
-            </button>
-          </form>
+            <form onSubmit={startQuiz}>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Enter Quiz Topic</label>
+              <div className="flex gap-2 mb-4">
+                  <div className="relative flex-1">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Search className="h-5 w-5 text-slate-400" />
+                    </div>
+                    <input
+                        type="text"
+                        value={topic}
+                        onChange={(e) => setTopic(e.target.value)}
+                        placeholder={subject === Subject.MARATHI ? "e.g. प्रयोग, समास..." : "e.g. Tenses, Articles..."}
+                        className="block w-full pl-10 pr-3 py-3 border border-slate-300 rounded-lg leading-5 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={!topic.trim()}
+                    className="bg-indigo-600 text-white px-6 py-2.5 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all shadow-sm hover:shadow font-medium"
+                  >
+                    Generate <Play size={16} fill="currentColor" />
+                  </button>
+              </div>
+              
+              {/* Suggested Topics Chips */}
+              <div className="animate-in fade-in slide-in-from-top-1 duration-300">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                      <Sparkles size={12} className="text-amber-500" /> Popular Topics
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                      {SUGGESTED_TOPICS[subject].map((suggestion, idx) => (
+                          <button
+                              key={idx}
+                              type="button"
+                              onClick={() => handleSuggestionClick(suggestion)}
+                              className={`text-sm px-3 py-1.5 rounded-full border transition-all ${
+                                  topic === suggestion 
+                                  ? 'bg-indigo-100 border-indigo-300 text-indigo-800 font-medium ring-1 ring-indigo-300' 
+                                  : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-indigo-300 hover:text-indigo-600'
+                              }`}
+                          >
+                              {suggestion}
+                          </button>
+                      ))}
+                  </div>
+              </div>
+            </form>
         </div>
       )}
 
@@ -131,8 +199,8 @@ export const QuizMode: React.FC<QuizModeProps> = ({ initialSubject = Subject.MAR
       {status === 'success' && questions.length > 0 && (
         <div className="space-y-6">
           <div className="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm">
-             <h2 className="font-bold text-lg">{topic || subject} Quiz</h2>
-             {!showResults && <span className="text-sm bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full">{userAnswers.filter(a => a !== -1).length}/{questions.length} Answered</span>}
+             <h2 className="font-bold text-lg text-slate-800">{topic || subject} Quiz</h2>
+             {!showResults && <span className="text-sm bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full font-medium">{userAnswers.filter(a => a !== -1).length}/{questions.length} Answered</span>}
              {showResults && <span className="text-lg font-bold text-green-600">Score: {calculateScore()}/{questions.length}</span>}
           </div>
 
