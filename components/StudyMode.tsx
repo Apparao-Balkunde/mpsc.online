@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Subject, LoadingState } from '../types';
-import { generateStudyNotes, generateConciseExplanation } from '../services/gemini';
-import { Book, Send, Loader2, ArrowLeft, Lightbulb, Search, ListFilter, GraduationCap, ChevronDown, ChevronUp, ArrowRight, Save, Check } from 'lucide-react';
+import { generateStudyNotes, generateConciseExplanation, playTextToSpeech } from '../services/gemini';
+import { Book, Send, Loader2, ArrowLeft, Lightbulb, Search, ListFilter, GraduationCap, ChevronDown, ChevronUp, ArrowRight, Save, Check, Volume2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 interface StudyModeProps {
@@ -54,6 +54,9 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
   
   // Logic for saving notes
   const [isSaved, setIsSaved] = useState(false);
+
+  // Logic for audio
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
 
   const generateNotes = async (topicToUse: string) => {
     if (!topicToUse.trim()) return;
@@ -119,14 +122,33 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
     try {
       const existingNotesStr = localStorage.getItem('mpsc_saved_notes');
       const existingNotes = existingNotesStr ? JSON.parse(existingNotesStr) : [];
-      localStorage.setItem('mpsc_saved_notes', JSON.stringify([newNote, ...existingNotes]));
+      
+      // Prevent duplicates
+      const isDuplicate = existingNotes.some((n: any) => n.topic === topic && n.subject === subject && n.content === notes);
+      
+      if (!isDuplicate) {
+        localStorage.setItem('mpsc_saved_notes', JSON.stringify([newNote, ...existingNotes]));
+      }
       
       setIsSaved(true);
-      // Reset the saved indicator after 2 seconds
-      setTimeout(() => setIsSaved(false), 2000);
+      // Removed timeout: Keep it saved until new notes are generated
     } catch (e) {
       console.error("Failed to save note", e);
       alert("Failed to save note. Storage might be full.");
+    }
+  };
+
+  const handlePlayAudio = async () => {
+    if (!topic || isPlayingAudio) return;
+    
+    setIsPlayingAudio(true);
+    try {
+      await playTextToSpeech(topic);
+    } catch (e) {
+      console.error("Failed to play audio", e);
+      alert("Could not play audio. Please try again.");
+    } finally {
+      setIsPlayingAudio(false);
     }
   };
 
@@ -302,6 +324,14 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
                     <GraduationCap className="mr-2 h-5 w-5" />
                     {topic}
                     </h3>
+                    <button
+                      onClick={handlePlayAudio}
+                      disabled={isPlayingAudio}
+                      className="p-2 rounded-full text-indigo-600 hover:bg-indigo-100 transition-colors disabled:opacity-50"
+                      title="Listen to pronunciation"
+                    >
+                      {isPlayingAudio ? <Loader2 size={20} className="animate-spin" /> : <Volume2 size={20} />}
+                    </button>
                     <span className="text-xs font-semibold px-2.5 py-1 bg-indigo-100 text-indigo-700 rounded-full border border-indigo-200 hidden md:inline-block">
                     {subject}
                     </span>
