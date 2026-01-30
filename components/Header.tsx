@@ -1,0 +1,53 @@
+import React from 'react';
+import { BookOpen, GraduationCap } from 'lucide-react';
+import { Mode } from '../types';
+
+interface HeaderProps {
+  currentMode: Mode;
+  onNavigate: (mode: Mode) => void;
+}
+
+export const Header: React.FC<HeaderProps> = ({ currentMode, onNavigate }) => {
+  return (
+    <header className="bg-indigo-700 text-white shadow-lg sticky top-0 z-50">
+      <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+        <div 
+          className="flex items-center space-x-2 cursor-pointer" 
+          onClick={() => onNavigate(Mode.HOME)}
+        >
+          <GraduationCap size={32} className="text-yellow-300" />
+          <div>
+            <h1 className="text-xl font-bold leading-tight">MPSC Sarathi</h1>
+            <p className="text-xs text-indigo-200">Your AI Study Companion</p>
+          </div>
+        </div>
+        
+        <nav className="hidden md:flex space-x-6">
+          <button 
+            onClick={() => onNavigate(Mode.HOME)}
+            className={`hover:text-yellow-300 transition ${currentMode === Mode.HOME ? 'text-yellow-300 font-semibold' : ''}`}
+          >
+            Dashboard
+          </button>
+          <button 
+             onClick={() => onNavigate(Mode.STUDY)}
+            className={`hover:text-yellow-300 transition ${currentMode === Mode.STUDY ? 'text-yellow-300 font-semibold' : ''}`}
+          >
+            Study Notes
+          </button>
+          <button 
+             onClick={() => onNavigate(Mode.QUIZ)}
+            className={`hover:text-yellow-300 transition ${currentMode === Mode.QUIZ ? 'text-yellow-300 font-semibold' : ''}`}
+          >
+            Quiz Practice
+          </button>
+        </nav>
+
+         {/* Mobile simple indicator or menu could go here */}
+         <div className="md:hidden">
+             <BookOpen size={24} />
+         </div>
+      </div>
+    </header>
+  );
+};
