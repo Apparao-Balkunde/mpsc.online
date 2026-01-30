@@ -11,24 +11,52 @@ interface StudyModeProps {
 
 const GRAMMAR_TOPICS: Record<Subject, string[]> = {
   [Subject.MARATHI]: [
-    "संधी (Sandhi) - नियम व प्रकार",
-    "समास (Samas) - प्रकार व उदाहरणे",
-    "प्रयोग (Prayog) - कर्तरी, कर्मणी, भावे",
-    "अलंकार (Alankar) - मुख्य प्रकार",
-    "शब्दसिद्धी (Shabdasiddhi) - तत्सम, तद्भव, देशी",
+    "मराठी वर्णमाला (Alphabet) - स्वर, व्यंजने व उच्चारस्थाने",
+    "शब्दांच्या जाती - नाम व नामाचे प्रकार (Noun)",
+    "शब्दांच्या जाती - सर्वनाम व प्रकार (Pronoun)",
+    "शब्दांच्या जाती - विशेषण व प्रकार (Adjective)",
+    "शब्दांच्या जाती - क्रियापद व काळ (Verb & Tense)",
+    "शब्दांच्या जाती - क्रियाविशेषण अव्यय (Adverb)",
+    "शब्दांच्या जाती - शब्दयोगी अव्यय (Preposition)",
+    "शब्दांच्या जाती - उभयान्वयी अव्यय (Conjunction)",
+    "शब्दांच्या जाती - केवलप्रयोगी अव्यय (Interjection)",
+    "लिंग, वचन व विभक्ती विचार (Gender, Number & Case)",
+    "विभक्ती व कारकार्थ (Vibhakti & Functions)",
+    "संधी (Sandhi) - स्वर, व्यंजन व विसर्ग संधी",
+    "प्रयोग (Prayog) - कर्तरी, कर्मणी, भावे व संकर",
+    "समास (Samas) - अव्ययीभाव, तत्पुरुष, द्वंद्व, बहुव्रीही",
+    "शब्दसिद्धी (Shabdasiddhi) - तत्सम, तद्भव, देशी व परभाषिक",
+    "अलंकार (Alankar) - शब्दालंकार व अर्थालंकार",
+    "वृत्ते (Vrutte) - अक्षरगणवृत्ते व मात्रावृत्ते",
     "वाक्यरुपांतर (Sentence Transformation)",
-    "विभक्ती (Vibhakti) - कारकार्थ",
-    "वृत्ते (Vrutte) - गण व मात्रा"
+    "वाक्य पृथक्करण (Sentence Analysis)",
+    "समानार्थी व विरुद्धार्थी शब्द (Synonyms & Antonyms)",
+    "म्हणी व वाक्प्रचार (Idioms & Phrases)",
+    "विरामचिन्हे व शुद्धलेखन नियम (Punctuation & Spelling Rules)"
   ],
   [Subject.ENGLISH]: [
     "Articles - Definite & Indefinite Rules",
-    "Tenses - MPSC Exam Rules",
-    "Active & Passive Voice Transformation",
-    "Direct & Indirect Speech Rules",
-    "Degrees of Comparison",
-    "Question Tags - Rules & Exceptions",
-    "Prepositions - Important Fixed Prepositions",
-    "Modal Auxiliaries"
+    "Nouns - Types, Gender & Number Rules",
+    "Pronouns - Types & Case Usage",
+    "Adjectives - Degrees of Comparison",
+    "Verbs - Main & Auxiliary Verbs",
+    "Subject-Verb Agreement - Vital MPSC Rules",
+    "Tenses - Detailed Formations & Patterns",
+    "Adverbs - Types & Correct Positioning",
+    "Prepositions - Fixed & Phrasal Usage",
+    "Conjunctions - Coordinating & Correlative",
+    "Active & Passive Voice - Transformation",
+    "Direct & Indirect Speech - Narration Rules",
+    "Question Tags - Patterns & Exceptions",
+    "Simple, Compound & Complex Sentences",
+    "Clauses - Noun, Adjective & Adverbial",
+    "Non-Finite Verbs - Infinitives, Gerunds & Participles",
+    "Conditional Sentences - If-Clause Types",
+    "Synthesis of Sentences - Joining Techniques",
+    "Figures of Speech - Simile, Metaphor, Personification",
+    "Punctuation - Marks & Capitalization Rules",
+    "Common Errors - Sentence Improvement",
+    "Prefix & Suffix - Word Formation"
   ],
   [Subject.GS]: [
     "Maharashtra: Social Reformers",
@@ -66,12 +94,6 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
     setTopic(topicToUse);
     setIsSaved(false); // Reset saved state for new content
     
-    // Reset manual search field if triggered from rules
-    if (activeTab === 'rules') {
-         // keep tab on rules? or switch? keeping on rules allows checking more rules.
-         // But we need to show the notes. Let's scroll down or just render them.
-    }
-
     try {
       const result = await generateStudyNotes(subject, topicToUse);
       setNotes(result);
@@ -94,7 +116,6 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
 
     setExpandedRule(rule);
 
-    // If explanation not cached, fetch it
     if (!ruleExplanations[rule]) {
       setLoadingExplanation(true);
       try {
@@ -123,7 +144,6 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
       const existingNotesStr = localStorage.getItem('mpsc_saved_notes');
       const existingNotes = existingNotesStr ? JSON.parse(existingNotesStr) : [];
       
-      // Prevent duplicates
       const isDuplicate = existingNotes.some((n: any) => n.topic === topic && n.subject === subject && n.content === notes);
       
       if (!isDuplicate) {
@@ -131,7 +151,6 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
       }
       
       setIsSaved(true);
-      // Removed timeout: Keep it saved until new notes are generated
     } catch (e) {
       console.error("Failed to save note", e);
       alert("Failed to save note. Storage might be full.");
@@ -167,7 +186,7 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
           </h2>
           <p className="text-slate-500 mb-6">Generate detailed notes, grammar rules, and explanations instantly.</p>
 
-          {/* Subject Selector - Always visible */}
+          {/* Subject Selector */}
            <div className="mb-6">
               <label className="block text-sm font-medium text-slate-700 mb-2">Select Subject</label>
               <div className="flex flex-wrap gap-2">
@@ -239,16 +258,13 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
                     {status === 'loading' ? <Loader2 className="animate-spin" /> : <Send size={20} />}
                   </button>
                 </div>
-                <p className="text-xs text-slate-500 mt-2">
-                  Tip: Be specific. Try "Rules of Active Voice" instead of just "Voice".
-                </p>
               </div>
             </form>
           ) : (
             <div className="animate-in fade-in slide-in-from-top-2 duration-300">
               <div className="flex items-center gap-2 mb-4 text-indigo-800 bg-indigo-50 p-3 rounded-lg border border-indigo-100">
                  <Lightbulb size={20} className="shrink-0" />
-                 <span className="text-sm font-medium">Click on any rule to see a quick explanation.</span>
+                 <span className="text-sm font-medium">Click on any chapter to see a quick rule summary.</span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
                 {GRAMMAR_TOPICS[subject]?.map((ruleItem, idx) => (
