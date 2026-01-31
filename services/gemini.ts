@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
-import { Subject, QuizQuestion, VocabWord, CurrentAffairItem, ExamType, VocabCategory } from '../types';
+import { Subject, QuizQuestion, VocabWord, CurrentAffairItem, ExamType, VocabCategory, RuleExplanation } from '../types';
 
 const apiKey = process.env.API_KEY || '';
 const ai = new GoogleGenAI({ apiKey });
@@ -106,28 +106,47 @@ export const generateStudyNotes = async (subject: Subject, topic: string): Promi
   }
 };
 
-export const generateConciseExplanation = async (subject: Subject, topic: string): Promise<string> => {
+export const generateConciseExplanation = async (subject: Subject, topic: string): Promise<RuleExplanation> => {
   try {
     const prompt = `
       You are an MPSC exam tutor.
       Subject: ${subject}
       Topic: ${topic}
       
-      Provide a very concise explanation (max 3-4 sentences) of this rule or concept.
-      - If the subject is Marathi, strictly use Marathi.
-      - If English, use English (with optional Marathi context).
-      - Focus on the key definition or rule used in exams.
+      Provide a structured summary containing:
+      1. rule: A very concise explanation (max 2-3 sentences) of the key grammar rule or concept.
+      2. example: A practical example sentence relevant to MPSC exams demonstrating this rule.
+      
+      Language:
+      - If Subject is Marathi: Use Marathi (Devanagari).
+      - If Subject is English: Use English.
+      
+      Return strictly as JSON.
     `;
 
     const response = await ai.models.generateContent({
       model: MODEL_FAST,
       contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            rule: { type: Type.STRING },
+            example: { type: Type.STRING }
+          },
+          required: ["rule", "example"]
+        }
+      }
     });
 
-    return response.text || "No explanation available.";
+    const jsonText = response.text;
+    if (!jsonText) return { rule: "Explanation not available", example: "" };
+    
+    return JSON.parse(jsonText) as RuleExplanation;
   } catch (error) {
     console.error("Error generating explanation:", error);
-    return "Could not load explanation.";
+    return { rule: "Could not load explanation.", example: "" };
   }
 };
 

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { Subject, LoadingState } from '../types';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Subject, LoadingState, RuleExplanation } from '../types';
 import { generateStudyNotes, generateConciseExplanation, playTextToSpeech } from '../services/gemini';
-import { Book, Send, Loader2, ArrowLeft, Lightbulb, Search, ListFilter, GraduationCap, ChevronDown, ChevronUp, ArrowRight, Save, Check, Volume2 } from 'lucide-react';
+import { Book, Send, Loader2, ArrowLeft, Lightbulb, Search, ListFilter, GraduationCap, ChevronDown, ChevronUp, ArrowRight, Save, Check, Volume2, Folder, Layout, Info, CheckCircle2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 interface StudyModeProps {
@@ -9,63 +9,147 @@ interface StudyModeProps {
   onBack: () => void;
 }
 
-const GRAMMAR_TOPICS: Record<Subject, string[]> = {
+interface TopicGroup {
+  category: string;
+  topics: string[];
+}
+
+const GRAMMAR_STRUCTURE: Record<Subject, TopicGroup[]> = {
   [Subject.MARATHI]: [
-    "मराठी वर्णमाला (Alphabet) - स्वर, व्यंजने व उच्चारस्थाने",
-    "शब्दांच्या जाती - नाम व नामाचे प्रकार (Noun)",
-    "शब्दांच्या जाती - सर्वनाम व प्रकार (Pronoun)",
-    "शब्दांच्या जाती - विशेषण व प्रकार (Adjective)",
-    "शब्दांच्या जाती - क्रियापद व काळ (Verb & Tense)",
-    "शब्दांच्या जाती - क्रियाविशेषण अव्यय (Adverb)",
-    "शब्दांच्या जाती - शब्दयोगी अव्यय (Preposition)",
-    "शब्दांच्या जाती - उभयान्वयी अव्यय (Conjunction)",
-    "शब्दांच्या जाती - केवलप्रयोगी अव्यय (Interjection)",
-    "लिंग, वचन व विभक्ती विचार (Gender, Number & Case)",
-    "विभक्ती व कारकार्थ (Vibhakti & Functions)",
-    "संधी (Sandhi) - स्वर, व्यंजन व विसर्ग संधी",
-    "प्रयोग (Prayog) - कर्तरी, कर्मणी, भावे व संकर",
-    "समास (Samas) - अव्ययीभाव, तत्पुरुष, द्वंद्व, बहुव्रीही",
-    "शब्दसिद्धी (Shabdasiddhi) - तत्सम, तद्भव, देशी व परभाषिक",
-    "अलंकार (Alankar) - शब्दालंकार व अर्थालंकार",
-    "वृत्ते (Vrutte) - अक्षरगणवृत्ते व मात्रावृत्ते",
-    "वाक्यरुपांतर (Sentence Transformation)",
-    "वाक्य पृथक्करण (Sentence Analysis)",
-    "समानार्थी व विरुद्धार्थी शब्द (Synonyms & Antonyms)",
-    "म्हणी व वाक्प्रचार (Idioms & Phrases)",
-    "विरामचिन्हे व शुद्धलेखन नियम (Punctuation & Spelling Rules)"
+    {
+      category: "वर्णमाला व मूलभूत (Basics)",
+      topics: [
+        "मराठी वर्णमाला (Alphabet) - स्वर, व्यंजने व उच्चारस्थाने",
+        "विरामचिन्हे व शुद्धलेखन नियम (Punctuation & Spelling Rules)"
+      ]
+    },
+    {
+      category: "शब्दांच्या जाती (Parts of Speech)",
+      topics: [
+        "शब्दांच्या जाती - नाम व नामाचे प्रकार (Noun)",
+        "शब्दांच्या जाती - सर्वनाम व प्रकार (Pronoun)",
+        "शब्दांच्या जाती - विशेषण व प्रकार (Adjective)",
+        "शब्दांच्या जाती - क्रियापद व काळ (Verb & Tense)",
+        "शब्दांच्या जाती - क्रियाविशेषण अव्यय (Adverb)",
+        "शब्दांच्या जाती - शब्दयोगी अव्यय (Preposition)",
+        "शब्दांच्या जाती - उभयान्वयी अव्यय (Conjunction)",
+        "शब्दांच्या जाती - केवलप्रयोगी अव्यय (Interjection)"
+      ]
+    },
+    {
+        category: "विकार विचार (Gender, Number, Case)",
+        topics: [
+            "लिंग, वचन व विभक्ती विचार (Gender, Number & Case)",
+            "विभक्ती व कारकार्थ (Vibhakti & Functions)"
+        ]
+    },
+    {
+      category: "वाक्य व व्याकरण (Sentence & Grammar)",
+      topics: [
+        "संधी (Sandhi) - स्वर, व्यंजन व विसर्ग संधी",
+        "प्रयोग (Prayog) - कर्तरी, कर्मणी, भावे व संकर",
+        "समास (Samas) - अव्ययीभाव, तत्पुरुष, द्वंद्व, बहुव्रीही",
+        "वाक्यरुपांतर (Sentence Transformation)",
+        "वाक्य पृथक्करण (Sentence Analysis)"
+      ]
+    },
+    {
+      category: "शब्दसंपत्ती (Vocabulary & Figures of Speech)",
+      topics: [
+        "शब्दसिद्धी (Shabdasiddhi) - तत्सम, तद्भव, देशी व परभाषिक",
+        "अलंकार (Alankar) - शब्दालंकार व अर्थालंकार",
+        "वृत्ते (Vrutte) - अक्षरगणवृत्ते व मात्रावृत्ते",
+        "समानार्थी व विरुद्धार्थी शब्द (Synonyms & Antonyms)",
+        "म्हणी व वाक्प्रचार (Idioms & Phrases)"
+      ]
+    }
   ],
   [Subject.ENGLISH]: [
-    "Articles - Definite & Indefinite Rules",
-    "Nouns - Types, Gender & Number Rules",
-    "Pronouns - Types & Case Usage",
-    "Adjectives - Degrees of Comparison",
-    "Verbs - Main & Auxiliary Verbs",
-    "Subject-Verb Agreement - Vital MPSC Rules",
-    "Tenses - Detailed Formations & Patterns",
-    "Adverbs - Types & Correct Positioning",
-    "Prepositions - Fixed & Phrasal Usage",
-    "Conjunctions - Coordinating & Correlative",
-    "Active & Passive Voice - Transformation",
-    "Direct & Indirect Speech - Narration Rules",
-    "Question Tags - Patterns & Exceptions",
-    "Simple, Compound & Complex Sentences",
-    "Clauses - Noun, Adjective & Adverbial",
-    "Non-Finite Verbs - Infinitives, Gerunds & Participles",
-    "Conditional Sentences - If-Clause Types",
-    "Synthesis of Sentences - Joining Techniques",
-    "Figures of Speech - Simile, Metaphor, Personification",
-    "Punctuation - Marks & Capitalization Rules",
-    "Common Errors - Sentence Improvement",
-    "Prefix & Suffix - Word Formation"
+    {
+      category: "Parts of Speech",
+      topics: [
+        "Articles - Definite & Indefinite Rules",
+        "Nouns - Types, Gender & Number Rules",
+        "Pronouns - Types & Case Usage",
+        "Adjectives - Degrees of Comparison",
+        "Verbs - Main & Auxiliary Verbs",
+        "Adverbs - Types & Correct Positioning",
+        "Prepositions - Fixed & Phrasal Usage",
+        "Conjunctions - Coordinating & Correlative"
+      ]
+    },
+    {
+      category: "Sentence Structure & Syntax",
+      topics: [
+        "Subject-Verb Agreement - Vital MPSC Rules",
+        "Tenses - Detailed Formations & Patterns",
+        "Active & Passive Voice - Transformation",
+        "Direct & Indirect Speech - Narration Rules",
+        "Question Tags - Patterns & Exceptions",
+        "Simple, Compound & Complex Sentences",
+        "Conditional Sentences - If-Clause Types",
+        "Clauses - Noun, Adjective & Adverbial",
+        "Synthesis of Sentences - Joining Techniques"
+      ]
+    },
+    {
+      category: "Vocabulary & Composition",
+      topics: [
+        "Non-Finite Verbs - Infinitives, Gerunds & Participles",
+        "Figures of Speech - Simile, Metaphor, Personification",
+        "Punctuation - Marks & Capitalization Rules",
+        "Common Errors - Sentence Improvement",
+        "Prefix & Suffix - Word Formation"
+      ]
+    }
   ],
   [Subject.GS]: [
-    "Maharashtra: Social Reformers",
-    "Indian Constitution: Fundamental Rights",
-    "Geography: Maharashtra River Systems",
-    "Polity: Panchayat Raj Institutions",
-    "History: 1857 Revolt in Maharashtra",
-    "Economy: RBI Functions"
+    {
+      category: "History & Culture",
+      topics: [
+        "Maharashtra: Social Reformers",
+        "History: 1857 Revolt in Maharashtra"
+      ]
+    },
+    {
+      category: "Polity & Constitution",
+      topics: [
+        "Indian Constitution: Fundamental Rights",
+        "Polity: Panchayat Raj Institutions"
+      ]
+    },
+    {
+      category: "Geography & Economy",
+      topics: [
+        "Geography: Maharashtra River Systems",
+        "Economy: RBI Functions"
+      ]
+    }
   ]
+};
+
+// Fuzzy search helper
+const getLevenshteinDistance = (a: string, b: string): number => {
+  if (a.length === 0) return b.length;
+  if (b.length === 0) return a.length;
+
+  const matrix = Array.from({ length: a.length + 1 }, () => Array(b.length + 1).fill(0));
+
+  for (let i = 0; i <= a.length; i++) matrix[i][0] = i;
+  for (let j = 0; j <= b.length; j++) matrix[0][j] = j;
+
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      matrix[i][j] = Math.min(
+        matrix[i - 1][j] + 1,
+        matrix[i][j - 1] + 1,
+        matrix[i - 1][j - 1] + cost
+      );
+    }
+  }
+
+  return matrix[a.length][b.length];
 };
 
 export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.MARATHI, onBack }) => {
@@ -75,10 +159,13 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
   const [status, setStatus] = useState<LoadingState>('idle');
   const [activeTab, setActiveTab] = useState<'search' | 'rules'>('search');
 
-  // Logic for expandable rules
+  // Logic for expandable rules and categories
   const [expandedRule, setExpandedRule] = useState<string | null>(null);
-  const [ruleExplanations, setRuleExplanations] = useState<Record<string, string>>({});
+  const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({});
+  
+  const [ruleExplanations, setRuleExplanations] = useState<Record<string, RuleExplanation>>({});
   const [loadingExplanation, setLoadingExplanation] = useState(false);
+  const [ruleFilter, setRuleFilter] = useState('');
   
   // Logic for saving notes
   const [isSaved, setIsSaved] = useState(false);
@@ -129,6 +216,13 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
     }
   };
 
+  const toggleCategory = (category: string) => {
+    setOpenCategories(prev => ({
+      ...prev,
+      [category]: !prev[category]
+    }));
+  };
+
   const handleSaveNotes = () => {
     if (!notes || !topic) return;
 
@@ -171,6 +265,55 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
     }
   };
 
+  const filteredStructure = useMemo(() => {
+    const rawFilter = ruleFilter.trim().toLowerCase();
+    const groups = GRAMMAR_STRUCTURE[subject] || [];
+
+    if (!rawFilter) return groups;
+
+    const searchTerms = rawFilter.split(/\s+/).filter(t => t.length > 0);
+
+    return groups.map(group => {
+       const matchingTopics = group.topics.filter(rule => {
+          const ruleLower = rule.toLowerCase();
+          // Fast path: substring match
+          if (ruleLower.includes(rawFilter)) return true;
+
+          // Token-based fuzzy match
+          const ruleWords = ruleLower.split(/[\s,()-]+/).filter(w => w.length > 0);
+          
+          return searchTerms.every(term => {
+             // 1. Exact term substring match in any word
+             if (ruleWords.some(rw => rw.includes(term))) return true;
+             
+             // 2. Fuzzy match
+             return ruleWords.some(rw => {
+                 if (Math.abs(rw.length - term.length) > 2) return false;
+                 const allowedErrors = term.length > 4 ? 2 : (term.length > 2 ? 1 : 0);
+                 if (allowedErrors === 0) return false;
+                 return getLevenshteinDistance(term, rw) <= allowedErrors;
+             });
+          });
+       });
+
+       return {
+         category: group.category,
+         topics: matchingTopics
+       };
+    }).filter(group => group.topics.length > 0);
+  }, [subject, ruleFilter]);
+
+  // Auto-expand categories with results when searching
+  useEffect(() => {
+    if (ruleFilter.trim()) {
+      const newOpenState: Record<string, boolean> = {};
+      filteredStructure.forEach(group => {
+          newOpenState[group.category] = true;
+      });
+      setOpenCategories(newOpenState);
+    }
+  }, [ruleFilter, filteredStructure]);
+
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-6">
       <button onClick={onBack} className="flex items-center text-slate-500 hover:text-indigo-600 mb-4 transition-colors">
@@ -196,6 +339,8 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
                     onClick={() => {
                         setSubject(s);
                         setExpandedRule(null);
+                        setRuleFilter('');
+                        setOpenCategories({});
                     }}
                     className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                       subject === s 
@@ -262,56 +407,138 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
             </form>
           ) : (
             <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-              <div className="flex items-center gap-2 mb-4 text-indigo-800 bg-indigo-50 p-3 rounded-lg border border-indigo-100">
-                 <Lightbulb size={20} className="shrink-0" />
-                 <span className="text-sm font-medium">Click on any chapter to see a quick rule summary.</span>
+              <div className="flex items-center gap-2 mb-6 text-indigo-800 bg-indigo-50 p-4 rounded-xl border border-indigo-100 shadow-sm">
+                 <div className="bg-indigo-100 p-2 rounded-lg text-indigo-600">
+                    <Lightbulb size={24} />
+                 </div>
+                 <div className="flex-1">
+                     <p className="font-semibold text-sm">Quick Study Guide</p>
+                     <p className="text-xs text-indigo-700 mt-0.5">Browse topics by category or search below. Click to see quick explanations.</p>
+                 </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
-                {GRAMMAR_TOPICS[subject]?.map((ruleItem, idx) => (
-                   <div 
-                        key={idx} 
-                        className={`bg-white border rounded-lg transition-all overflow-hidden ${
-                            expandedRule === ruleItem 
-                            ? 'border-indigo-500 shadow-md ring-1 ring-indigo-500 md:row-span-2' 
-                            : 'border-slate-200 hover:border-indigo-300'
-                        }`}
-                   >
-                    <button
-                        onClick={() => toggleRule(ruleItem)}
-                        className="w-full text-left p-3 flex items-center justify-between"
-                    >
-                        <span className={`font-medium transition-colors ${expandedRule === ruleItem ? 'text-indigo-700' : 'text-slate-700'}`}>
-                            {ruleItem}
-                        </span>
-                        {expandedRule === ruleItem ? <ChevronUp size={16} className="text-indigo-600 shrink-0" /> : <ChevronDown size={16} className="text-slate-400 shrink-0" />}
-                    </button>
-                    
-                    {expandedRule === ruleItem && (
-                        <div className="px-4 pb-4 animate-in slide-in-from-top-2">
-                            {loadingExplanation && !ruleExplanations[ruleItem] ? (
-                                <div className="flex items-center text-sm text-slate-500 py-4 justify-center bg-slate-50 rounded">
-                                    <Loader2 size={16} className="animate-spin mr-2"/>
-                                    Generating concise explanation...
-                                </div>
-                            ) : (
-                                <div className="text-sm text-slate-600 bg-slate-50 p-3 rounded border border-slate-100 mb-3 leading-relaxed">
-                                    <ReactMarkdown>{ruleExplanations[ruleItem] || ''}</ReactMarkdown>
-                                </div>
-                            )}
-                            
-                            <button 
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    generateNotes(ruleItem);
-                                }}
-                                className="w-full text-xs flex items-center justify-center text-indigo-600 font-semibold hover:bg-indigo-50 py-2 rounded transition-colors"
-                            >
-                                Generate Detailed Study Notes <ArrowRight size={12} className="ml-1"/>
-                            </button>
-                        </div>
-                    )}
+
+              {/* Filter Input */}
+              <div className="relative mb-6 group">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                   <Search className="h-5 w-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                 </div>
-                ))}
+                <input
+                  type="text"
+                  value={ruleFilter}
+                  onChange={(e) => setRuleFilter(e.target.value)}
+                  placeholder={`Search ${subject} rules (smart search supported)...`}
+                  className="block w-full pl-10 pr-3 py-3 border border-slate-200 rounded-xl leading-5 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm transition-all"
+                />
+              </div>
+              
+              <div className="space-y-4">
+                {filteredStructure.length > 0 ? (
+                  filteredStructure.map((group, groupIdx) => (
+                    <div key={groupIdx} className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow transition-all">
+                       {/* Category Header (Accordion Trigger) */}
+                       <button
+                          onClick={() => toggleCategory(group.category)}
+                          className={`w-full flex items-center justify-between p-4 transition-colors ${
+                              openCategories[group.category] 
+                              ? 'bg-indigo-50/50 text-indigo-900 border-b border-indigo-100' 
+                              : 'bg-white text-slate-700 hover:bg-slate-50'
+                          }`}
+                       >
+                           <div className="flex items-center gap-3 font-semibold text-base">
+                               <Folder size={20} className={`shrink-0 ${openCategories[group.category] ? 'text-indigo-600 fill-indigo-100' : 'text-slate-400'}`} />
+                               {group.category}
+                               <span className="text-xs font-medium bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full border border-slate-200">
+                                   {group.topics.length}
+                               </span>
+                           </div>
+                           <div className={`transition-transform duration-200 ${openCategories[group.category] ? 'rotate-180' : ''}`}>
+                               <ChevronDown size={20} className="text-slate-400" />
+                           </div>
+                       </button>
+
+                       {/* Accordion Content */}
+                       {openCategories[group.category] && (
+                           <div className="bg-white p-2 space-y-2 animate-in slide-in-from-top-1 duration-200">
+                               {group.topics.map((ruleItem, idx) => (
+                                   <div 
+                                        key={idx} 
+                                        className={`rounded-lg border transition-all duration-200 overflow-hidden mx-2 ${
+                                            expandedRule === ruleItem 
+                                            ? 'border-indigo-300 bg-indigo-50/30' 
+                                            : 'border-transparent hover:bg-slate-50 hover:border-slate-200'
+                                        }`}
+                                   >
+                                    <button
+                                        onClick={() => toggleRule(ruleItem)}
+                                        className="w-full text-left p-3 flex items-center justify-between group"
+                                    >
+                                        <div className="flex items-center gap-3 pl-2">
+                                            <span className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                                                expandedRule === ruleItem ? 'bg-indigo-500' : 'bg-slate-300 group-hover:bg-indigo-400'
+                                            }`}></span>
+                                            <span className={`text-sm font-medium transition-colors ${expandedRule === ruleItem ? 'text-indigo-900' : 'text-slate-700'}`}>
+                                                {ruleItem}
+                                            </span>
+                                        </div>
+                                        {expandedRule === ruleItem 
+                                            ? <ChevronUp size={16} className="text-indigo-600 shrink-0" /> 
+                                            : <ChevronDown size={16} className="text-slate-300 shrink-0 group-hover:text-indigo-400 opacity-0 group-hover:opacity-100 transition-all" />
+                                        }
+                                    </button>
+                                    
+                                    {expandedRule === ruleItem && (
+                                        <div className="px-5 pb-4 pl-8">
+                                            {loadingExplanation && !ruleExplanations[ruleItem] ? (
+                                                <div className="flex flex-col items-center justify-center text-xs text-slate-500 py-4 bg-white/50 rounded-lg border border-indigo-100 border-dashed">
+                                                    <Loader2 size={16} className="animate-spin mb-2 text-indigo-500"/>
+                                                    <p>Generating summary...</p>
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-3 mb-4">
+                                                    <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                                                        <h4 className="text-xs font-bold text-slate-500 uppercase mb-1 flex items-center gap-1">
+                                                            <Info size={12} /> Rule
+                                                        </h4>
+                                                        <p className="text-sm text-slate-700 leading-relaxed">
+                                                            {ruleExplanations[ruleItem]?.rule}
+                                                        </p>
+                                                    </div>
+                                                    <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+                                                        <h4 className="text-xs font-bold text-green-700 uppercase mb-1 flex items-center gap-1">
+                                                            <CheckCircle2 size={12} /> Exam Example
+                                                        </h4>
+                                                        <p className="text-sm text-slate-800 font-medium italic">
+                                                            "{ruleExplanations[ruleItem]?.example}"
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            )}
+                                            
+                                            <button 
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    generateNotes(ruleItem);
+                                                }}
+                                                className="w-full text-xs flex items-center justify-center text-indigo-700 bg-indigo-100 hover:bg-indigo-200 font-semibold py-2 rounded-md transition-colors"
+                                            >
+                                                <Layout size={14} className="mr-1.5"/>
+                                                Generate Full Study Notes
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                               ))}
+                           </div>
+                       )}
+                    </div>
+                  ))
+                ) : (
+                    <div className="text-center py-12 bg-white rounded-xl border border-dashed border-slate-300">
+                        <Search size={32} className="mx-auto text-slate-300 mb-2" />
+                        <p className="text-slate-500 font-medium">No grammar rules match "{ruleFilter}"</p>
+                        <p className="text-xs text-slate-400 mt-1">Try checking for spelling errors, although our fuzzy search handles minor typos.</p>
+                    </div>
+                )}
               </div>
             </div>
           )}

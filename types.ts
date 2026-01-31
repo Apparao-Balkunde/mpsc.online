@@ -47,4 +47,9 @@ export interface CurrentAffairItem {
   examRelevance: string;
 }
 
+export interface RuleExplanation {
+  rule: string;
+  example: string;
+}
+
 export type LoadingState = 'idle' | 'loading' | 'success' | 'error';
