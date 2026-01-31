@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { CurrentAffairItem, LoadingState } from '../types';
 import { generateCurrentAffairs } from '../services/gemini';
-import { Newspaper, Loader2, ArrowLeft, RefreshCw, Calendar, Tag, AlertCircle, TrendingUp, MapPin } from 'lucide-react';
+import { Newspaper, Loader2, ArrowLeft, RefreshCw, Calendar, Tag, AlertCircle, TrendingUp, MapPin, Languages } from 'lucide-react';
 
 interface CurrentAffairsModeProps {
   onBack: () => void;
@@ -20,19 +20,20 @@ const CATEGORIES = [
 
 export const CurrentAffairsMode: React.FC<CurrentAffairsModeProps> = ({ onBack }) => {
   const [activeCategory, setActiveCategory] = useState<string>("Maharashtra Special");
+  const [language, setLanguage] = useState<'Marathi' | 'English'>('Marathi');
   const [news, setNews] = useState<CurrentAffairItem[]>([]);
   const [status, setStatus] = useState<LoadingState>('idle');
 
-  // Load news when category changes
+  // Load news when category or language changes
   useEffect(() => {
-    fetchNews(activeCategory);
-  }, [activeCategory]);
+    fetchNews(activeCategory, language);
+  }, [activeCategory, language]);
 
-  const fetchNews = async (category: string) => {
+  const fetchNews = async (category: string, lang: 'Marathi' | 'English') => {
     setStatus('loading');
     setNews([]);
     try {
-      const data = await generateCurrentAffairs(category);
+      const data = await generateCurrentAffairs(category, lang);
       setNews(data);
       setStatus('success');
     } catch (e) {
@@ -50,13 +51,34 @@ export const CurrentAffairsMode: React.FC<CurrentAffairsModeProps> = ({ onBack }
       <div className="flex flex-col md:flex-row gap-6 items-start">
         
         {/* Sidebar Navigation */}
-        <div className="w-full md:w-64 bg-white rounded-xl shadow-md border border-slate-100 overflow-hidden shrink-0">
+        <div className="w-full md:w-72 bg-white rounded-xl shadow-md border border-slate-100 overflow-hidden shrink-0 sticky top-24">
           <div className="p-4 bg-indigo-900 text-white">
             <h2 className="font-bold flex items-center gap-2">
               <Newspaper size={20} className="text-yellow-400" />
-              Categories
+              Topics & Language
             </h2>
           </div>
+
+          <div className="p-4 border-b border-slate-100">
+             <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                 <Languages size={12} /> Language
+             </label>
+              <div className="grid grid-cols-2 gap-2">
+                  <button 
+                      onClick={() => setLanguage('Marathi')}
+                      className={`py-2 px-3 rounded-lg text-sm font-semibold transition-all ${language === 'Marathi' ? 'bg-orange-100 text-orange-700 ring-1 ring-orange-300' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
+                  >
+                      Marathi
+                  </button>
+                  <button 
+                        onClick={() => setLanguage('English')}
+                      className={`py-2 px-3 rounded-lg text-sm font-semibold transition-all ${language === 'English' ? 'bg-blue-100 text-blue-700 ring-1 ring-blue-300' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
+                  >
+                      English
+                  </button>
+              </div>
+          </div>
+
           <div className="p-2 space-y-1">
             {CATEGORIES.map((cat) => (
               <button
@@ -80,11 +102,16 @@ export const CurrentAffairsMode: React.FC<CurrentAffairsModeProps> = ({ onBack }
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
              <div className="flex justify-between items-center mb-4">
                 <div>
-                   <h1 className="text-2xl font-bold text-slate-900">{activeCategory}</h1>
-                   <p className="text-slate-500 text-sm">Latest updates curated for MPSC Aspirants</p>
+                   <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                       {activeCategory}
+                       <span className="text-sm font-normal text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
+                           {language}
+                       </span>
+                   </h1>
+                   <p className="text-slate-500 text-sm">Curated from last 6 months for MPSC Rajyaseva & Combined Exams.</p>
                 </div>
                 <button 
-                  onClick={() => fetchNews(activeCategory)}
+                  onClick={() => fetchNews(activeCategory, language)}
                   disabled={status === 'loading'}
                   className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors"
                   title="Refresh News"
@@ -97,6 +124,7 @@ export const CurrentAffairsMode: React.FC<CurrentAffairsModeProps> = ({ onBack }
                 <div className="text-center py-24">
                   <Loader2 className="animate-spin h-10 w-10 text-indigo-600 mx-auto mb-4" />
                   <p className="text-slate-600 font-medium animate-pulse">Scanning latest sources for {activeCategory}...</p>
+                  <p className="text-slate-400 text-sm mt-1">Language: {language}</p>
                 </div>
              )}
 

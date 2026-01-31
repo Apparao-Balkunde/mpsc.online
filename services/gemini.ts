@@ -297,14 +297,22 @@ export const generateVocab = async (subject: Subject, category: VocabCategory): 
   }
 }
 
-export const generateCurrentAffairs = async (category: string): Promise<CurrentAffairItem[]> => {
+export const generateCurrentAffairs = async (category: string, language: 'Marathi' | 'English' = 'Marathi'): Promise<CurrentAffairItem[]> => {
   try {
+    const langInstruction = language === 'Marathi' 
+      ? "OUTPUT LANGUAGE: MARATHI (Devanagari script). Ensure headlines and descriptions are in formal, high-quality Marathi suitable for Rajyaseva." 
+      : "OUTPUT LANGUAGE: ENGLISH. Ensure professional and formal tone.";
+
     const prompt = `
-      Find 4-5 very recent and important current affairs topics specifically relevant for MPSC (Maharashtra Public Service Commission) exams.
+      You are an expert MPSC content curator.
+      Task: Find 5 very recent and highly relevant current affairs topics for MPSC (Maharashtra Public Service Commission) exams.
       Category: ${category}
       
-      Use Google Search to find the latest information from the last 6-12 months.
-      Focus on government schemes, appointments, awards, sports winners, or major political/economic events in Maharashtra and India.
+      Instructions:
+      1. Use Google Search to find events from the last 3-6 months.
+      2. FOCUS: Prioritize **Maharashtra-specific** news (Govt schemes, State awards, Appointments, Social reforms), then National news with high exam probability.
+      3. ${langInstruction}
+      4. Each item must explain WHY it is relevant for MPSC (Exam Relevance).
       
       Return strictly as JSON.
     `;
@@ -324,7 +332,7 @@ export const generateCurrentAffairs = async (category: string): Promise<CurrentA
               description: { type: Type.STRING, description: "Brief summary of the event (50-60 words)" },
               date: { type: Type.STRING, description: "Approximate date or month of the event" },
               category: { type: Type.STRING },
-              examRelevance: { type: Type.STRING, description: "Why this is important for MPSC exam? What kind of question can be asked?" }
+              examRelevance: { type: Type.STRING, description: "Why this is important for MPSC exam?" }
             },
             required: ["headline", "description", "date", "category", "examRelevance"]
           }
