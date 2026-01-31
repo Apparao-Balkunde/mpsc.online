@@ -5,8 +5,9 @@ import { QuizMode } from './components/QuizMode';
 import { PYQMode } from './components/PYQMode';
 import { CurrentAffairsMode } from './components/CurrentAffairsMode';
 import { VocabMode } from './components/VocabMode';
+import { BookmarksMode } from './components/BookmarksMode';
 import { Subject, Mode } from './types';
-import { BookOpen, BrainCircuit, Languages, History, Newspaper, ArrowRight as ArrowIcon, BookA } from 'lucide-react';
+import { BookOpen, BrainCircuit, Languages, History, Newspaper, ArrowRight as ArrowIcon, BookA, Bookmark } from 'lucide-react';
 
 const App: React.FC = () => {
   const [mode, setMode] = useState<Mode>(Mode.HOME);
@@ -84,7 +85,7 @@ const App: React.FC = () => {
       </div>
 
       {/* Feature Sections */}
-      <div className="grid md:grid-cols-3 gap-6 mb-16">
+      <div className="grid md:grid-cols-4 gap-6 mb-16">
           {/* PYQ Quick Access */}
           <div className="bg-indigo-900 rounded-2xl p-6 text-white flex flex-col justify-between shadow-xl relative overflow-hidden">
              <div className="absolute top-0 right-0 opacity-10">
@@ -95,7 +96,7 @@ const App: React.FC = () => {
                     <History className="text-yellow-400" />
                     PYQs
                 </h3>
-                <p className="text-indigo-200 text-sm mb-6">Authentic questions from Rajyaseva, Group B, Group C (2010-2024).</p>
+                <p className="text-indigo-200 text-sm mb-6">Authentic questions from Rajyaseva, Group B, Group C.</p>
              </div>
              <button 
                 onClick={() => setMode(Mode.PYQ)}
@@ -113,9 +114,9 @@ const App: React.FC = () => {
              <div className="relative z-10">
                 <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
                     <BookA className="text-purple-300" />
-                    Vocabulary
+                    Vocab
                 </h3>
-                <p className="text-purple-200 text-sm mb-6">Idioms, Phrases, Synonyms & Antonyms for Marathi & English.</p>
+                <p className="text-purple-200 text-sm mb-6">Idioms, Phrases, Synonyms & Antonyms.</p>
              </div>
              <button 
                 onClick={() => setMode(Mode.VOCAB)}
@@ -133,15 +134,35 @@ const App: React.FC = () => {
              <div className="relative z-10">
                 <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
                     <Newspaper className="text-emerald-300" />
-                    Current Affairs
+                    News
                 </h3>
-                <p className="text-emerald-100 text-sm mb-6">Daily updates on Maharashtra & India events for exams.</p>
+                <p className="text-emerald-100 text-sm mb-6">Daily updates on Maharashtra & India events.</p>
              </div>
              <button 
                 onClick={() => setMode(Mode.CURRENT_AFFAIRS)}
                 className="relative z-10 bg-emerald-400 text-emerald-950 px-4 py-2 rounded-lg font-bold hover:bg-emerald-300 transition-all shadow-lg flex items-center justify-center gap-2 w-full text-sm"
              >
                 Read News <ArrowRight className="w-4 h-4" />
+             </button>
+          </div>
+
+           {/* Bookmarks Quick Access */}
+           <div className="bg-pink-900 rounded-2xl p-6 text-white flex flex-col justify-between shadow-xl relative overflow-hidden">
+             <div className="absolute top-0 right-0 opacity-10">
+                <Bookmark size={140} />
+             </div>
+             <div className="relative z-10">
+                <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
+                    <Bookmark className="text-pink-300" fill="currentColor" />
+                    Saved
+                </h3>
+                <p className="text-pink-100 text-sm mb-6">Review your bookmarked important questions.</p>
+             </div>
+             <button 
+                onClick={() => setMode(Mode.BOOKMARKS)}
+                className="relative z-10 bg-pink-400 text-pink-950 px-4 py-2 rounded-lg font-bold hover:bg-pink-300 transition-all shadow-lg flex items-center justify-center gap-2 w-full text-sm"
+             >
+                View Saved <ArrowRight className="w-4 h-4" />
              </button>
           </div>
       </div>
@@ -194,6 +215,11 @@ const App: React.FC = () => {
         )}
         {mode === Mode.CURRENT_AFFAIRS && (
           <CurrentAffairsMode 
+            onBack={() => setMode(Mode.HOME)} 
+          />
+        )}
+         {mode === Mode.BOOKMARKS && (
+          <BookmarksMode 
             onBack={() => setMode(Mode.HOME)} 
           />
         )}

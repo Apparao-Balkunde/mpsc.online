@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, GraduationCap, History, Newspaper, BookA } from 'lucide-react';
+import { BookOpen, GraduationCap, History, Newspaper, BookA, Bookmark } from 'lucide-react';
 import { Mode } from '../types';
 
 interface HeaderProps {
@@ -52,6 +52,12 @@ export const Header: React.FC<HeaderProps> = ({ currentMode, onNavigate }) => {
             className={`hover:text-yellow-300 transition flex items-center gap-1 ${currentMode === Mode.PYQ ? 'text-yellow-300 font-bold' : 'text-indigo-100'}`}
           >
             <History size={16} /> PYQs
+          </button>
+          <button 
+             onClick={() => onNavigate(Mode.BOOKMARKS)}
+            className={`hover:text-yellow-300 transition flex items-center gap-1 ${currentMode === Mode.BOOKMARKS ? 'text-yellow-300 font-bold' : 'text-indigo-100'}`}
+          >
+            <Bookmark size={16} /> Saved
           </button>
           <button 
              onClick={() => onNavigate(Mode.CURRENT_AFFAIRS)}

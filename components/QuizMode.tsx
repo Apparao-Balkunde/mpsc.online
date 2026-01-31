@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Subject, LoadingState, QuizQuestion } from '../types';
 import { generateQuiz } from '../services/gemini';
-import { HelpCircle, CheckCircle2, XCircle, Loader2, ArrowLeft, RefreshCcw, Sparkles, Search, Play } from 'lucide-react';
+import { HelpCircle, CheckCircle2, XCircle, Loader2, ArrowLeft, RefreshCcw, Sparkles, Search, Play, Download, FileText } from 'lucide-react';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 interface QuizModeProps {
   initialSubject?: Subject;
@@ -45,6 +47,9 @@ export const QuizMode: React.FC<QuizModeProps> = ({ initialSubject = Subject.MAR
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [userAnswers, setUserAnswers] = useState<number[]>([]); // stores index of selected option
   const [showResults, setShowResults] = useState(false);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  
+  const resultsRef = useRef<HTMLDivElement>(null);
 
   const startQuiz = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,6 +95,59 @@ export const QuizMode: React.FC<QuizModeProps> = ({ initialSubject = Subject.MAR
 
   const handleSuggestionClick = (suggestion: string) => {
     setTopic(suggestion);
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!resultsRef.current) return;
+    setIsGeneratingPDF(true);
+
+    try {
+      const element = resultsRef.current;
+      const canvas = await html2canvas(element, {
+        scale: 2, // Higher scale for better quality
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      
+      // Calculate ratio to fit A4 width
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      
+      const imgX = (pdfWidth - imgWidth * ratio) / 2;
+      const imgY = 10; // Top margin
+
+      // Check if content is long, might need multiple pages (basic implementation fits to one or scales)
+      // For a long quiz list, we use the standard "auto" height based on width
+      const finalImgWidth = pdfWidth - 20; // 10mm margin on sides
+      const finalImgHeight = (imgHeight * finalImgWidth) / imgWidth;
+
+      // If content is longer than one page, we split it (simplified for now to standard scaling)
+      if (finalImgHeight > pdfHeight) {
+          // If extremely long, just create a long PDF page or scale down
+          // For simplicity in client-side without advanced page breaking logic, we create a custom page size if needed
+          const longPdf = new jsPDF('p', 'mm', [pdfWidth, finalImgHeight + 20]);
+          longPdf.addImage(imgData, 'PNG', 10, 10, finalImgWidth, finalImgHeight);
+          longPdf.save(`MPSC_Sarathi_Result_${new Date().toISOString().split('T')[0]}.pdf`);
+      } else {
+          pdf.addImage(imgData, 'PNG', 10, 10, finalImgWidth, finalImgHeight);
+          pdf.save(`MPSC_Sarathi_Result_${new Date().toISOString().split('T')[0]}.pdf`);
+      }
+
+    } catch (error) {
+      console.error("PDF generation failed", error);
+      alert("Failed to generate PDF. Please try again.");
+    } finally {
+      setIsGeneratingPDF(false);
+    }
   };
 
   return (
@@ -204,9 +262,18 @@ export const QuizMode: React.FC<QuizModeProps> = ({ initialSubject = Subject.MAR
              {showResults && <span className="text-lg font-bold text-green-600">Score: {calculateScore()}/{questions.length}</span>}
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-6" ref={resultsRef}>
+            {/* Added for PDF Header visibility only when captured, usually hidden or styled same */}
+            {showResults && (
+                <div className="hidden pdf-only mb-4 text-center border-b pb-4">
+                    <h1 className="text-2xl font-bold text-indigo-800">MPSC Sarathi Result</h1>
+                    <p className="text-slate-600">Subject: {subject} | Topic: {topic}</p>
+                    <p className="text-lg font-bold mt-2">Final Score: {calculateScore()} / {questions.length}</p>
+                </div>
+            )}
+            
             {questions.map((q, qIdx) => (
-              <div key={qIdx} className="bg-white rounded-xl shadow-md p-6 border border-slate-100">
+              <div key={qIdx} className="bg-white rounded-xl shadow-md p-6 border border-slate-100 break-inside-avoid">
                 <h3 className="text-lg font-medium text-slate-900 mb-4">{qIdx + 1}. {q.question}</h3>
                 <div className="space-y-3">
                   {q.options.map((opt, oIdx) => {
@@ -252,12 +319,20 @@ export const QuizMode: React.FC<QuizModeProps> = ({ initialSubject = Subject.MAR
                   Submit Quiz
               </button>
           ) : (
-              <div className="flex gap-4">
+              <div className="flex flex-col md:flex-row gap-4">
                   <button
                     onClick={resetQuiz}
                     className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 shadow-lg flex items-center justify-center gap-2"
                   >
                       <RefreshCcw size={20}/> Take Another Quiz
+                  </button>
+                  <button
+                    onClick={handleDownloadPDF}
+                    disabled={isGeneratingPDF}
+                    className="flex-1 bg-slate-800 text-white py-3 rounded-xl font-bold hover:bg-slate-900 shadow-lg flex items-center justify-center gap-2 disabled:opacity-70"
+                  >
+                      {isGeneratingPDF ? <Loader2 size={20} className="animate-spin" /> : <Download size={20}/>}
+                      {isGeneratingPDF ? 'Generating PDF...' : 'Download Result PDF'}
                   </button>
               </div>
           )}

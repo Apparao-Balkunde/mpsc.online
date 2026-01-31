@@ -10,7 +10,8 @@ export enum Mode {
   QUIZ = 'QUIZ',
   VOCAB = 'VOCAB',
   PYQ = 'PYQ',
-  CURRENT_AFFAIRS = 'CURRENT_AFFAIRS'
+  CURRENT_AFFAIRS = 'CURRENT_AFFAIRS',
+  BOOKMARKS = 'BOOKMARKS'
 }
 
 export type ExamType = 'ALL' | 'RAJYASEVA' | 'GROUP_B' | 'GROUP_C';
