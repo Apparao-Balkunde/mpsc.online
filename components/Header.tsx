@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, GraduationCap, History, Newspaper, BookA, Bookmark } from 'lucide-react';
+import { BookOpen, GraduationCap, History, Newspaper, BookA, Bookmark, PenTool } from 'lucide-react';
 import { Mode } from '../types';
 
 interface HeaderProps {
@@ -22,7 +22,7 @@ export const Header: React.FC<HeaderProps> = ({ currentMode, onNavigate }) => {
           </div>
         </div>
         
-        <nav className="hidden xl:flex space-x-6 text-sm font-medium">
+        <nav className="hidden xl:flex space-x-5 text-sm font-medium">
           <button 
             onClick={() => onNavigate(Mode.HOME)}
             className={`hover:text-yellow-300 transition ${currentMode === Mode.HOME ? 'text-yellow-300 font-bold' : 'text-indigo-100'}`}
@@ -34,6 +34,12 @@ export const Header: React.FC<HeaderProps> = ({ currentMode, onNavigate }) => {
             className={`hover:text-yellow-300 transition ${currentMode === Mode.STUDY ? 'text-yellow-300 font-bold' : 'text-indigo-100'}`}
           >
             Study Notes
+          </button>
+          <button 
+             onClick={() => onNavigate(Mode.LITERATURE)}
+            className={`hover:text-yellow-300 transition flex items-center gap-1 ${currentMode === Mode.LITERATURE ? 'text-yellow-300 font-bold' : 'text-indigo-100'}`}
+          >
+            <PenTool size={14} /> Lit. Practice
           </button>
           <button 
              onClick={() => onNavigate(Mode.VOCAB)}

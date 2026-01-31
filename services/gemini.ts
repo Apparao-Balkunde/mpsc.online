@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
-import { Subject, QuizQuestion, VocabWord, CurrentAffairItem, ExamType, VocabCategory, RuleExplanation } from '../types';
+import { Subject, QuizQuestion, VocabWord, CurrentAffairItem, ExamType, VocabCategory, RuleExplanation, DescriptiveQA } from '../types';
 
 const apiKey = process.env.API_KEY || '';
 const ai = new GoogleGenAI({ apiKey });
@@ -7,6 +7,50 @@ const ai = new GoogleGenAI({ apiKey });
 const MODEL_FAST = 'gemini-3-flash-preview';
 const MODEL_PRO = 'gemini-3-pro-preview';
 const MODEL_TTS = 'gemini-2.5-flash-preview-tts';
+
+// --- LOCAL DATA CENTER (CACHING SYSTEM) ---
+const CACHE_PREFIX = 'MPSC_DATA_CENTER_';
+
+// Helper to generate consistent unique keys for storage
+const getCacheKey = (...args: string[]) => {
+  return CACHE_PREFIX + args.join('_').toUpperCase().replace(/[^A-Z0-9_]/g, '_');
+};
+
+// Retrieve from Local Data Center
+const getFromDataCenter = <T>(key: string): T | null => {
+  try {
+    const item = localStorage.getItem(key);
+    if (item) {
+      console.log(`⚡ [Local Data Center] Serving instantly: ${key}`);
+      return JSON.parse(item) as T;
+    }
+  } catch (e) {
+    console.warn("Data Center retrieval error", e);
+  }
+  return null;
+};
+
+// Save to Local Data Center
+const saveToDataCenter = (key: string, data: any) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+    console.log(`💾 [Local Data Center] Data stored: ${key}`);
+  } catch (e) {
+    console.warn("Data Center full. Clearing old MPSC data to make space...");
+    try {
+      // Smart cleanup: Only remove MPSC_DATA_CENTER keys to avoid messing with other apps
+      Object.keys(localStorage).forEach(k => {
+        if (k.startsWith(CACHE_PREFIX)) {
+          localStorage.removeItem(k);
+        }
+      });
+      localStorage.setItem(key, JSON.stringify(data));
+    } catch (retryError) {
+      console.error("Critical storage failure", retryError);
+    }
+  }
+};
+// --- END CACHING SYSTEM ---
 
 // Audio Context Singleton
 let audioContext: AudioContext | null = null;
@@ -81,6 +125,10 @@ export const playTextToSpeech = async (text: string): Promise<void> => {
 };
 
 export const generateStudyNotes = async (subject: Subject, topic: string): Promise<string> => {
+  const cacheKey = getCacheKey('NOTES', subject, topic);
+  const cached = getFromDataCenter<string>(cacheKey);
+  if (cached) return cached;
+
   try {
     const prompt = `
       You are an expert tutor for the MPSC (Maharashtra Public Service Commission) exam.
@@ -99,7 +147,9 @@ export const generateStudyNotes = async (subject: Subject, topic: string): Promi
       contents: prompt,
     });
 
-    return response.text || "No notes generated.";
+    const result = response.text || "No notes generated.";
+    saveToDataCenter(cacheKey, result);
+    return result;
   } catch (error) {
     console.error("Error generating notes:", error);
     throw error;
@@ -107,21 +157,25 @@ export const generateStudyNotes = async (subject: Subject, topic: string): Promi
 };
 
 export const generateConciseExplanation = async (subject: Subject, topic: string): Promise<RuleExplanation> => {
+  const cacheKey = getCacheKey('RULE', subject, topic);
+  const cached = getFromDataCenter<RuleExplanation>(cacheKey);
+  if (cached) return cached;
+
   try {
     const prompt = `
-      You are an MPSC exam tutor.
+      You are an expert MPSC (Maharashtra Public Service Commission) exam tutor.
       Subject: ${subject}
       Topic: ${topic}
       
-      Provide a structured summary containing:
-      1. rule: A very concise explanation (max 2-3 sentences) of the key grammar rule or concept.
-      2. example: A practical example sentence relevant to MPSC exams demonstrating this rule.
+      Provide a JSON object with:
+      1. rule: A concise but comprehensive explanation (2-4 sentences) of the core grammar rule. Mention exceptions if crucial.
+      2. example: An exam-oriented example sentence (with analysis if needed in brackets).
       
-      Language:
-      - If Subject is Marathi: Use Marathi (Devanagari).
-      - If Subject is English: Use English.
+      Language Requirement:
+      - Marathi Subject: Explain STRICTLY in Marathi (Devanagari).
+      - English Subject: Explain in English.
       
-      Return strictly as JSON.
+      Output JSON strictly.
     `;
 
     const response = await ai.models.generateContent({
@@ -143,7 +197,9 @@ export const generateConciseExplanation = async (subject: Subject, topic: string
     const jsonText = response.text;
     if (!jsonText) return { rule: "Explanation not available", example: "" };
     
-    return JSON.parse(jsonText) as RuleExplanation;
+    const data = JSON.parse(jsonText) as RuleExplanation;
+    saveToDataCenter(cacheKey, data);
+    return data;
   } catch (error) {
     console.error("Error generating explanation:", error);
     return { rule: "Could not load explanation.", example: "" };
@@ -151,6 +207,10 @@ export const generateConciseExplanation = async (subject: Subject, topic: string
 };
 
 export const generateQuiz = async (subject: Subject, topic: string): Promise<QuizQuestion[]> => {
+  const cacheKey = getCacheKey('QUIZ', subject, topic);
+  const cached = getFromDataCenter<QuizQuestion[]>(cacheKey);
+  if (cached) return cached;
+
   try {
     const prompt = `
       Generate 20 multiple choice questions (MCQs) for MPSC exam practice.
@@ -189,7 +249,9 @@ export const generateQuiz = async (subject: Subject, topic: string): Promise<Qui
     const jsonText = response.text;
     if (!jsonText) throw new Error("Empty response from AI");
     
-    return JSON.parse(jsonText) as QuizQuestion[];
+    const data = JSON.parse(jsonText) as QuizQuestion[];
+    saveToDataCenter(cacheKey, data);
+    return data;
   } catch (error) {
     console.error("Error generating quiz:", error);
     throw error;
@@ -197,6 +259,10 @@ export const generateQuiz = async (subject: Subject, topic: string): Promise<Qui
 };
 
 export const generatePYQs = async (subject: Subject, year: string, examType: ExamType = 'ALL'): Promise<QuizQuestion[]> => {
+  const cacheKey = getCacheKey('PYQ', subject, year, examType);
+  const cached = getFromDataCenter<QuizQuestion[]>(cacheKey);
+  if (cached) return cached;
+
   try {
     let examContext = '';
     
@@ -257,7 +323,9 @@ export const generatePYQs = async (subject: Subject, year: string, examType: Exa
     const jsonText = response.text;
     if (!jsonText) throw new Error("Empty response from AI");
     
-    return JSON.parse(jsonText) as QuizQuestion[];
+    const data = JSON.parse(jsonText) as QuizQuestion[];
+    saveToDataCenter(cacheKey, data);
+    return data;
   } catch (error) {
     console.error("Error generating PYQs:", error);
     throw error;
@@ -265,6 +333,10 @@ export const generatePYQs = async (subject: Subject, year: string, examType: Exa
 };
 
 export const generateVocab = async (subject: Subject, category: VocabCategory): Promise<VocabWord[]> => {
+  const cacheKey = getCacheKey('VOCAB', subject, category);
+  const cached = getFromDataCenter<VocabWord[]>(cacheKey);
+  if (cached) return cached;
+
   try {
     let categoryPrompt = '';
     
@@ -281,7 +353,7 @@ export const generateVocab = async (subject: Subject, category: VocabCategory): 
     }
 
     const prompt = `
-      Generate 10 important ${categoryPrompt} for ${subject} subject specifically for MPSC/Competitive Exams.
+      Generate 100 important ${categoryPrompt} for ${subject} subject specifically for MPSC/Competitive Exams.
       
       Output strictly in JSON.
     `;
@@ -307,10 +379,12 @@ export const generateVocab = async (subject: Subject, category: VocabCategory): 
       }
     });
 
-     const jsonText = response.text;
+    const jsonText = response.text;
     if (!jsonText) throw new Error("Empty response from AI");
     
-    return JSON.parse(jsonText) as VocabWord[];
+    const data = JSON.parse(jsonText) as VocabWord[];
+    saveToDataCenter(cacheKey, data);
+    return data;
 
   } catch (error) {
     console.error("Error generating vocab:", error);
@@ -319,6 +393,10 @@ export const generateVocab = async (subject: Subject, category: VocabCategory): 
 }
 
 export const generateCurrentAffairs = async (category: string, language: 'Marathi' | 'English' = 'Marathi'): Promise<CurrentAffairItem[]> => {
+  const cacheKey = getCacheKey('NEWS', category, language);
+  const cached = getFromDataCenter<CurrentAffairItem[]>(cacheKey);
+  if (cached) return cached;
+
   try {
     const langInstruction = language === 'Marathi' 
       ? "OUTPUT LANGUAGE: MARATHI (Devanagari script). Ensure headlines and descriptions are in formal, high-quality Marathi suitable for Rajyaseva." 
@@ -364,10 +442,63 @@ export const generateCurrentAffairs = async (category: string, language: 'Marath
     const jsonText = response.text;
     if (!jsonText) throw new Error("Empty response from AI");
     
-    return JSON.parse(jsonText) as CurrentAffairItem[];
+    const data = JSON.parse(jsonText) as CurrentAffairItem[];
+    saveToDataCenter(cacheKey, data);
+    return data;
 
   } catch (error) {
     console.error("Error generating current affairs:", error);
+    throw error;
+  }
+}
+
+export const generateDescriptiveQA = async (topic: string): Promise<DescriptiveQA> => {
+  const cacheKey = getCacheKey('LIT_QA', topic);
+  const cached = getFromDataCenter<DescriptiveQA>(cacheKey);
+  if (cached) return cached;
+
+  try {
+    const prompt = `
+      You are a professor for MPSC (Maharashtra Public Service Commission) Marathi Literature (Optional Paper).
+      Topic: ${topic}
+      
+      Task:
+      1. Generate a high-quality, descriptive question (10-15 marks style) suitable for the Mains exam on this topic.
+      2. Provide a structured 'Model Answer' in Marathi (Devanagari) that includes:
+         - Introduction (प्रस्तावना)
+         - Core Analysis/Body (मुख्य गाभा)
+         - Conclusion (निष्कर्ष)
+      3. Extract 3-5 Key Points (मुख्य मुद्दे) for quick revision.
+      
+      Output in JSON.
+    `;
+
+    const response = await ai.models.generateContent({
+      model: MODEL_PRO,
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            question: { type: Type.STRING, description: "The descriptive question in Marathi" },
+            modelAnswer: { type: Type.STRING, description: "Full detailed answer in Marathi Markdown" },
+            keyPoints: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Short bullet points" }
+          },
+          required: ["question", "modelAnswer", "keyPoints"]
+        }
+      }
+    });
+
+    const jsonText = response.text;
+    if (!jsonText) throw new Error("Empty response from AI");
+    
+    const data = JSON.parse(jsonText) as DescriptiveQA;
+    saveToDataCenter(cacheKey, data);
+    return data;
+
+  } catch (error) {
+    console.error("Error generating literature content:", error);
     throw error;
   }
 }

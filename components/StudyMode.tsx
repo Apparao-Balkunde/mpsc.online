@@ -17,19 +17,26 @@ interface TopicGroup {
 const GRAMMAR_STRUCTURE: Record<Subject, TopicGroup[]> = {
   [Subject.MARATHI]: [
     {
-      category: "वर्णमाला व मूलभूत (Basics)",
+      category: "वर्णमाला व नियम (Alphabet & Basics)",
       topics: [
-        "मराठी वर्णमाला (Alphabet) - स्वर, व्यंजने व उच्चारस्थाने",
-        "विरामचिन्हे व शुद्धलेखन नियम (Punctuation & Spelling Rules)"
+        "मराठी वर्णमाला: स्वर, स्वरादी, व्यंजने (Alphabet Structure)",
+        "जोडाक्षरे व लेखन प्रकार (Conjunct Consonants)",
+        "संधी (Sandhi): स्वर, व्यंजन व विसर्ग संधी",
+        "विरामचिन्हे व शुद्धलेखन (Punctuation & Orthography)"
       ]
     },
     {
-      category: "शब्दांच्या जाती (Parts of Speech)",
+      category: "शब्दांच्या जाती - विकारी (Declinable POS)",
       topics: [
-        "नाम व नामाचे प्रकार (Noun)",
-        "सर्वनाम व प्रकार (Pronoun)",
-        "विशेषण व प्रकार (Adjective)",
-        "क्रियापद व काळ (Verb & Tense)",
+        "नाम: प्रकार, लिंग, वचन, विभक्ती (Noun: Gender, Number, Case)",
+        "सर्वनाम: प्रकार व उपयोग (Pronoun Types)",
+        "विशेषण: प्रकार व अवस्था (Adjective Types)",
+        "क्रियापद: प्रकार, अर्थ, आख्यात (Verb & Tense Forms)"
+      ]
+    },
+    {
+      category: "शब्दांच्या जाती - अविकारी (Indeclinable POS)",
+      topics: [
         "क्रियाविशेषण अव्यय (Adverb)",
         "शब्दयोगी अव्यय (Preposition)",
         "उभयान्वयी अव्यय (Conjunction)",
@@ -37,69 +44,68 @@ const GRAMMAR_STRUCTURE: Record<Subject, TopicGroup[]> = {
       ]
     },
     {
-        category: "विकार विचार (Gender, Number, Case)",
-        topics: [
-            "लिंग, वचन व विभक्ती विचार (Gender, Number & Case)",
-            "विभक्ती व कारकार्थ (Vibhakti & Functions)"
-        ]
-    },
-    {
       category: "वाक्य व व्याकरण (Sentence & Grammar)",
       topics: [
-        "संधी (Sandhi) - स्वर, व्यंजन व विसर्ग संधी",
-        "प्रयोग (Prayog) - कर्तरी, कर्मणी, भावे व संकर",
-        "समास (Samas) - अव्ययीभाव, तत्पुरुष, द्वंद्व, बहुव्रीही",
+        "वाक्याचे प्रकार (Types of Sentences)",
+        "प्रयोग (Prayog): कर्तरी, कर्मणी, भावे",
+        "समास (Compound Words): अव्ययीभाव, तत्पुरुष, द्वंद्व, बहुव्रीही",
         "वाक्यरुपांतर (Sentence Transformation)",
-        "वाक्य पृथक्करण (Sentence Analysis)"
+        "वाक्यपृथक्करण (Sentence Analysis)",
+        "काळ व काळाचे प्रकार (Tenses)"
       ]
     },
     {
-      category: "शब्दसंपत्ती (Vocabulary & Figures of Speech)",
+      category: "शब्दसंपत्ती (Vocabulary)",
       topics: [
-        "शब्दसिद्धी (Shabdasiddhi) - तत्सम, तद्भव, देशी व परभाषिक",
-        "अलंकार (Alankar) - शब्दालंकार व अर्थालंकार",
-        "वृत्ते (Vrutte) - अक्षरगणवृत्ते व मात्रावृत्ते",
-        "समानार्थी व विरुद्धार्थी शब्द (Synonyms & Antonyms)",
-        "म्हणी व वाक्प्रचार (Idioms & Phrases)"
+        "अलंकार (Figures of Speech)",
+        "वृत्ते (Prosody/Meter)",
+        "शब्दसिद्धी: तत्सम, तद्भव, देशी, परभाषिक",
+        "वाक्प्रचार व म्हणी (Idioms & Proverbs)",
+        "समानार्थी व विरुद्धार्थी शब्द (Synonyms & Antonyms)"
       ]
     }
   ],
   [Subject.ENGLISH]: [
     {
-      category: "Parts of Speech",
+      category: "Fundamentals of Grammar",
       topics: [
-        "Articles - Definite & Indefinite Rules",
-        "Nouns - Types, Gender & Number Rules",
-        "Pronouns - Types & Case Usage",
-        "Adjectives - Degrees of Comparison",
-        "Verbs - Main & Auxiliary Verbs",
-        "Adverbs - Types & Correct Positioning",
-        "Prepositions - Fixed & Phrasal Usage",
-        "Conjunctions - Coordinating & Correlative"
+        "Articles: A, An, The (Rules & Omission)",
+        "Nouns: Number, Gender & Case Rules",
+        "Pronouns: Personal, Relative, Reflexive",
+        "Adjectives: Degrees of Comparison",
+        "Verbs: Transitive, Intransitive & Auxiliaries"
       ]
     },
     {
-      category: "Sentence Structure & Syntax",
+      category: "Tenses & Voice",
       topics: [
-        "Subject-Verb Agreement - Vital MPSC Rules",
-        "Tenses - Detailed Formations & Patterns",
-        "Active & Passive Voice - Transformation",
-        "Direct & Indirect Speech - Narration Rules",
-        "Question Tags - Patterns & Exceptions",
-        "Simple, Compound & Complex Sentences",
-        "Conditional Sentences - If-Clause Types",
-        "Clauses - Noun, Adjective & Adverbial",
-        "Synthesis of Sentences - Joining Techniques"
+        "Tenses: Present, Past, Future (Structure & Usage)",
+        "Subject-Verb Agreement (Concord Rules)",
+        "Active & Passive Voice (Transformation)",
+        "Direct & Indirect Speech (Narration)"
       ]
     },
     {
-      category: "Vocabulary & Composition",
+      category: "Advanced Sentence Structure",
       topics: [
-        "Non-Finite Verbs - Infinitives, Gerunds & Participles",
-        "Figures of Speech - Simile, Metaphor, Personification",
-        "Punctuation - Marks & Capitalization Rules",
-        "Common Errors - Sentence Improvement",
-        "Prefix & Suffix - Word Formation"
+        "Clauses: Noun, Adjective, Adverb Clauses",
+        "Types of Sentences: Simple, Compound, Complex",
+        "Question Tags & Frame Questions",
+        "Modal Auxiliaries & their Usage",
+        "Transformation: Affirmative to Negative",
+        "Transformation: Exclamatory to Assertive",
+        "Remove 'too' / Use 'so...that'"
+      ]
+    },
+    {
+      category: "Vocabulary & Usage",
+      topics: [
+        "Prepositions: Fixed & Phrasal Prepositions",
+        "Conjunctions & Connectors",
+        "Phrasal Verbs & Idioms",
+        "One Word Substitution",
+        "Common Errors in Sentence Construction",
+        "Punctuation Marks"
       ]
     }
   ],

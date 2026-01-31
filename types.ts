@@ -11,7 +11,8 @@ export enum Mode {
   VOCAB = 'VOCAB',
   PYQ = 'PYQ',
   CURRENT_AFFAIRS = 'CURRENT_AFFAIRS',
-  BOOKMARKS = 'BOOKMARKS'
+  BOOKMARKS = 'BOOKMARKS',
+  LITERATURE = 'LITERATURE'
 }
 
 export type ExamType = 'ALL' | 'RAJYASEVA' | 'GROUP_B' | 'GROUP_C';
@@ -50,6 +51,12 @@ export interface CurrentAffairItem {
 export interface RuleExplanation {
   rule: string;
   example: string;
+}
+
+export interface DescriptiveQA {
+  question: string;
+  modelAnswer: string;
+  keyPoints: string[];
 }
 
 export type LoadingState = 'idle' | 'loading' | 'success' | 'error';
