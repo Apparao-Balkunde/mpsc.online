@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, GraduationCap } from 'lucide-react';
+import { BookOpen, GraduationCap, History } from 'lucide-react';
 import { Mode } from '../types';
 
 interface HeaderProps {
@@ -22,7 +22,7 @@ export const Header: React.FC<HeaderProps> = ({ currentMode, onNavigate }) => {
           </div>
         </div>
         
-        <nav className="hidden md:flex space-x-6">
+        <nav className="hidden lg:flex space-x-6">
           <button 
             onClick={() => onNavigate(Mode.HOME)}
             className={`hover:text-yellow-300 transition ${currentMode === Mode.HOME ? 'text-yellow-300 font-semibold' : ''}`}
@@ -41,11 +41,16 @@ export const Header: React.FC<HeaderProps> = ({ currentMode, onNavigate }) => {
           >
             Quiz Practice
           </button>
+          <button 
+             onClick={() => onNavigate(Mode.PYQ)}
+            className={`hover:text-yellow-300 transition flex items-center gap-1 ${currentMode === Mode.PYQ ? 'text-yellow-300 font-semibold' : ''}`}
+          >
+            <History size={16} /> Previous Questions
+          </button>
         </nav>
 
-         {/* Mobile simple indicator or menu could go here */}
-         <div className="md:hidden">
-             <BookOpen size={24} />
+         <div className="lg:hidden">
+             <button onClick={() => onNavigate(Mode.HOME)} className="p-2"><BookOpen size={24} /></button>
          </div>
       </div>
     </header>

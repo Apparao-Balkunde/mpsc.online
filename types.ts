@@ -8,7 +8,8 @@ export enum Mode {
   HOME = 'HOME',
   STUDY = 'STUDY',
   QUIZ = 'QUIZ',
-  VOCAB = 'VOCAB'
+  VOCAB = 'VOCAB',
+  PYQ = 'PYQ'
 }
 
 export interface QuizQuestion {

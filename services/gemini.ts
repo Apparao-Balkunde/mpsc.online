@@ -5,6 +5,7 @@ const apiKey = process.env.API_KEY || '';
 const ai = new GoogleGenAI({ apiKey });
 
 const MODEL_FAST = 'gemini-3-flash-preview';
+const MODEL_PRO = 'gemini-3-pro-preview';
 const MODEL_TTS = 'gemini-2.5-flash-preview-tts';
 
 // Audio Context Singleton
@@ -171,6 +172,50 @@ export const generateQuiz = async (subject: Subject, topic: string): Promise<Qui
     return JSON.parse(jsonText) as QuizQuestion[];
   } catch (error) {
     console.error("Error generating quiz:", error);
+    throw error;
+  }
+};
+
+export const generatePYQs = async (subject: Subject, year: string): Promise<QuizQuestion[]> => {
+  try {
+    const prompt = `
+      Retrieve or generate 5 authentic Previous Year Questions (PYQs) that appeared in MPSC exams for ${subject} around the year ${year}.
+      Include the question text, multiple choice options, the correct answer, and a detailed explanation of the concept tested.
+      If the subject is Marathi, provide the question and explanation in Marathi.
+      Return strictly as JSON.
+    `;
+
+    const response = await ai.models.generateContent({
+      model: MODEL_PRO,
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        tools: [{ googleSearch: {} }],
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              question: { type: Type.STRING },
+              options: { 
+                type: Type.ARRAY,
+                items: { type: Type.STRING }
+              },
+              correctAnswerIndex: { type: Type.INTEGER },
+              explanation: { type: Type.STRING }
+            },
+            required: ["question", "options", "correctAnswerIndex", "explanation"]
+          }
+        }
+      }
+    });
+
+    const jsonText = response.text;
+    if (!jsonText) throw new Error("Empty response from AI");
+    
+    return JSON.parse(jsonText) as QuizQuestion[];
+  } catch (error) {
+    console.error("Error generating PYQs:", error);
     throw error;
   }
 };

@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { Header } from './components/Header';
 import { StudyMode } from './components/StudyMode';
 import { QuizMode } from './components/QuizMode';
+import { PYQMode } from './components/PYQMode';
 import { Subject, Mode, VocabWord } from './types';
 import { generateVocab } from './services/gemini';
-import { BookOpen, BrainCircuit, Languages, Sparkles } from 'lucide-react';
+import { BookOpen, BrainCircuit, Languages, Sparkles, History } from 'lucide-react';
 
 const App: React.FC = () => {
   const [mode, setMode] = useState<Mode>(Mode.HOME);
@@ -39,11 +40,11 @@ const App: React.FC = () => {
         </h1>
         <p className="text-lg text-slate-600 max-w-2xl mx-auto">
           Comprehensive AI-powered preparation for Marathi and English papers. 
-          Generate notes, practice quizzes, and build vocabulary instantly.
+          Generate notes, practice quizzes, and review previous year questions.
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-8 mb-16">
+      <div className="grid md:grid-cols-2 gap-8 mb-12">
         {/* Marathi Card */}
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100 hover:border-indigo-200 transition-all group">
            <div className="h-32 bg-gradient-to-r from-orange-400 to-red-500 p-6 flex items-end justify-between">
@@ -66,12 +67,6 @@ const App: React.FC = () => {
                       <BrainCircuit size={18} /> Practice
                   </button>
               </div>
-               <button 
-                onClick={() => loadDailyVocab(Subject.MARATHI)}
-                className="mt-4 w-full flex items-center justify-center gap-2 border border-slate-200 text-slate-600 py-2 rounded-lg text-sm hover:bg-slate-50 transition"
-              >
-                  <Sparkles size={16} /> Generate Important Vocab (Mani/Vakprachar)
-              </button>
            </div>
         </div>
 
@@ -97,14 +92,31 @@ const App: React.FC = () => {
                       <BrainCircuit size={18} /> Practice
                   </button>
               </div>
-              <button 
-                onClick={() => loadDailyVocab(Subject.ENGLISH)}
-                className="mt-4 w-full flex items-center justify-center gap-2 border border-slate-200 text-slate-600 py-2 rounded-lg text-sm hover:bg-slate-50 transition"
-              >
-                  <Sparkles size={16} /> Generate Daily Vocab
-              </button>
            </div>
         </div>
+      </div>
+
+      {/* PYQ Quick Access Section */}
+      <div className="mb-16">
+          <div className="bg-indigo-900 rounded-2xl p-8 text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl relative overflow-hidden">
+             <div className="absolute top-0 right-0 opacity-10">
+                <History size={200} />
+             </div>
+             <div className="relative z-10">
+                <h3 className="text-2xl font-bold mb-2 flex items-center gap-2">
+                    <History className="text-yellow-400" />
+                    Previous Year Questions (2010-2024)
+                </h3>
+                <p className="text-indigo-200 max-w-lg">Study actual questions asked in past exams to understand the changing pattern and focus areas of MPSC.</p>
+             </div>
+             <button 
+                onClick={() => setMode(Mode.PYQ)}
+                className="relative z-10 bg-yellow-400 text-indigo-900 px-8 py-4 rounded-xl font-bold hover:bg-yellow-300 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 group"
+             >
+                Enter PYQ Section
+                <ArrowRight className="group-hover:translate-x-1 transition-transform" />
+             </button>
+          </div>
       </div>
 
         {/* Vocab Section Display */}
@@ -115,7 +127,7 @@ const App: React.FC = () => {
         )}
 
         {dailyVocab.length > 0 && (
-            <div className="bg-white rounded-xl shadow-lg border border-yellow-200 p-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="bg-white rounded-xl shadow-lg border border-yellow-200 p-6 mb-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-xl font-bold text-slate-800">✨ Quick Study Words</h3>
                     <button onClick={() => setDailyVocab([])} className="text-sm text-slate-400 hover:text-red-500">Clear</button>
@@ -136,7 +148,7 @@ const App: React.FC = () => {
         )}
 
       {/* Quick Tips Section */}
-      <div className="mt-12 grid md:grid-cols-3 gap-6">
+      <div className="grid md:grid-cols-3 gap-6">
         <div className="bg-slate-100 p-6 rounded-xl">
             <h4 className="font-bold text-slate-800 mb-2">Grammar Focus</h4>
             <p className="text-sm text-slate-600">MPSC asks deep conceptual questions. Don't just memorize rules, understand the logic (Contextual Grammar).</p>
@@ -171,6 +183,11 @@ const App: React.FC = () => {
             onBack={() => setMode(Mode.HOME)} 
           />
         )}
+        {mode === Mode.PYQ && (
+          <PYQMode 
+            onBack={() => setMode(Mode.HOME)} 
+          />
+        )}
       </main>
 
       <footer className="bg-slate-900 text-slate-400 py-6 mt-auto">
@@ -182,5 +199,9 @@ const App: React.FC = () => {
     </div>
   );
 };
+
+const ArrowRight = ({ className }: { className?: string }) => (
+  <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+);
 
 export default App;
