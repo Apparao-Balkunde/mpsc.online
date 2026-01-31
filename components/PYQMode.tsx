@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Subject, LoadingState, QuizQuestion, ExamType } from '../types';
 import { generatePYQs } from '../services/gemini';
-import { History, Search, Loader2, ArrowLeft, Eye, CheckCircle2, AlertCircle, Filter, Bookmark, X } from 'lucide-react';
+import { History, Search, Loader2, ArrowLeft, Eye, CheckCircle2, AlertCircle, Filter, Bookmark, X, Calendar, Layers } from 'lucide-react';
 
 interface PYQModeProps {
   onBack: () => void;
@@ -80,7 +80,7 @@ export const PYQMode: React.FC<PYQModeProps> = ({ onBack }) => {
           <p className="text-slate-600">Review authentic MPSC questions from 2010 to current exams.</p>
         </div>
 
-        <div className="p-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="p-6 grid grid-cols-1 md:grid-cols-4 gap-4 bg-white items-end">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">Subject</label>
             <select 
@@ -95,9 +95,9 @@ export const PYQMode: React.FC<PYQModeProps> = ({ onBack }) => {
           </div>
 
           <div>
-             <label className="block text-sm font-medium text-slate-700 mb-2">Exam Filter</label>
+             <label className="block text-sm font-medium text-slate-700 mb-2">Exam Type</label>
              <div className="relative">
-                <Filter size={16} className="absolute left-3 top-3.5 text-slate-400" />
+                <Layers size={16} className="absolute left-3 top-3.5 text-slate-400" />
                 <select 
                   value={examType}
                   onChange={(e) => setExamType(e.target.value as ExamType)}
@@ -111,25 +111,28 @@ export const PYQMode: React.FC<PYQModeProps> = ({ onBack }) => {
                   <option value="GROUP_C">Group C (Clerk/Tax Asst)</option>
                 </select>
              </div>
-             {subject === Subject.ENGLISH && <p className="text-xs text-slate-500 mt-1">Includes SSC, UPSC, CDS & MPSC</p>}
+             {subject === Subject.ENGLISH && <p className="text-[10px] text-slate-500 mt-1 ml-1">Includes MPSC, SSC, UPSC</p>}
           </div>
 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">Year</label>
-            <select 
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(e.target.value)}
-              className="w-full rounded-lg border-slate-300 border p-3 focus:ring-2 focus:ring-indigo-500 shadow-sm"
-            >
-              {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
-            </select>
+            <div className="relative">
+                <Calendar size={16} className="absolute left-3 top-3.5 text-slate-400" />
+                <select 
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(e.target.value)}
+                    className="w-full pl-9 rounded-lg border-slate-300 border p-3 focus:ring-2 focus:ring-indigo-500 shadow-sm"
+                >
+                {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+                </select>
+            </div>
           </div>
 
-          <div className="flex items-end">
+          <div>
             <button 
               onClick={fetchQuestions}
               disabled={status === 'loading'}
-              className="w-full bg-indigo-600 text-white p-3 rounded-lg hover:bg-indigo-700 transition font-semibold shadow flex items-center justify-center gap-2"
+              className="w-full bg-indigo-600 text-white p-3 rounded-lg hover:bg-indigo-700 transition-all font-semibold shadow-md flex items-center justify-center gap-2"
             >
               {status === 'loading' ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
               Fetch Questions
@@ -142,7 +145,7 @@ export const PYQMode: React.FC<PYQModeProps> = ({ onBack }) => {
         <div className="text-center py-20">
           <Loader2 className="animate-spin h-12 w-12 text-indigo-600 mx-auto mb-4" />
           <p className="text-slate-600 font-medium">Scanning archives for {subject} questions...</p>
-          <p className="text-slate-400 text-sm mt-1">Targeting {subject === Subject.ENGLISH ? 'SSC, UPSC, MPSC' : examType} sources</p>
+          <p className="text-slate-400 text-sm mt-1">Filtering by {examType === 'ALL' ? 'All Exams' : examType} - {selectedYear}</p>
         </div>
       )}
 
@@ -151,7 +154,7 @@ export const PYQMode: React.FC<PYQModeProps> = ({ onBack }) => {
           <AlertCircle size={32} />
           <div>
             <h4 className="font-bold">Retrieval Failed</h4>
-            <p className="text-sm">We couldn't fetch questions for this selection. Please try a different year or subject.</p>
+            <p className="text-sm">We couldn't fetch questions for this selection. Please check your connection and try again.</p>
           </div>
         </div>
       )}
@@ -162,9 +165,9 @@ export const PYQMode: React.FC<PYQModeProps> = ({ onBack }) => {
             <div className="flex items-center text-indigo-800 font-semibold">
                 <CheckCircle2 size={18} className="mr-2" />
                 <span>Found {questions.length} questions</span>
-                <span className="mx-2">•</span>
-                <span className="text-sm bg-indigo-100 px-3 py-1 rounded-full text-indigo-700">
-                    {subject} / {selectedYear}
+                <span className="mx-2 text-slate-300">|</span>
+                <span className="text-sm bg-indigo-50 px-3 py-1 rounded-full text-indigo-700 border border-indigo-100">
+                    {subject} • {selectedYear}
                 </span>
             </div>
             
@@ -176,8 +179,8 @@ export const PYQMode: React.FC<PYQModeProps> = ({ onBack }) => {
                     type="text"
                     value={searchKeyword}
                     onChange={(e) => setSearchKeyword(e.target.value)}
-                    placeholder="Search keyword..."
-                    className="block w-full pl-9 pr-8 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="Search in questions..."
+                    className="block w-full pl-9 pr-8 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                 />
                 {searchKeyword && (
                     <button 
@@ -197,9 +200,6 @@ export const PYQMode: React.FC<PYQModeProps> = ({ onBack }) => {
               </div>
           ) : (
             filteredQuestions.map((q, idx) => {
-                // Find the original index to maintain correct numbering relative to the fetched set if needed, 
-                // but usually simply numbering the filtered view is better UI. 
-                // Let's stick to simple filtered numbering for clean look.
                 const isBookmarked = bookmarks.some(b => b.question === q.question);
                 return (
                 <div key={idx} className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition-shadow">
@@ -207,7 +207,7 @@ export const PYQMode: React.FC<PYQModeProps> = ({ onBack }) => {
                     <div className="flex justify-between items-start mb-2">
                         <div className="flex items-start gap-3">
                             <div className="flex flex-col gap-2 shrink-0 items-center">
-                                <span className="bg-slate-100 text-slate-600 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">
+                                <span className="bg-slate-100 text-slate-600 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm border border-slate-200">
                                         {idx + 1}
                                 </span>
                             </div>
@@ -222,7 +222,7 @@ export const PYQMode: React.FC<PYQModeProps> = ({ onBack }) => {
                         </div>
                         <button 
                             onClick={() => toggleBookmark(q)}
-                            className={`p-2 rounded-full transition-colors ${isBookmarked ? 'text-pink-500 bg-pink-50' : 'text-slate-300 hover:text-pink-400 hover:bg-slate-50'}`}
+                            className={`p-2 rounded-full transition-all duration-200 ${isBookmarked ? 'text-pink-500 bg-pink-50' : 'text-slate-300 hover:text-pink-400 hover:bg-slate-50'}`}
                             title={isBookmarked ? "Remove Bookmark" : "Bookmark Question"}
                         >
                             <Bookmark size={20} fill={isBookmarked ? "currentColor" : "none"} />
@@ -231,7 +231,7 @@ export const PYQMode: React.FC<PYQModeProps> = ({ onBack }) => {
 
                     <div className="ml-11 grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
                         {q.options.map((opt, oIdx) => (
-                        <div key={oIdx} className="p-3 border border-slate-200 rounded-lg text-slate-700 text-sm bg-slate-50/50 hover:bg-white hover:border-indigo-200 transition-colors">
+                        <div key={oIdx} className="p-3 border border-slate-200 rounded-lg text-slate-700 text-sm bg-slate-50/50 hover:bg-white hover:border-indigo-200 transition-colors cursor-default">
                             <span className="font-bold mr-2 text-slate-400">({String.fromCharCode(65 + oIdx)})</span>
                             {opt}
                         </div>
@@ -240,9 +240,9 @@ export const PYQMode: React.FC<PYQModeProps> = ({ onBack }) => {
 
                     <button 
                         onClick={() => toggleReveal(idx)}
-                        className={`ml-11 flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all ${
+                        className={`ml-11 flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all shadow-sm ${
                         revealedAnswers.includes(idx)
-                        ? 'bg-slate-800 text-white'
+                        ? 'bg-slate-800 text-white hover:bg-slate-900'
                         : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
                         }`}
                     >
@@ -251,13 +251,15 @@ export const PYQMode: React.FC<PYQModeProps> = ({ onBack }) => {
                     </button>
 
                     {revealedAnswers.includes(idx) && (
-                        <div className="ml-11 mt-4 animate-in slide-in-from-top-2">
+                        <div className="ml-11 mt-4 animate-in slide-in-from-top-2 duration-300">
                         <div className="bg-green-50 border-l-4 border-green-500 p-4 mb-3 rounded-r-lg">
                             <p className="text-green-800 font-bold mb-1">Correct Answer: {String.fromCharCode(65 + q.correctAnswerIndex)}</p>
                             <p className="text-green-700 text-sm font-medium">{q.options[q.correctAnswerIndex]}</p>
                         </div>
                         <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                            <h5 className="font-bold text-slate-800 mb-2 text-sm uppercase tracking-wide">Explanation:</h5>
+                            <h5 className="font-bold text-slate-800 mb-2 text-sm uppercase tracking-wide flex items-center gap-1">
+                                Explanation
+                            </h5>
                             <p className="text-slate-600 text-sm leading-relaxed">{q.explanation}</p>
                         </div>
                         </div>

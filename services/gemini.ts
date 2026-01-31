@@ -214,12 +214,14 @@ export const generatePYQs = async (subject: Subject, year: string, examType: Exa
 
     const prompt = `
       Retrieve or generate 15 authentic Previous Year Questions (PYQs) for the subject: ${subject}.
-      Target Exams: ${examContext}.
-      Target Year (Approximate): ${year}.
+      
+      Filters to Apply:
+      - Exam Context: ${examContext}
+      - Specific Year: ${year} (approximate if exact match not found)
       
       Requirements:
       1. Provide exactly 15 questions.
-      2. Include the specific exam name and year in the "examSource" field if possible (e.g., "MPSC Rajyaseva 2019" or "SSC CGL 2020").
+      2. Include the specific exam name and year in the "examSource" field (e.g., "Rajyaseva 2019" or "Group B 2020").
       3. For Marathi subject, ensure questions are in Marathi script (Devanagari).
       4. For English subject, include questions on Grammar, Vocab, and Comprehension.
       
