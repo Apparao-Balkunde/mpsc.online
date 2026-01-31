@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, GraduationCap, History } from 'lucide-react';
+import { BookOpen, GraduationCap, History, Newspaper } from 'lucide-react';
 import { Mode } from '../types';
 
 interface HeaderProps {
@@ -22,7 +22,7 @@ export const Header: React.FC<HeaderProps> = ({ currentMode, onNavigate }) => {
           </div>
         </div>
         
-        <nav className="hidden lg:flex space-x-6">
+        <nav className="hidden xl:flex space-x-6">
           <button 
             onClick={() => onNavigate(Mode.HOME)}
             className={`hover:text-yellow-300 transition ${currentMode === Mode.HOME ? 'text-yellow-300 font-semibold' : ''}`}
@@ -45,11 +45,17 @@ export const Header: React.FC<HeaderProps> = ({ currentMode, onNavigate }) => {
              onClick={() => onNavigate(Mode.PYQ)}
             className={`hover:text-yellow-300 transition flex items-center gap-1 ${currentMode === Mode.PYQ ? 'text-yellow-300 font-semibold' : ''}`}
           >
-            <History size={16} /> Previous Questions
+            <History size={16} /> PYQs
+          </button>
+          <button 
+             onClick={() => onNavigate(Mode.CURRENT_AFFAIRS)}
+            className={`hover:text-yellow-300 transition flex items-center gap-1 ${currentMode === Mode.CURRENT_AFFAIRS ? 'text-yellow-300 font-semibold' : ''}`}
+          >
+            <Newspaper size={16} /> Current Affairs
           </button>
         </nav>
 
-         <div className="lg:hidden">
+         <div className="xl:hidden">
              <button onClick={() => onNavigate(Mode.HOME)} className="p-2"><BookOpen size={24} /></button>
          </div>
       </div>

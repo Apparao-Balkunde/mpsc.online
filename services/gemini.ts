@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
-import { Subject, QuizQuestion, VocabWord } from '../types';
+import { Subject, QuizQuestion, VocabWord, CurrentAffairItem } from '../types';
 
 const apiKey = process.env.API_KEY || '';
 const ai = new GoogleGenAI({ apiKey });
@@ -258,6 +258,52 @@ export const generateVocab = async (subject: Subject): Promise<VocabWord[]> => {
 
   } catch (error) {
     console.error("Error generating vocab:", error);
+    throw error;
+  }
+}
+
+export const generateCurrentAffairs = async (category: string): Promise<CurrentAffairItem[]> => {
+  try {
+    const prompt = `
+      Find 4-5 very recent and important current affairs topics specifically relevant for MPSC (Maharashtra Public Service Commission) exams.
+      Category: ${category}
+      
+      Use Google Search to find the latest information from the last 6-12 months.
+      Focus on government schemes, appointments, awards, sports winners, or major political/economic events in Maharashtra and India.
+      
+      Return strictly as JSON.
+    `;
+
+    const response = await ai.models.generateContent({
+      model: MODEL_PRO,
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        tools: [{ googleSearch: {} }],
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              headline: { type: Type.STRING },
+              description: { type: Type.STRING, description: "Brief summary of the event (50-60 words)" },
+              date: { type: Type.STRING, description: "Approximate date or month of the event" },
+              category: { type: Type.STRING },
+              examRelevance: { type: Type.STRING, description: "Why this is important for MPSC exam? What kind of question can be asked?" }
+            },
+            required: ["headline", "description", "date", "category", "examRelevance"]
+          }
+        }
+      }
+    });
+
+    const jsonText = response.text;
+    if (!jsonText) throw new Error("Empty response from AI");
+    
+    return JSON.parse(jsonText) as CurrentAffairItem[];
+
+  } catch (error) {
+    console.error("Error generating current affairs:", error);
     throw error;
   }
 }

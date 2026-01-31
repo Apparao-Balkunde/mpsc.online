@@ -9,7 +9,8 @@ export enum Mode {
   STUDY = 'STUDY',
   QUIZ = 'QUIZ',
   VOCAB = 'VOCAB',
-  PYQ = 'PYQ'
+  PYQ = 'PYQ',
+  CURRENT_AFFAIRS = 'CURRENT_AFFAIRS'
 }
 
 export interface QuizQuestion {
@@ -30,6 +31,14 @@ export interface VocabWord {
   meaning: string;
   usage: string;
   type: string; // Noun, Verb, etc.
+}
+
+export interface CurrentAffairItem {
+  headline: string;
+  description: string;
+  date: string;
+  category: string;
+  examRelevance: string;
 }
 
 export type LoadingState = 'idle' | 'loading' | 'success' | 'error';

@@ -3,9 +3,10 @@ import { Header } from './components/Header';
 import { StudyMode } from './components/StudyMode';
 import { QuizMode } from './components/QuizMode';
 import { PYQMode } from './components/PYQMode';
+import { CurrentAffairsMode } from './components/CurrentAffairsMode';
 import { Subject, Mode, VocabWord } from './types';
 import { generateVocab } from './services/gemini';
-import { BookOpen, BrainCircuit, Languages, Sparkles, History } from 'lucide-react';
+import { BookOpen, BrainCircuit, Languages, Sparkles, History, Newspaper, ArrowRight as ArrowIcon } from 'lucide-react';
 
 const App: React.FC = () => {
   const [mode, setMode] = useState<Mode>(Mode.HOME);
@@ -96,25 +97,47 @@ const App: React.FC = () => {
         </div>
       </div>
 
-      {/* PYQ Quick Access Section */}
-      <div className="mb-16">
-          <div className="bg-indigo-900 rounded-2xl p-8 text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl relative overflow-hidden">
+      {/* Feature Sections */}
+      <div className="grid md:grid-cols-2 gap-8 mb-16">
+          {/* PYQ Quick Access */}
+          <div className="bg-indigo-900 rounded-2xl p-8 text-white flex flex-col justify-between shadow-2xl relative overflow-hidden h-full">
              <div className="absolute top-0 right-0 opacity-10">
-                <History size={200} />
+                <History size={180} />
              </div>
              <div className="relative z-10">
                 <h3 className="text-2xl font-bold mb-2 flex items-center gap-2">
                     <History className="text-yellow-400" />
-                    Previous Year Questions (2010-2024)
+                    Previous Year Questions
                 </h3>
-                <p className="text-indigo-200 max-w-lg">Study actual questions asked in past exams to understand the changing pattern and focus areas of MPSC.</p>
+                <p className="text-indigo-200 mb-6">Study authentic questions from 2010 to 2024 exams.</p>
              </div>
              <button 
                 onClick={() => setMode(Mode.PYQ)}
-                className="relative z-10 bg-yellow-400 text-indigo-900 px-8 py-4 rounded-xl font-bold hover:bg-yellow-300 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 group"
+                className="relative z-10 bg-yellow-400 text-indigo-900 px-6 py-3 rounded-xl font-bold hover:bg-yellow-300 transition-all shadow-lg flex items-center justify-center gap-2 w-full md:w-auto"
              >
                 Enter PYQ Section
-                <ArrowRight className="group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-5 h-5" />
+             </button>
+          </div>
+
+          {/* Current Affairs Quick Access */}
+           <div className="bg-emerald-900 rounded-2xl p-8 text-white flex flex-col justify-between shadow-2xl relative overflow-hidden h-full">
+             <div className="absolute top-0 right-0 opacity-10">
+                <Newspaper size={180} />
+             </div>
+             <div className="relative z-10">
+                <h3 className="text-2xl font-bold mb-2 flex items-center gap-2">
+                    <Newspaper className="text-emerald-300" />
+                    MPSC Current Affairs
+                </h3>
+                <p className="text-emerald-100 mb-6">Daily updates on Maharashtra, National, and International events relevant for exams.</p>
+             </div>
+             <button 
+                onClick={() => setMode(Mode.CURRENT_AFFAIRS)}
+                className="relative z-10 bg-emerald-400 text-emerald-950 px-6 py-3 rounded-xl font-bold hover:bg-emerald-300 transition-all shadow-lg flex items-center justify-center gap-2 w-full md:w-auto"
+             >
+                Read Latest News
+                <ArrowRight className="w-5 h-5" />
              </button>
           </div>
       </div>
@@ -185,6 +208,11 @@ const App: React.FC = () => {
         )}
         {mode === Mode.PYQ && (
           <PYQMode 
+            onBack={() => setMode(Mode.HOME)} 
+          />
+        )}
+        {mode === Mode.CURRENT_AFFAIRS && (
+          <CurrentAffairsMode 
             onBack={() => setMode(Mode.HOME)} 
           />
         )}
