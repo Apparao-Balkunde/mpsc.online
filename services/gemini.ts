@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
-import { Subject, QuizQuestion, VocabWord, CurrentAffairItem } from '../types';
+import { Subject, QuizQuestion, VocabWord, CurrentAffairItem, ExamType, VocabCategory } from '../types';
 
 const apiKey = process.env.API_KEY || '';
 const ai = new GoogleGenAI({ apiKey });
@@ -134,11 +134,12 @@ export const generateConciseExplanation = async (subject: Subject, topic: string
 export const generateQuiz = async (subject: Subject, topic: string): Promise<QuizQuestion[]> => {
   try {
     const prompt = `
-      Generate 5 multiple choice questions (MCQs) for MPSC exam practice.
+      Generate 20 multiple choice questions (MCQs) for MPSC exam practice.
       Subject: ${subject}
       Topic: ${topic}
       Language: ${subject === Subject.MARATHI ? 'Marathi' : 'English'}
       
+      Ensure questions cover various difficulty levels and aspects of the topic.
       Return the response in strictly valid JSON format.
     `;
 
@@ -176,12 +177,33 @@ export const generateQuiz = async (subject: Subject, topic: string): Promise<Qui
   }
 };
 
-export const generatePYQs = async (subject: Subject, year: string): Promise<QuizQuestion[]> => {
+export const generatePYQs = async (subject: Subject, year: string, examType: ExamType = 'ALL'): Promise<QuizQuestion[]> => {
   try {
+    let examContext = '';
+    
+    if (subject === Subject.MARATHI) {
+      if (examType === 'ALL') examContext = 'MPSC Rajyaseva, Group B (Combined), and Group C exams';
+      else if (examType === 'RAJYASEVA') examContext = 'MPSC Rajyaseva (State Services) exams';
+      else if (examType === 'GROUP_B') examContext = 'MPSC Group B Combined exams (PSI/STI/ASO)';
+      else if (examType === 'GROUP_C') examContext = 'MPSC Group C exams';
+    } else if (subject === Subject.ENGLISH) {
+      // For English, broaden the scope as requested
+      examContext = 'MPSC, SSC CGL, UPSC, CDS, and Banking exams (English Grammar is similar across these). Prioritize MPSC pattern.';
+    } else {
+      examContext = 'MPSC State Services and Combined exams';
+    }
+
     const prompt = `
-      Retrieve or generate 5 authentic Previous Year Questions (PYQs) that appeared in MPSC exams for ${subject} around the year ${year}.
-      Include the question text, multiple choice options, the correct answer, and a detailed explanation of the concept tested.
-      If the subject is Marathi, provide the question and explanation in Marathi.
+      Retrieve or generate 15 authentic Previous Year Questions (PYQs) for the subject: ${subject}.
+      Target Exams: ${examContext}.
+      Target Year (Approximate): ${year}.
+      
+      Requirements:
+      1. Provide exactly 15 questions.
+      2. Include the specific exam name and year in the "examSource" field if possible (e.g., "MPSC Rajyaseva 2019" or "SSC CGL 2020").
+      3. For Marathi subject, ensure questions are in Marathi script (Devanagari).
+      4. For English subject, include questions on Grammar, Vocab, and Comprehension.
+      
       Return strictly as JSON.
     `;
 
@@ -202,7 +224,8 @@ export const generatePYQs = async (subject: Subject, year: string): Promise<Quiz
                 items: { type: Type.STRING }
               },
               correctAnswerIndex: { type: Type.INTEGER },
-              explanation: { type: Type.STRING }
+              explanation: { type: Type.STRING },
+              examSource: { type: Type.STRING, description: "The exam where this question appeared" }
             },
             required: ["question", "options", "correctAnswerIndex", "explanation"]
           }
@@ -220,12 +243,24 @@ export const generatePYQs = async (subject: Subject, year: string): Promise<Quiz
   }
 };
 
-export const generateVocab = async (subject: Subject): Promise<VocabWord[]> => {
+export const generateVocab = async (subject: Subject, category: VocabCategory): Promise<VocabWord[]> => {
   try {
+    let categoryPrompt = '';
+    
+    if (subject === Subject.MARATHI) {
+       if (category === 'IDIOMS') categoryPrompt = 'Mhani ani Vakprachar (म्हणी व वाक्प्रचार)';
+       else if (category === 'SYNONYMS') categoryPrompt = 'Samanarthi Shabd (समानार्थी शब्द)';
+       else if (category === 'ANTONYMS') categoryPrompt = 'Viruddharthi Shabd (विरुद्धार्थी शब्द)';
+       else if (category === 'ONE_WORD') categoryPrompt = 'Shabdasamuhabaddal ek shabd (शब्दसमूहाबद्दल एक शब्द)';
+    } else {
+       if (category === 'IDIOMS') categoryPrompt = 'Idioms and Phrases';
+       else if (category === 'SYNONYMS') categoryPrompt = 'Synonyms';
+       else if (category === 'ANTONYMS') categoryPrompt = 'Antonyms';
+       else if (category === 'ONE_WORD') categoryPrompt = 'One Word Substitution';
+    }
+
     const prompt = `
-      Generate 3 important vocabulary words (idioms, phrases, or difficult words) often asked in MPSC exams for the subject: ${subject}.
-      If subject is Marathi, provide Marathi words/idioms (Mani/Vakprachar).
-      If subject is English, provide English words/idioms.
+      Generate 10 important ${categoryPrompt} for ${subject} subject specifically for MPSC/Competitive Exams.
       
       Output strictly in JSON.
     `;
@@ -240,10 +275,10 @@ export const generateVocab = async (subject: Subject): Promise<VocabWord[]> => {
           items: {
             type: Type.OBJECT,
             properties: {
-              word: { type: Type.STRING },
+              word: { type: Type.STRING, description: "The word, idiom, or phrase" },
               meaning: { type: Type.STRING },
               usage: { type: Type.STRING, description: "Example sentence" },
-              type: { type: Type.STRING, description: "Part of speech or category (e.g. Idiom, Noun)" }
+              type: { type: Type.STRING, description: "Category info" }
             },
             required: ["word", "meaning", "usage", "type"]
           }

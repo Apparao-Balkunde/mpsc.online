@@ -4,33 +4,19 @@ import { StudyMode } from './components/StudyMode';
 import { QuizMode } from './components/QuizMode';
 import { PYQMode } from './components/PYQMode';
 import { CurrentAffairsMode } from './components/CurrentAffairsMode';
-import { Subject, Mode, VocabWord } from './types';
-import { generateVocab } from './services/gemini';
-import { BookOpen, BrainCircuit, Languages, Sparkles, History, Newspaper, ArrowRight as ArrowIcon } from 'lucide-react';
+import { VocabMode } from './components/VocabMode';
+import { Subject, Mode } from './types';
+import { BookOpen, BrainCircuit, Languages, History, Newspaper, ArrowRight as ArrowIcon, BookA } from 'lucide-react';
 
 const App: React.FC = () => {
   const [mode, setMode] = useState<Mode>(Mode.HOME);
   const [selectedSubject, setSelectedSubject] = useState<Subject>(Subject.MARATHI);
-  const [dailyVocab, setDailyVocab] = useState<VocabWord[]>([]);
-  const [vocabLoading, setVocabLoading] = useState(false);
 
   // Simplified navigation handler
   const navigate = (newMode: Mode, subject?: Subject) => {
     if (subject) setSelectedSubject(subject);
     setMode(newMode);
   };
-
-  const loadDailyVocab = async (subject: Subject) => {
-    setVocabLoading(true);
-    try {
-        const words = await generateVocab(subject);
-        setDailyVocab(words);
-    } catch (e) {
-        console.error("Failed to load vocab");
-    } finally {
-        setVocabLoading(false);
-    }
-  }
 
   // Render Home Dashboard
   const renderHome = () => (
@@ -41,7 +27,7 @@ const App: React.FC = () => {
         </h1>
         <p className="text-lg text-slate-600 max-w-2xl mx-auto">
           Comprehensive AI-powered preparation for Marathi and English papers. 
-          Generate notes, practice quizzes, and review previous year questions.
+          Generate notes, practice quizzes, and review previous year questions for Rajyaseva, Group B, and Group C.
         </p>
       </div>
 
@@ -78,7 +64,7 @@ const App: React.FC = () => {
              <Languages className="text-white/80 w-12 h-12" />
            </div>
            <div className="p-6">
-              <p className="text-slate-600 mb-6">Master Grammar, Idioms, Phrases and Comprehension for MPSC.</p>
+              <p className="text-slate-600 mb-6">Master Grammar for MPSC, UPSC, SSC & CDS exams.</p>
                <div className="grid grid-cols-2 gap-4">
                   <button 
                      onClick={() => navigate(Mode.STUDY, Subject.ENGLISH)}
@@ -98,77 +84,67 @@ const App: React.FC = () => {
       </div>
 
       {/* Feature Sections */}
-      <div className="grid md:grid-cols-2 gap-8 mb-16">
+      <div className="grid md:grid-cols-3 gap-6 mb-16">
           {/* PYQ Quick Access */}
-          <div className="bg-indigo-900 rounded-2xl p-8 text-white flex flex-col justify-between shadow-2xl relative overflow-hidden h-full">
+          <div className="bg-indigo-900 rounded-2xl p-6 text-white flex flex-col justify-between shadow-xl relative overflow-hidden">
              <div className="absolute top-0 right-0 opacity-10">
-                <History size={180} />
+                <History size={140} />
              </div>
              <div className="relative z-10">
-                <h3 className="text-2xl font-bold mb-2 flex items-center gap-2">
+                <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
                     <History className="text-yellow-400" />
-                    Previous Year Questions
+                    PYQs
                 </h3>
-                <p className="text-indigo-200 mb-6">Study authentic questions from 2010 to 2024 exams.</p>
+                <p className="text-indigo-200 text-sm mb-6">Authentic questions from Rajyaseva, Group B, Group C (2010-2024).</p>
              </div>
              <button 
                 onClick={() => setMode(Mode.PYQ)}
-                className="relative z-10 bg-yellow-400 text-indigo-900 px-6 py-3 rounded-xl font-bold hover:bg-yellow-300 transition-all shadow-lg flex items-center justify-center gap-2 w-full md:w-auto"
+                className="relative z-10 bg-yellow-400 text-indigo-900 px-4 py-2 rounded-lg font-bold hover:bg-yellow-300 transition-all shadow-lg flex items-center justify-center gap-2 w-full text-sm"
              >
-                Enter PYQ Section
-                <ArrowRight className="w-5 h-5" />
+                Solve PYQs <ArrowRight className="w-4 h-4" />
+             </button>
+          </div>
+
+          {/* Vocabulary Quick Access */}
+          <div className="bg-purple-900 rounded-2xl p-6 text-white flex flex-col justify-between shadow-xl relative overflow-hidden">
+             <div className="absolute top-0 right-0 opacity-10">
+                <BookA size={140} />
+             </div>
+             <div className="relative z-10">
+                <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
+                    <BookA className="text-purple-300" />
+                    Vocabulary
+                </h3>
+                <p className="text-purple-200 text-sm mb-6">Idioms, Phrases, Synonyms & Antonyms for Marathi & English.</p>
+             </div>
+             <button 
+                onClick={() => setMode(Mode.VOCAB)}
+                className="relative z-10 bg-purple-400 text-purple-950 px-4 py-2 rounded-lg font-bold hover:bg-purple-300 transition-all shadow-lg flex items-center justify-center gap-2 w-full text-sm"
+             >
+                Learn Words <ArrowRight className="w-4 h-4" />
              </button>
           </div>
 
           {/* Current Affairs Quick Access */}
-           <div className="bg-emerald-900 rounded-2xl p-8 text-white flex flex-col justify-between shadow-2xl relative overflow-hidden h-full">
+           <div className="bg-emerald-900 rounded-2xl p-6 text-white flex flex-col justify-between shadow-xl relative overflow-hidden">
              <div className="absolute top-0 right-0 opacity-10">
-                <Newspaper size={180} />
+                <Newspaper size={140} />
              </div>
              <div className="relative z-10">
-                <h3 className="text-2xl font-bold mb-2 flex items-center gap-2">
+                <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
                     <Newspaper className="text-emerald-300" />
-                    MPSC Current Affairs
+                    Current Affairs
                 </h3>
-                <p className="text-emerald-100 mb-6">Daily updates on Maharashtra, National, and International events relevant for exams.</p>
+                <p className="text-emerald-100 text-sm mb-6">Daily updates on Maharashtra & India events for exams.</p>
              </div>
              <button 
                 onClick={() => setMode(Mode.CURRENT_AFFAIRS)}
-                className="relative z-10 bg-emerald-400 text-emerald-950 px-6 py-3 rounded-xl font-bold hover:bg-emerald-300 transition-all shadow-lg flex items-center justify-center gap-2 w-full md:w-auto"
+                className="relative z-10 bg-emerald-400 text-emerald-950 px-4 py-2 rounded-lg font-bold hover:bg-emerald-300 transition-all shadow-lg flex items-center justify-center gap-2 w-full text-sm"
              >
-                Read Latest News
-                <ArrowRight className="w-5 h-5" />
+                Read News <ArrowRight className="w-4 h-4" />
              </button>
           </div>
       </div>
-
-        {/* Vocab Section Display */}
-        {vocabLoading && (
-            <div className="text-center py-4">
-                <span className="inline-block animate-pulse text-indigo-600 font-medium">✨ Finding important words for you...</span>
-            </div>
-        )}
-
-        {dailyVocab.length > 0 && (
-            <div className="bg-white rounded-xl shadow-lg border border-yellow-200 p-6 mb-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-xl font-bold text-slate-800">✨ Quick Study Words</h3>
-                    <button onClick={() => setDailyVocab([])} className="text-sm text-slate-400 hover:text-red-500">Clear</button>
-                </div>
-                <div className="grid md:grid-cols-3 gap-4">
-                    {dailyVocab.map((item, idx) => (
-                        <div key={idx} className="bg-yellow-50 p-4 rounded-lg border border-yellow-100">
-                            <div className="flex justify-between items-start mb-2">
-                                <span className="text-lg font-bold text-slate-900">{item.word}</span>
-                                <span className="text-xs font-mono bg-white px-2 py-0.5 rounded text-slate-500 border">{item.type}</span>
-                            </div>
-                            <p className="text-slate-700 mb-2 font-medium">{item.meaning}</p>
-                            <p className="text-slate-500 text-sm italic">"{item.usage}"</p>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        )}
 
       {/* Quick Tips Section */}
       <div className="grid md:grid-cols-3 gap-6">
@@ -208,6 +184,11 @@ const App: React.FC = () => {
         )}
         {mode === Mode.PYQ && (
           <PYQMode 
+            onBack={() => setMode(Mode.HOME)} 
+          />
+        )}
+        {mode === Mode.VOCAB && (
+          <VocabMode 
             onBack={() => setMode(Mode.HOME)} 
           />
         )}

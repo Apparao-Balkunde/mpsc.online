@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Subject, LoadingState, QuizQuestion } from '../types';
+import { Subject, LoadingState, QuizQuestion, ExamType } from '../types';
 import { generatePYQs } from '../services/gemini';
-import { History, Search, Loader2, ArrowLeft, ChevronRight, Eye, CheckCircle2, AlertCircle } from 'lucide-react';
+import { History, Search, Loader2, ArrowLeft, Eye, CheckCircle2, AlertCircle, Filter } from 'lucide-react';
 
 interface PYQModeProps {
   onBack: () => void;
@@ -12,6 +12,7 @@ const YEARS = Array.from({ length: 15 }, (_, i) => (2024 - i).toString());
 export const PYQMode: React.FC<PYQModeProps> = ({ onBack }) => {
   const [selectedYear, setSelectedYear] = useState<string>('2023');
   const [subject, setSubject] = useState<Subject>(Subject.MARATHI);
+  const [examType, setExamType] = useState<ExamType>('ALL');
   const [status, setStatus] = useState<LoadingState>('idle');
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [revealedAnswers, setRevealedAnswers] = useState<number[]>([]);
@@ -21,7 +22,7 @@ export const PYQMode: React.FC<PYQModeProps> = ({ onBack }) => {
     setQuestions([]);
     setRevealedAnswers([]);
     try {
-      const data = await generatePYQs(subject, selectedYear);
+      const data = await generatePYQs(subject, selectedYear, examType);
       setQuestions(data);
       setStatus('success');
     } catch (e) {
@@ -38,7 +39,7 @@ export const PYQMode: React.FC<PYQModeProps> = ({ onBack }) => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-6">
+    <div className="max-w-5xl mx-auto p-4 md:p-6 space-y-6">
       <button onClick={onBack} className="flex items-center text-slate-500 hover:text-indigo-600 mb-4 transition-colors">
         <ArrowLeft size={16} className="mr-1" /> Back to Dashboard
       </button>
@@ -52,20 +53,9 @@ export const PYQMode: React.FC<PYQModeProps> = ({ onBack }) => {
           <p className="text-slate-600">Review authentic MPSC questions from 2010 to current exams.</p>
         </div>
 
-        <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="p-6 grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Select Year</label>
-            <select 
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(e.target.value)}
-              className="w-full rounded-lg border-slate-300 border p-3 focus:ring-2 focus:ring-indigo-500 shadow-sm"
-            >
-              {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Select Subject</label>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Subject</label>
             <select 
               value={subject}
               onChange={(e) => setSubject(e.target.value as Subject)}
@@ -77,6 +67,37 @@ export const PYQMode: React.FC<PYQModeProps> = ({ onBack }) => {
             </select>
           </div>
 
+          <div>
+             <label className="block text-sm font-medium text-slate-700 mb-2">Exam Filter</label>
+             <div className="relative">
+                <Filter size={16} className="absolute left-3 top-3.5 text-slate-400" />
+                <select 
+                  value={examType}
+                  onChange={(e) => setExamType(e.target.value as ExamType)}
+                  className="w-full pl-9 rounded-lg border-slate-300 border p-3 focus:ring-2 focus:ring-indigo-500 shadow-sm disabled:bg-slate-100 disabled:text-slate-400"
+                  disabled={subject === Subject.ENGLISH} // English covers all exams automatically
+                  title={subject === Subject.ENGLISH ? "English covers MPSC, SSC, UPSC & CDS" : "Select MPSC Exam Type"}
+                >
+                  <option value="ALL">All Exams</option>
+                  <option value="RAJYASEVA">Rajyaseva (State Services)</option>
+                  <option value="GROUP_B">Group B (PSI/STI/ASO)</option>
+                  <option value="GROUP_C">Group C (Clerk/Tax Asst)</option>
+                </select>
+             </div>
+             {subject === Subject.ENGLISH && <p className="text-xs text-slate-500 mt-1">Includes SSC, UPSC, CDS & MPSC</p>}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Year</label>
+            <select 
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
+              className="w-full rounded-lg border-slate-300 border p-3 focus:ring-2 focus:ring-indigo-500 shadow-sm"
+            >
+              {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+            </select>
+          </div>
+
           <div className="flex items-end">
             <button 
               onClick={fetchQuestions}
@@ -84,7 +105,7 @@ export const PYQMode: React.FC<PYQModeProps> = ({ onBack }) => {
               className="w-full bg-indigo-600 text-white p-3 rounded-lg hover:bg-indigo-700 transition font-semibold shadow flex items-center justify-center gap-2"
             >
               {status === 'loading' ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
-              Show Questions
+              Fetch Questions
             </button>
           </div>
         </div>
@@ -93,7 +114,8 @@ export const PYQMode: React.FC<PYQModeProps> = ({ onBack }) => {
       {status === 'loading' && (
         <div className="text-center py-20">
           <Loader2 className="animate-spin h-12 w-12 text-indigo-600 mx-auto mb-4" />
-          <p className="text-slate-600 font-medium">Scanning MPSC database for {selectedYear} {subject} questions...</p>
+          <p className="text-slate-600 font-medium">Scanning archives for {subject} questions...</p>
+          <p className="text-slate-400 text-sm mt-1">Targeting {subject === Subject.ENGLISH ? 'SSC, UPSC, MPSC' : examType} sources</p>
         </div>
       )}
 
@@ -102,31 +124,45 @@ export const PYQMode: React.FC<PYQModeProps> = ({ onBack }) => {
           <AlertCircle size={32} />
           <div>
             <h4 className="font-bold">Retrieval Failed</h4>
-            <p className="text-sm">We couldn't fetch questions for this specific year. Please try a different year or subject.</p>
+            <p className="text-sm">We couldn't fetch questions for this selection. Please try a different year or subject.</p>
           </div>
         </div>
       )}
 
       {status === 'success' && questions.length > 0 && (
         <div className="space-y-6">
-          <div className="flex items-center gap-2 text-indigo-800 font-semibold px-2">
-            <CheckCircle2 size={18} />
-            Found {questions.length} questions for {selectedYear}
+          <div className="flex items-center justify-between text-indigo-800 font-semibold px-2">
+            <div className="flex items-center gap-2">
+                 <CheckCircle2 size={18} />
+                Found {questions.length} questions
+            </div>
+            <span className="text-sm bg-indigo-100 px-3 py-1 rounded-full text-indigo-700">
+                {subject} • {selectedYear}
+            </span>
           </div>
           
           {questions.map((q, idx) => (
             <div key={idx} className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition-shadow">
               <div className="p-6">
-                <div className="flex items-start gap-3 mb-4">
-                  <span className="bg-slate-100 text-slate-600 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shrink-0">
-                    {idx + 1}
-                  </span>
-                  <p className="text-lg text-slate-900 font-medium leading-relaxed">{q.question}</p>
+                <div className="flex items-start gap-3 mb-2">
+                   <div className="flex flex-col gap-2 shrink-0 items-center">
+                       <span className="bg-slate-100 text-slate-600 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">
+                            {idx + 1}
+                       </span>
+                   </div>
+                  <div className="flex-1">
+                      {q.examSource && (
+                          <span className="inline-block text-[10px] uppercase font-bold tracking-wider bg-slate-100 text-slate-500 px-2 py-0.5 rounded mb-2">
+                              {q.examSource}
+                          </span>
+                      )}
+                      <p className="text-lg text-slate-900 font-medium leading-relaxed">{q.question}</p>
+                  </div>
                 </div>
 
                 <div className="ml-11 grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
                   {q.options.map((opt, oIdx) => (
-                    <div key={oIdx} className="p-3 border border-slate-200 rounded-lg text-slate-700 text-sm bg-slate-50/50">
+                    <div key={oIdx} className="p-3 border border-slate-200 rounded-lg text-slate-700 text-sm bg-slate-50/50 hover:bg-white hover:border-indigo-200 transition-colors">
                       <span className="font-bold mr-2 text-slate-400">({String.fromCharCode(65 + oIdx)})</span>
                       {opt}
                     </div>
@@ -147,9 +183,9 @@ export const PYQMode: React.FC<PYQModeProps> = ({ onBack }) => {
 
                 {revealedAnswers.includes(idx) && (
                   <div className="ml-11 mt-4 animate-in slide-in-from-top-2">
-                    <div className="bg-green-50 border-l-4 border-green-500 p-4 mb-3">
+                    <div className="bg-green-50 border-l-4 border-green-500 p-4 mb-3 rounded-r-lg">
                       <p className="text-green-800 font-bold mb-1">Correct Answer: {String.fromCharCode(65 + q.correctAnswerIndex)}</p>
-                      <p className="text-green-700 text-sm">{q.options[q.correctAnswerIndex]}</p>
+                      <p className="text-green-700 text-sm font-medium">{q.options[q.correctAnswerIndex]}</p>
                     </div>
                     <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
                       <h5 className="font-bold text-slate-800 mb-2 text-sm uppercase tracking-wide">Explanation:</h5>
@@ -165,7 +201,7 @@ export const PYQMode: React.FC<PYQModeProps> = ({ onBack }) => {
 
       {status === 'success' && questions.length === 0 && (
          <div className="text-center py-20 bg-white rounded-xl border border-dashed border-slate-300">
-            <p className="text-slate-500">No specific questions found for this selection. Try another year.</p>
+            <p className="text-slate-500">No specific questions found for this selection. Try another year or exam type.</p>
          </div>
       )}
     </div>

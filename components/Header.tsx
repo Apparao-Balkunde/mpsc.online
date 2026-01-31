@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, GraduationCap, History, Newspaper } from 'lucide-react';
+import { BookOpen, GraduationCap, History, Newspaper, BookA } from 'lucide-react';
 import { Mode } from '../types';
 
 interface HeaderProps {
@@ -22,34 +22,40 @@ export const Header: React.FC<HeaderProps> = ({ currentMode, onNavigate }) => {
           </div>
         </div>
         
-        <nav className="hidden xl:flex space-x-6">
+        <nav className="hidden xl:flex space-x-6 text-sm font-medium">
           <button 
             onClick={() => onNavigate(Mode.HOME)}
-            className={`hover:text-yellow-300 transition ${currentMode === Mode.HOME ? 'text-yellow-300 font-semibold' : ''}`}
+            className={`hover:text-yellow-300 transition ${currentMode === Mode.HOME ? 'text-yellow-300 font-bold' : 'text-indigo-100'}`}
           >
             Dashboard
           </button>
           <button 
              onClick={() => onNavigate(Mode.STUDY)}
-            className={`hover:text-yellow-300 transition ${currentMode === Mode.STUDY ? 'text-yellow-300 font-semibold' : ''}`}
+            className={`hover:text-yellow-300 transition ${currentMode === Mode.STUDY ? 'text-yellow-300 font-bold' : 'text-indigo-100'}`}
           >
             Study Notes
           </button>
           <button 
-             onClick={() => onNavigate(Mode.QUIZ)}
-            className={`hover:text-yellow-300 transition ${currentMode === Mode.QUIZ ? 'text-yellow-300 font-semibold' : ''}`}
+             onClick={() => onNavigate(Mode.VOCAB)}
+            className={`hover:text-yellow-300 transition flex items-center gap-1 ${currentMode === Mode.VOCAB ? 'text-yellow-300 font-bold' : 'text-indigo-100'}`}
           >
-            Quiz Practice
+            <BookA size={16} /> Vocab
+          </button>
+          <button 
+             onClick={() => onNavigate(Mode.QUIZ)}
+            className={`hover:text-yellow-300 transition ${currentMode === Mode.QUIZ ? 'text-yellow-300 font-bold' : 'text-indigo-100'}`}
+          >
+            Quiz
           </button>
           <button 
              onClick={() => onNavigate(Mode.PYQ)}
-            className={`hover:text-yellow-300 transition flex items-center gap-1 ${currentMode === Mode.PYQ ? 'text-yellow-300 font-semibold' : ''}`}
+            className={`hover:text-yellow-300 transition flex items-center gap-1 ${currentMode === Mode.PYQ ? 'text-yellow-300 font-bold' : 'text-indigo-100'}`}
           >
             <History size={16} /> PYQs
           </button>
           <button 
              onClick={() => onNavigate(Mode.CURRENT_AFFAIRS)}
-            className={`hover:text-yellow-300 transition flex items-center gap-1 ${currentMode === Mode.CURRENT_AFFAIRS ? 'text-yellow-300 font-semibold' : ''}`}
+            className={`hover:text-yellow-300 transition flex items-center gap-1 ${currentMode === Mode.CURRENT_AFFAIRS ? 'text-yellow-300 font-bold' : 'text-indigo-100'}`}
           >
             <Newspaper size={16} /> Current Affairs
           </button>
