@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Subject, VocabWord, VocabCategory, LoadingState } from '../types';
 import { generateVocab, playTextToSpeech } from '../services/gemini';
-import { BookA, Loader2, ArrowLeft, RotateCw, Volume2, GraduationCap, Quote, ArrowRightLeft, Spline, WholeWord } from 'lucide-react';
+import { BookA, Loader2, ArrowLeft, RotateCw, Volume2, GraduationCap, Quote, ArrowRightLeft, Spline, WholeWord, Layers, ArrowRight, ArrowLeft as ArrowLeftIcon, Repeat } from 'lucide-react';
 
 interface VocabModeProps {
   onBack: () => void;
@@ -14,6 +14,11 @@ export const VocabMode: React.FC<VocabModeProps> = ({ onBack }) => {
   const [status, setStatus] = useState<LoadingState>('idle');
   const [playingIndex, setPlayingIndex] = useState<number | null>(null);
 
+  // Practice Mode State
+  const [viewMode, setViewMode] = useState<'LIST' | 'FLASHCARDS'>('LIST');
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isFlipped, setIsFlipped] = useState(false);
+
   useEffect(() => {
     fetchVocab();
   }, [subject, category]);
@@ -21,6 +26,7 @@ export const VocabMode: React.FC<VocabModeProps> = ({ onBack }) => {
   const fetchVocab = async () => {
     setStatus('loading');
     setWords([]);
+    setViewMode('LIST');
     try {
       const data = await generateVocab(subject, category);
       setWords(data);
@@ -42,6 +48,35 @@ export const VocabMode: React.FC<VocabModeProps> = ({ onBack }) => {
         setPlayingIndex(null);
     }
   }
+
+  const startFlashcards = () => {
+    setCurrentIndex(0);
+    setIsFlipped(false);
+    setViewMode('FLASHCARDS');
+  };
+
+  const nextCard = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (currentIndex < words.length - 1) {
+        setCurrentIndex(c => c + 1);
+        setIsFlipped(false);
+    }
+  };
+
+  const prevCard = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (currentIndex > 0) {
+        setCurrentIndex(c => c - 1);
+        setIsFlipped(false);
+    }
+  };
+  
+  const shuffleCards = () => {
+    const shuffled = [...words].sort(() => Math.random() - 0.5);
+    setWords(shuffled);
+    setCurrentIndex(0);
+    setIsFlipped(false);
+  };
 
   const getCategoryConfig = (cat: VocabCategory, sub: Subject) => {
       const isMarathi = sub === Subject.MARATHI;
@@ -152,14 +187,34 @@ export const VocabMode: React.FC<VocabModeProps> = ({ onBack }) => {
 
         {/* Main Card Area */}
         <div className="flex-1 min-w-0">
-             <div className="mb-6 flex justify-between items-center">
+             <div className="mb-6 flex justify-between items-center flex-wrap gap-4">
                  <div>
                     <h1 className="text-2xl font-bold text-slate-900">{getCategoryConfig(category, subject).label}</h1>
                     <p className="text-slate-500 text-sm">Reviewing {subject} vocabulary</p>
                  </div>
-                 <span className="text-sm bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full font-medium border border-indigo-100">
-                    {words.length} Items Loaded
-                 </span>
+                 
+                 {status === 'success' && words.length > 0 && (
+                     <div className="flex gap-2">
+                        {viewMode === 'LIST' ? (
+                            <button 
+                                onClick={startFlashcards}
+                                className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-indigo-700 transition-colors shadow-sm text-sm"
+                            >
+                                <Layers size={16} /> Flashcards
+                            </button>
+                        ) : (
+                            <button 
+                                onClick={() => setViewMode('LIST')}
+                                className="flex items-center gap-2 bg-slate-200 text-slate-700 px-4 py-2 rounded-lg font-bold hover:bg-slate-300 transition-colors text-sm"
+                            >
+                                <BookA size={16} /> View List
+                            </button>
+                        )}
+                        <span className="hidden sm:inline-block text-sm bg-indigo-50 text-indigo-700 px-3 py-2 rounded-lg font-medium border border-indigo-100">
+                            {words.length} Items
+                        </span>
+                     </div>
+                 )}
              </div>
 
              {status === 'loading' && (
@@ -177,7 +232,107 @@ export const VocabMode: React.FC<VocabModeProps> = ({ onBack }) => {
                 </div>
              )}
 
-             {status === 'success' && (
+             {/* FLASHCARD MODE */}
+             {status === 'success' && viewMode === 'FLASHCARDS' && (
+                 <div className="max-w-xl mx-auto py-4 animate-in fade-in zoom-in-95 duration-300">
+                     <div 
+                        className="relative h-96 cursor-pointer group perspective-1000" 
+                        onClick={() => setIsFlipped(!isFlipped)}
+                        style={{ perspective: '1000px' }}
+                     >
+                         <div 
+                            className="relative w-full h-full transition-all duration-500 shadow-xl rounded-2xl" 
+                            style={{ 
+                                transformStyle: 'preserve-3d', 
+                                transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)' 
+                            }}
+                         >
+                             {/* Front of Card */}
+                             <div 
+                                className="absolute inset-0 w-full h-full bg-white rounded-2xl border-2 border-indigo-100 p-8 flex flex-col items-center justify-center" 
+                                style={{ backfaceVisibility: 'hidden' }}
+                             >
+                                 <span className="absolute top-6 right-6 text-xs font-bold text-indigo-400 px-2 py-1 rounded bg-indigo-50 border border-indigo-100">
+                                     {currentIndex + 1} / {words.length}
+                                 </span>
+                                 <span className="text-xs font-bold text-white bg-indigo-500 px-3 py-1 rounded-full uppercase tracking-widest mb-6 shadow-sm">
+                                     {words[currentIndex].type.split('(')[0]} {/* Simplify type display */}
+                                 </span>
+                                 
+                                 <h2 className="text-3xl md:text-4xl font-black text-slate-800 text-center mb-8 leading-tight">
+                                     {words[currentIndex].word}
+                                 </h2>
+                                 
+                                 <div className="flex gap-3">
+                                    <button 
+                                        onClick={(e) => { e.stopPropagation(); handlePlayAudio(words[currentIndex].word, currentIndex); }}
+                                        disabled={playingIndex !== null}
+                                        className="p-3 rounded-full bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors"
+                                        title="Listen"
+                                    >
+                                        {playingIndex === currentIndex ? <Loader2 size={24} className="animate-spin" /> : <Volume2 size={24} />}
+                                    </button>
+                                 </div>
+                                 
+                                 <p className="text-slate-400 text-xs font-medium mt-auto flex items-center gap-1">
+                                     Tap card to reveal answer <RotateCw size={12}/>
+                                 </p>
+                             </div>
+
+                             {/* Back of Card */}
+                             <div 
+                                className="absolute inset-0 w-full h-full bg-indigo-600 text-white rounded-2xl p-8 flex flex-col items-center justify-center" 
+                                style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+                             >
+                                 <div className="text-center mb-6 w-full">
+                                     <h3 className="text-indigo-200 mb-2 uppercase text-[10px] font-bold tracking-widest border-b border-indigo-500/50 pb-2 inline-block">Meaning</h3>
+                                     <p className="text-xl md:text-2xl font-bold leading-relaxed">{words[currentIndex].meaning}</p>
+                                 </div>
+                                 
+                                 <div className="text-center bg-indigo-800/50 p-4 rounded-xl w-full border border-indigo-500/30">
+                                     <h3 className="text-indigo-300 mb-2 uppercase text-[10px] font-bold tracking-widest flex items-center justify-center gap-2">
+                                         <Quote size={10} /> Example Usage
+                                     </h3>
+                                     <p className="text-base italic text-indigo-100 font-serif">"{words[currentIndex].usage}"</p>
+                                 </div>
+                                 
+                                 <p className="text-indigo-400 text-xs font-medium mt-auto">Tap to flip back</p>
+                             </div>
+                         </div>
+                     </div>
+
+                     {/* Controls */}
+                     <div className="flex justify-between items-center mt-8 px-4 bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                         <button 
+                             onClick={prevCard}
+                             disabled={currentIndex === 0}
+                             className="p-3 rounded-full bg-slate-100 text-slate-600 hover:bg-indigo-100 hover:text-indigo-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                         >
+                             <ArrowLeftIcon size={20} />
+                         </button>
+
+                         <div className="flex flex-col items-center gap-1">
+                             <button
+                                onClick={(e) => { e.stopPropagation(); shuffleCards(); }}
+                                className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-indigo-600 transition-colors bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200 hover:border-indigo-200"
+                             >
+                                 <Repeat size={12} /> Shuffle Deck
+                             </button>
+                         </div>
+
+                         <button 
+                             onClick={nextCard}
+                             disabled={currentIndex === words.length - 1}
+                             className="p-3 rounded-full bg-indigo-600 text-white shadow-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-105 active:scale-95"
+                         >
+                             <ArrowRight size={20} />
+                         </button>
+                     </div>
+                 </div>
+             )}
+
+             {/* LIST MODE (Default) */}
+             {status === 'success' && viewMode === 'LIST' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {words.map((item, idx) => (
                         <div key={idx} className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all border border-slate-200 overflow-hidden flex flex-col group">

@@ -228,10 +228,11 @@ export const generateQuiz = async (subject: Subject, topic: string, difficulty: 
          - MEDIUM: Application of rules, exception identification, standard MPSC Prelims level.
          - HARD: Complex sentences, multi-statement questions (A, B, C correct), deep conceptual analysis, MPSC Mains level.
       2. Ensure questions cover various aspects of the topic.
-      3. **Crucial**: The 'explanation' field MUST be detailed and educational (approx 30-50 words). 
+      3. **Crucial**: The 'explanation' field MUST be extremely detailed and educational (minimum 100 words).
          - If Marathi Grammar: Explain the rule (नियम) clearly in Marathi.
          - If English Grammar: Explain the rule in English.
-         - Explain WHY the answer is correct and briefly why others are incorrect if relevant.
+         - Analyze ALL options: Explain WHY the correct answer is correct AND WHY the incorrect options are wrong.
+         - Break down the logic step-by-step to function as a mini-lesson.
       
       Return the response in strictly valid JSON format.
     `;
@@ -252,7 +253,7 @@ export const generateQuiz = async (subject: Subject, topic: string, difficulty: 
                 items: { type: Type.STRING }
               },
               correctAnswerIndex: { type: Type.INTEGER, description: "0-based index of the correct option" },
-              explanation: { type: Type.STRING, description: "Detailed, educational explanation (30-50 words) of the answer and concept." }
+              explanation: { type: Type.STRING, description: "Comprehensive, educational explanation (min 100 words) analyzing the concept and all options." }
             },
             required: ["question", "options", "correctAnswerIndex", "explanation"]
           }
@@ -304,7 +305,9 @@ export const generatePYQs = async (subject: Subject, year: string, examType: Exa
       2. Include the specific exam name and year in the "examSource" field (e.g., "Rajyaseva 2019" or "Group B 2020").
       3. For Marathi subject, ensure questions are in Marathi script (Devanagari).
       4. For English subject, include questions on Grammar, Vocab, and Comprehension.
-      5. **IMPORTANT**: Provide a DETAILED explanation for each question, explaining the concept or grammar rule involved clearly.
+      5. **IMPORTANT**: Provide a VERY DETAILED explanation (minimum 100 words) for each question.
+         - Explain the underlying concept or grammar rule in depth.
+         - Analyze why the correct answer is correct and why other options are wrong.
       
       Return strictly as JSON.
     `;
@@ -327,7 +330,7 @@ export const generatePYQs = async (subject: Subject, year: string, examType: Exa
                 items: { type: Type.STRING }
               },
               correctAnswerIndex: { type: Type.INTEGER },
-              explanation: { type: Type.STRING, description: "Detailed explanation of why the answer is correct." },
+              explanation: { type: Type.STRING, description: "Detailed explanation (min 100 words) of the concept and option analysis." },
               examSource: { type: Type.STRING, description: "The exam where this question appeared" }
             },
             required: ["question", "options", "correctAnswerIndex", "explanation"]
@@ -349,7 +352,8 @@ export const generatePYQs = async (subject: Subject, year: string, examType: Exa
 };
 
 export const generateVocab = async (subject: Subject, category: VocabCategory): Promise<VocabWord[]> => {
-  const cacheKey = getCacheKey('VOCAB', subject, category);
+  // Use a new cache key suffix to ensure users get the new "PYQ + Related" format
+  const cacheKey = getCacheKey('VOCAB_PYQ_REL', subject, category);
   const cached = getFromDataCenter<VocabWord[]>(cacheKey);
   if (cached) return cached;
 
@@ -369,7 +373,18 @@ export const generateVocab = async (subject: Subject, category: VocabCategory): 
     }
 
     const prompt = `
-      Generate 100 important ${categoryPrompt} for ${subject} subject specifically for MPSC/Competitive Exams.
+      Generate a comprehensive list (approx 60 items) of ${categoryPrompt} for ${subject} subject, strictly designed for MPSC/Competitive Exams.
+      
+      STRATEGY - "Previous & Related" (PYQ & Linked Concepts):
+      1. **PYQ Core:** Prioritize words/idioms that have appeared in **Previous Year MPSC Question Papers** (Rajyaseva, Combined B & C) from 2012-2024.
+      2. **Related Concepts:** For every PYQ word, include 1 or 2 "related" words (synonyms/antonyms/confusing pairs) that are likely to be asked next.
+      3. **Ease of Learning:** This structure helps aspirants "guess" or associate new words with known PYQ words.
+      
+      FORMATTING INSTRUCTIONS:
+      - **Type Field:** In the 'type' field, explicitly mention if it's a "PYQ [Year]" or "Related". 
+        Example: "Noun (PYQ 2018)", "Verb (Related)", "Idiom (Rajyaseva PYQ)".
+      - **Meaning:** Precise and exam-oriented.
+      - **Usage:** Simple sentence to show context.
       
       Output strictly in JSON.
     `;
@@ -387,7 +402,7 @@ export const generateVocab = async (subject: Subject, category: VocabCategory): 
               word: { type: Type.STRING, description: "The word, idiom, or phrase" },
               meaning: { type: Type.STRING },
               usage: { type: Type.STRING, description: "Example sentence" },
-              type: { type: Type.STRING, description: "Category info" }
+              type: { type: Type.STRING, description: "e.g., 'Noun (PYQ 2019)' or 'Adjective (Related)'" }
             },
             required: ["word", "meaning", "usage", "type"]
           }
