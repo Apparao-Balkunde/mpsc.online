@@ -218,7 +218,13 @@ export const generateQuiz = async (subject: Subject, topic: string): Promise<Qui
       Topic: ${topic}
       Language: ${subject === Subject.MARATHI ? 'Marathi' : 'English'}
       
-      Ensure questions cover various difficulty levels and aspects of the topic.
+      Requirements:
+      1. Ensure questions cover various difficulty levels and aspects of the topic.
+      2. **Crucial**: The 'explanation' field MUST be detailed and educational (approx 30-50 words). 
+         - If Marathi Grammar: Explain the rule (नियम) clearly in Marathi.
+         - If English Grammar: Explain the rule in English.
+         - Explain WHY the answer is correct and briefly why others are incorrect if relevant.
+      
       Return the response in strictly valid JSON format.
     `;
 
@@ -238,7 +244,7 @@ export const generateQuiz = async (subject: Subject, topic: string): Promise<Qui
                 items: { type: Type.STRING }
               },
               correctAnswerIndex: { type: Type.INTEGER, description: "0-based index of the correct option" },
-              explanation: { type: Type.STRING, description: "Short explanation of why the answer is correct" }
+              explanation: { type: Type.STRING, description: "Detailed, educational explanation (30-50 words) of the answer and concept." }
             },
             required: ["question", "options", "correctAnswerIndex", "explanation"]
           }
@@ -290,6 +296,7 @@ export const generatePYQs = async (subject: Subject, year: string, examType: Exa
       2. Include the specific exam name and year in the "examSource" field (e.g., "Rajyaseva 2019" or "Group B 2020").
       3. For Marathi subject, ensure questions are in Marathi script (Devanagari).
       4. For English subject, include questions on Grammar, Vocab, and Comprehension.
+      5. **IMPORTANT**: Provide a DETAILED explanation for each question, explaining the concept or grammar rule involved clearly.
       
       Return strictly as JSON.
     `;
@@ -312,7 +319,7 @@ export const generatePYQs = async (subject: Subject, year: string, examType: Exa
                 items: { type: Type.STRING }
               },
               correctAnswerIndex: { type: Type.INTEGER },
-              explanation: { type: Type.STRING },
+              explanation: { type: Type.STRING, description: "Detailed explanation of why the answer is correct." },
               examSource: { type: Type.STRING, description: "The exam where this question appeared" }
             },
             required: ["question", "options", "correctAnswerIndex", "explanation"]
@@ -454,22 +461,27 @@ export const generateCurrentAffairs = async (category: string, language: 'Marath
 }
 
 export const generateDescriptiveQA = async (topic: string): Promise<DescriptiveQA> => {
-  const cacheKey = getCacheKey('LIT_QA', topic);
+  const cacheKey = getCacheKey('LIT_QA_UNI', topic); // New key to force refresh for university content
   const cached = getFromDataCenter<DescriptiveQA>(cacheKey);
   if (cached) return cached;
 
   try {
     const prompt = `
-      You are a professor for MPSC (Maharashtra Public Service Commission) Marathi Literature (Optional Paper).
+      You are a distinguished Professor of Marathi Literature (Ph.D. level evaluator) at a top University.
       Topic: ${topic}
       
       Task:
-      1. Generate a high-quality, descriptive question (10-15 marks style) suitable for the Mains exam on this topic.
-      2. Provide a structured 'Model Answer' in Marathi (Devanagari) that includes:
-         - Introduction (प्रस्तावना)
-         - Core Analysis/Body (मुख्य गाभा)
-         - Conclusion (निष्कर्ष)
-      3. Extract 3-5 Key Points (मुख्य मुद्दे) for quick revision.
+      1. Generate a **PhD/University Level Descriptive Question** (Deep analytical, critical, or comparative).
+         - The question should not be factual; it must challenge the student to critique, analyze, or synthesize literary theories (Samiksha).
+         - Focus on: Literary Flows (Pravah), Aesthetics (Saundaryashastra), Feminist/Dalit/Gramin perspectives, or specific critical analysis of the topic.
+      
+      2. Provide a 'Model Research Answer' in highly academic Marathi (Praman Bhasha/Samiksha Bhasha) that includes:
+         - **Prastavana (Introduction):** Historical context and literary significance.
+         - **Gaba (Core Analysis):** Deep critical evaluation. You MUST reference famous critics (e.g., Bhalchandra Nemade, V.L. Kulkarni, Durga Bhagwat, M.P. Rege) where relevant.
+         - **Taulanik Abhyas (Comparative):** Compare with other writers or eras if applicable.
+         - **Nishkarsh (Conclusion):** Academic synthesis.
+      
+      3. Extract 3-5 **Key Scholarly Points (Siddhanta/Mudde)**: Use literary terminology (Samiksha Sandnya).
       
       Output in JSON.
     `;
@@ -482,9 +494,9 @@ export const generateDescriptiveQA = async (topic: string): Promise<DescriptiveQ
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            question: { type: Type.STRING, description: "The descriptive question in Marathi" },
-            modelAnswer: { type: Type.STRING, description: "Full detailed answer in Marathi Markdown" },
-            keyPoints: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Short bullet points" }
+            question: { type: Type.STRING, description: "PhD/University level analytical question in Marathi" },
+            modelAnswer: { type: Type.STRING, description: "Full academic answer in Marathi Markdown" },
+            keyPoints: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Critical terms and points" }
           },
           required: ["question", "modelAnswer", "keyPoints"]
         }

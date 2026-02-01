@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Subject, LoadingState, QuizQuestion } from '../types';
 import { generateQuiz } from '../services/gemini';
-import { HelpCircle, CheckCircle2, XCircle, Loader2, ArrowLeft, RefreshCcw, Sparkles, Search, Play, Download, PieChart } from 'lucide-react';
+import { HelpCircle, CheckCircle2, XCircle, Loader2, ArrowLeft, RefreshCcw, Sparkles, Search, Play, Download, PieChart, Info } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 
@@ -343,7 +343,10 @@ export const QuizMode: React.FC<QuizModeProps> = ({ initialSubject = Subject.MAR
                 
                 {showResults && (
                     <div className="mt-4 p-4 bg-yellow-50 text-yellow-900 rounded-lg text-sm border border-yellow-200">
-                        <strong>Explanation:</strong> {q.explanation}
+                        <strong className="block mb-1 font-bold flex items-center gap-2 text-yellow-700">
+                           <Info size={16} /> Explanation:
+                        </strong>
+                        <p className="leading-relaxed text-slate-800">{q.explanation}</p>
                     </div>
                 )}
               </div>

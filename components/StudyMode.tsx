@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Subject, LoadingState, RuleExplanation } from '../types';
 import { generateStudyNotes, generateConciseExplanation, playTextToSpeech } from '../services/gemini';
-import { Book, Send, Loader2, ArrowLeft, Lightbulb, Search, ListFilter, GraduationCap, ChevronDown, ChevronUp, ArrowRight, Save, Check, Volume2, Folder, Layout, Info, CheckCircle2 } from 'lucide-react';
+import { Book, Send, Loader2, ArrowLeft, Lightbulb, Search, ListFilter, GraduationCap, ChevronDown, ChevronRight, ArrowRight, Save, Check, Volume2, Folder, Layout, Info, CheckCircle2, FileText, Minimize2, Maximize2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 interface StudyModeProps {
@@ -224,6 +224,18 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
     }));
   };
 
+  const handleExpandAll = () => {
+    const newOpenState: Record<string, boolean> = {};
+    filteredStructure.forEach(group => {
+        newOpenState[group.category] = true;
+    });
+    setOpenCategories(newOpenState);
+  };
+
+  const handleCollapseAll = () => {
+    setOpenCategories({});
+  };
+
   const handleSaveNotes = () => {
     if (!notes || !topic) return;
 
@@ -307,13 +319,9 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
   // Auto-expand categories with results when searching
   useEffect(() => {
     if (ruleFilter.trim()) {
-      const newOpenState: Record<string, boolean> = {};
-      filteredStructure.forEach(group => {
-          newOpenState[group.category] = true;
-      });
-      setOpenCategories(newOpenState);
+      handleExpandAll();
     }
-  }, [ruleFilter, filteredStructure]);
+  }, [ruleFilter]);
 
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-6">
@@ -383,7 +391,7 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
         </div>
 
         {/* Tab Content */}
-        <div className="p-6 bg-slate-50/50 min-h-[300px]">
+        <div className="p-6 bg-slate-50/50 min-h-[500px]">
           {activeTab === 'search' ? (
              <form onSubmit={handleManualSubmit} className="space-y-4">
               <div>
@@ -408,7 +416,7 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
             </form>
           ) : (
             <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-              <div className="flex items-center gap-2 mb-6 text-indigo-800 bg-indigo-50 p-4 rounded-xl border border-indigo-100 shadow-sm">
+              <div className="flex items-center gap-2 mb-4 text-indigo-800 bg-indigo-50 p-4 rounded-xl border border-indigo-100 shadow-sm">
                  <div className="bg-indigo-100 p-2 rounded-lg text-indigo-600">
                     <Lightbulb size={24} />
                  </div>
@@ -418,97 +426,114 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
                  </div>
               </div>
 
-              {/* Filter Input */}
-              <div className="relative mb-6 group">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                   <Search className="h-5 w-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+              {/* Sticky Search & Controls Bar */}
+              <div className="sticky top-20 z-20 bg-slate-50/95 backdrop-blur py-3 mb-4 border-b border-slate-200 -mx-6 px-6 shadow-sm">
+                <div className="relative group mb-3">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Search className="h-5 w-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                    </div>
+                    <input
+                    type="text"
+                    value={ruleFilter}
+                    onChange={(e) => setRuleFilter(e.target.value)}
+                    placeholder={`Search ${subject} rules...`}
+                    className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg leading-5 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm transition-all"
+                    />
                 </div>
-                <input
-                  type="text"
-                  value={ruleFilter}
-                  onChange={(e) => setRuleFilter(e.target.value)}
-                  placeholder={`Search ${subject} rules (smart search supported)...`}
-                  className="block w-full pl-10 pr-3 py-3 border border-slate-200 rounded-xl leading-5 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm transition-all"
-                />
+                
+                <div className="flex justify-between items-center">
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                        {filteredStructure.reduce((acc, g) => acc + g.topics.length, 0)} Topics Available
+                    </p>
+                    <div className="flex gap-4 text-xs font-bold text-indigo-600">
+                        <button onClick={handleExpandAll} className="flex items-center gap-1 hover:text-indigo-800 hover:bg-indigo-50 px-2 py-1 rounded transition-colors">
+                            <Maximize2 size={12} /> Expand All
+                        </button>
+                        <span className="text-slate-300 py-1">|</span>
+                        <button onClick={handleCollapseAll} className="flex items-center gap-1 hover:text-indigo-800 hover:bg-indigo-50 px-2 py-1 rounded transition-colors">
+                            <Minimize2 size={12} /> Collapse All
+                        </button>
+                    </div>
+                </div>
               </div>
               
-              <div className="space-y-4">
+              <div className="space-y-3 pb-4">
                 {filteredStructure.length > 0 ? (
                   filteredStructure.map((group, groupIdx) => (
-                    <div key={groupIdx} className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow transition-all">
+                    <div key={groupIdx} className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all">
                        {/* Category Header (Accordion Trigger) */}
                        <button
                           onClick={() => toggleCategory(group.category)}
                           className={`w-full flex items-center justify-between p-4 transition-colors ${
                               openCategories[group.category] 
-                              ? 'bg-indigo-50/50 text-indigo-900 border-b border-indigo-100' 
+                              ? 'bg-indigo-50/80 text-indigo-900 border-b border-indigo-100' 
                               : 'bg-white text-slate-700 hover:bg-slate-50'
                           }`}
                        >
                            <div className="flex items-center gap-3 font-semibold text-base">
-                               <Folder size={20} className={`shrink-0 ${openCategories[group.category] ? 'text-indigo-600 fill-indigo-100' : 'text-slate-400'}`} />
+                               <div className={`p-1.5 rounded-lg ${openCategories[group.category] ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-400'}`}>
+                                  <Folder size={18} fill={openCategories[group.category] ? "currentColor" : "none"} />
+                               </div>
                                {group.category}
-                               <span className="text-xs font-medium bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full border border-slate-200">
+                               <span className="text-xs font-medium bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full border border-slate-200 min-w-[24px] text-center">
                                    {group.topics.length}
                                </span>
                            </div>
-                           <div className={`transition-transform duration-200 ${openCategories[group.category] ? 'rotate-180' : ''}`}>
-                               <ChevronDown size={20} className="text-slate-400" />
+                           <div className={`transition-transform duration-200 text-slate-400 ${openCategories[group.category] ? 'rotate-90 text-indigo-500' : ''}`}>
+                               <ChevronRight size={20} />
                            </div>
                        </button>
 
                        {/* Accordion Content */}
                        {openCategories[group.category] && (
-                           <div className="bg-white p-2 space-y-2 animate-in slide-in-from-top-1 duration-200">
+                           <div className="bg-white py-2 px-3 space-y-1 animate-in slide-in-from-top-1 duration-200 border-l-4 border-indigo-50 ml-4 my-2">
                                {group.topics.map((ruleItem, idx) => (
                                    <div 
                                         key={idx} 
-                                        className={`rounded-lg border transition-all duration-200 overflow-hidden mx-2 ${
+                                        className={`rounded-lg transition-all duration-200 overflow-hidden ${
                                             expandedRule === ruleItem 
-                                            ? 'border-indigo-300 bg-indigo-50/30' 
-                                            : 'border-transparent hover:bg-slate-50 hover:border-slate-200'
+                                            ? 'bg-indigo-50 ring-1 ring-indigo-200 shadow-sm my-2' 
+                                            : 'hover:bg-slate-50'
                                         }`}
                                    >
                                     <button
                                         onClick={() => toggleRule(ruleItem)}
-                                        className="w-full text-left p-3 flex items-center justify-between group"
+                                        className="w-full text-left py-2.5 px-3 flex items-center justify-between group"
                                     >
-                                        <div className="flex items-center gap-3 pl-2">
-                                            <span className={`w-1.5 h-1.5 rounded-full transition-colors ${
-                                                expandedRule === ruleItem ? 'bg-indigo-500' : 'bg-slate-300 group-hover:bg-indigo-400'
-                                            }`}></span>
-                                            <span className={`text-sm font-medium transition-colors ${expandedRule === ruleItem ? 'text-indigo-900' : 'text-slate-700'}`}>
+                                        <div className="flex items-center gap-3">
+                                            <FileText size={14} className={`${expandedRule === ruleItem ? 'text-indigo-600' : 'text-slate-300'}`} />
+                                            <span className={`text-sm font-medium transition-colors ${expandedRule === ruleItem ? 'text-indigo-900' : 'text-slate-600'}`}>
                                                 {ruleItem}
                                             </span>
                                         </div>
                                         {expandedRule === ruleItem 
-                                            ? <ChevronUp size={16} className="text-indigo-600 shrink-0" /> 
-                                            : <ChevronDown size={16} className="text-slate-300 shrink-0 group-hover:text-indigo-400 opacity-0 group-hover:opacity-100 transition-all" />
+                                            ? <ChevronDown size={14} className="text-indigo-600 shrink-0" /> 
+                                            : <ChevronRight size={14} className="text-slate-300 shrink-0 group-hover:text-indigo-400 opacity-0 group-hover:opacity-100 transition-all" />
                                         }
                                     </button>
                                     
                                     {expandedRule === ruleItem && (
-                                        <div className="px-5 pb-4 pl-8">
+                                        <div className="px-4 pb-4 pt-1 ml-1 border-t border-indigo-100">
                                             {loadingExplanation && !ruleExplanations[ruleItem] ? (
-                                                <div className="flex flex-col items-center justify-center text-xs text-slate-500 py-4 bg-white/50 rounded-lg border border-indigo-100 border-dashed">
-                                                    <Loader2 size={16} className="animate-spin mb-2 text-indigo-500"/>
-                                                    <p>Generating summary...</p>
+                                                <div className="flex flex-col items-center justify-center text-xs text-slate-500 py-6 bg-white/50 rounded-lg">
+                                                    <Loader2 size={20} className="animate-spin mb-2 text-indigo-500"/>
+                                                    <p>Consulting AI Tutor...</p>
                                                 </div>
                                             ) : (
-                                                <div className="space-y-3 mb-4">
-                                                    <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                                                        <h4 className="text-xs font-bold text-slate-500 uppercase mb-1 flex items-center gap-1">
-                                                            <Info size={12} /> Rule
+                                                <div className="space-y-3 my-3">
+                                                    <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+                                                        <h4 className="text-[10px] font-bold text-slate-400 uppercase mb-1 flex items-center gap-1">
+                                                            <Info size={10} /> Core Rule
                                                         </h4>
-                                                        <p className="text-sm text-slate-700 leading-relaxed">
+                                                        <p className="text-sm text-slate-800 leading-relaxed font-medium">
                                                             {ruleExplanations[ruleItem]?.rule}
                                                         </p>
                                                     </div>
-                                                    <div className="bg-green-50 p-3 rounded-lg border border-green-200">
-                                                        <h4 className="text-xs font-bold text-green-700 uppercase mb-1 flex items-center gap-1">
-                                                            <CheckCircle2 size={12} /> Exam Example
+                                                    <div className="bg-emerald-50 p-3 rounded-lg border border-emerald-100">
+                                                        <h4 className="text-[10px] font-bold text-emerald-700 uppercase mb-1 flex items-center gap-1">
+                                                            <CheckCircle2 size={10} /> Example
                                                         </h4>
-                                                        <p className="text-sm text-slate-800 font-medium italic">
+                                                        <p className="text-sm text-emerald-900 font-medium italic">
                                                             "{ruleExplanations[ruleItem]?.example}"
                                                         </p>
                                                     </div>
@@ -520,10 +545,10 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
                                                     e.stopPropagation();
                                                     generateNotes(ruleItem);
                                                 }}
-                                                className="w-full text-xs flex items-center justify-center text-indigo-700 bg-indigo-100 hover:bg-indigo-200 font-semibold py-2 rounded-md transition-colors"
+                                                className="w-full text-xs flex items-center justify-center text-indigo-700 bg-indigo-100 hover:bg-indigo-200 font-bold py-2.5 rounded-lg transition-colors border border-indigo-200"
                                             >
                                                 <Layout size={14} className="mr-1.5"/>
-                                                Generate Full Study Notes
+                                                Generate Full Detailed Notes
                                             </button>
                                         </div>
                                     )}
