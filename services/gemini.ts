@@ -136,8 +136,12 @@ export const generateStudyNotes = async (subject: Subject, topic: string): Promi
       Topic: ${topic}
       
       Please provide detailed study notes for this topic. 
-      - If the subject is Marathi, strictly use Marathi language for explanation.
-      - If the subject is English, use English language but you can provide Marathi translation for difficult concepts if helpful.
+      
+      LANGUAGE RULES:
+      - If Subject is MARATHI: Strictly use **Marathi language (Devanagari script)** for everything.
+      - If Subject is ENGLISH: The main notes must be in English (Roman script), BUT you **MUST** provide **Marathi translations and explanations (in Devanagari)** for difficult concepts, rules, and definitions to help Marathi medium students understand.
+      
+      Structure:
       - Include definitions, rules, examples, and exceptions relevant to MPSC pattern.
       - Format the output in clean Markdown.
     `;
@@ -168,12 +172,12 @@ export const generateConciseExplanation = async (subject: Subject, topic: string
       Topic: ${topic}
       
       Provide a JSON object with:
-      1. rule: A concise but comprehensive explanation (2-4 sentences) of the core grammar rule. Mention exceptions if crucial.
-      2. examples: An array of 2-3 distinct, exam-oriented example sentences that demonstrate this rule. Include brief analysis in brackets if helpful.
+      1. rule: A concise but comprehensive explanation (2-4 sentences).
+      2. examples: An array of 2-3 distinct, exam-oriented example sentences.
       
-      Language Requirement:
-      - Marathi Subject: Explain STRICTLY in Marathi (Devanagari).
-      - English Subject: Explain in English.
+      LANGUAGE RULES:
+      - If Subject is MARATHI: Explain STRICTLY in **Marathi (Devanagari)**.
+      - If Subject is ENGLISH: State the rule in English, but **IMMEDIATELY followed by a Marathi explanation (in Devanagari)** so the student understands the logic.
       
       Output JSON strictly.
     `;
@@ -220,19 +224,21 @@ export const generateQuiz = async (subject: Subject, topic: string, difficulty: 
       Subject: ${subject}
       Topic: ${topic}
       Difficulty Level: ${difficulty}
-      Language: ${subject === Subject.MARATHI ? 'Marathi' : 'English'}
+      
+      LANGUAGE RULES:
+      1. Subject MARATHI: Everything (Question, Options, Explanation) must be in **Marathi (Devanagari)**.
+      2. Subject ENGLISH: 
+         - Question and Options: English (Roman).
+         - Explanation: **MUST be in a mix of English and Marathi (Devanagari)**. Explain the rule in Marathi so the student understands WHY the answer is correct.
       
       Requirements:
       1. Difficulty Guidelines:
-         - EASY: Basic concepts, direct definitions, simple identification.
-         - MEDIUM: Application of rules, exception identification, standard MPSC Prelims level.
-         - HARD: Complex sentences, multi-statement questions (A, B, C correct), deep conceptual analysis, MPSC Mains level.
-      2. Ensure questions cover various aspects of the topic.
-      3. **Crucial**: The 'explanation' field MUST be extremely detailed and educational (minimum 100 words).
-         - If Marathi Grammar: Explain the rule (नियम) clearly in Marathi.
-         - If English Grammar: Explain the rule in English.
-         - Analyze ALL options: Explain WHY the correct answer is correct AND WHY the incorrect options are wrong.
-         - Break down the logic step-by-step to function as a mini-lesson.
+         - EASY: Basic concepts.
+         - MEDIUM: Standard MPSC Prelims level.
+         - HARD: MPSC Mains level (Multi-statement).
+      2. **Crucial**: The 'explanation' field MUST be extremely detailed (minimum 100 words).
+         - Analyze ALL options.
+         - Break down the logic step-by-step.
       
       Return the response in strictly valid JSON format.
     `;
@@ -253,7 +259,7 @@ export const generateQuiz = async (subject: Subject, topic: string, difficulty: 
                 items: { type: Type.STRING }
               },
               correctAnswerIndex: { type: Type.INTEGER, description: "0-based index of the correct option" },
-              explanation: { type: Type.STRING, description: "Comprehensive, educational explanation (min 100 words) analyzing the concept and all options." }
+              explanation: { type: Type.STRING, description: "Comprehensive explanation (min 100 words). For English subject, use Marathi (Devanagari) to explain." }
             },
             required: ["question", "options", "correctAnswerIndex", "explanation"]
           }
@@ -287,7 +293,6 @@ export const generatePYQs = async (subject: Subject, year: string, examType: Exa
       else if (examType === 'GROUP_B') examContext = 'MPSC Group B Combined exams (PSI/STI/ASO)';
       else if (examType === 'GROUP_C') examContext = 'MPSC Group C exams';
     } else if (subject === Subject.ENGLISH) {
-      // For English, broaden the scope as requested
       examContext = 'MPSC, SSC CGL, UPSC, CDS, and Banking exams (English Grammar is similar across these). Prioritize MPSC pattern.';
     } else {
       examContext = 'MPSC State Services and Combined exams';
@@ -300,20 +305,21 @@ export const generatePYQs = async (subject: Subject, year: string, examType: Exa
       - Exam Context: ${examContext}
       - Specific Year: ${year} (approximate if exact match not found)
       
+      LANGUAGE RULES:
+      - Subject MARATHI: Questions, Options, and Explanation strictly in **Marathi (Devanagari)**.
+      - Subject ENGLISH: 
+         * Question/Options in English. 
+         * **Explanation MUST be in English + Marathi (Devanagari)** to explain the logic clearly.
+      
       Requirements:
       1. Provide exactly 15 questions.
-      2. Include the specific exam name and year in the "examSource" field (e.g., "Rajyaseva 2019" or "Group B 2020").
-      3. For Marathi subject, ensure questions are in Marathi script (Devanagari).
-      4. For English subject, include questions on Grammar, Vocab, and Comprehension.
-      5. **IMPORTANT**: Provide a VERY DETAILED explanation (minimum 100 words) for each question.
-         - Explain the underlying concept or grammar rule in depth.
+      2. Include the specific exam name and year in the "examSource" field.
+      3. **IMPORTANT**: Provide a VERY DETAILED explanation (minimum 100 words) for each question.
          - Analyze why the correct answer is correct and why other options are wrong.
       
       Return strictly as JSON.
     `;
 
-    // Use MODEL_FAST without search tools to improve reliability and prevent XHR timeouts.
-    // Training data is sufficient for historical questions.
     const response = await ai.models.generateContent({
       model: MODEL_FAST,
       contents: prompt,
@@ -330,7 +336,7 @@ export const generatePYQs = async (subject: Subject, year: string, examType: Exa
                 items: { type: Type.STRING }
               },
               correctAnswerIndex: { type: Type.INTEGER },
-              explanation: { type: Type.STRING, description: "Detailed explanation (min 100 words) of the concept and option analysis." },
+              explanation: { type: Type.STRING, description: "Detailed explanation (min 100 words). Use Marathi (Devanagari) for English explanations." },
               examSource: { type: Type.STRING, description: "The exam where this question appeared" }
             },
             required: ["question", "options", "correctAnswerIndex", "explanation"]
@@ -353,7 +359,7 @@ export const generatePYQs = async (subject: Subject, year: string, examType: Exa
 
 export const generateVocab = async (subject: Subject, category: VocabCategory): Promise<VocabWord[]> => {
   // Use a new cache key suffix to ensure users get the new "PYQ + Related" format
-  const cacheKey = getCacheKey('VOCAB_PYQ_REL', subject, category);
+  const cacheKey = getCacheKey('VOCAB_PYQ_REL_LANG', subject, category);
   const cached = getFromDataCenter<VocabWord[]>(cacheKey);
   if (cached) return cached;
 
@@ -376,15 +382,15 @@ export const generateVocab = async (subject: Subject, category: VocabCategory): 
       Generate a comprehensive list (approx 60 items) of ${categoryPrompt} for ${subject} subject, strictly designed for MPSC/Competitive Exams.
       
       STRATEGY - "Previous & Related" (PYQ & Linked Concepts):
-      1. **PYQ Core:** Prioritize words/idioms that have appeared in **Previous Year MPSC Question Papers** (Rajyaseva, Combined B & C) from 2012-2024.
-      2. **Related Concepts:** For every PYQ word, include 1 or 2 "related" words (synonyms/antonyms/confusing pairs) that are likely to be asked next.
-      3. **Ease of Learning:** This structure helps aspirants "guess" or associate new words with known PYQ words.
+      1. **PYQ Core:** Prioritize words/idioms that have appeared in **Previous Year MPSC Question Papers**.
+      2. **Related Concepts:** Include related words (synonyms/antonyms) likely to be asked.
       
-      FORMATTING INSTRUCTIONS:
-      - **Type Field:** In the 'type' field, explicitly mention if it's a "PYQ [Year]" or "Related". 
-        Example: "Noun (PYQ 2018)", "Verb (Related)", "Idiom (Rajyaseva PYQ)".
-      - **Meaning:** Precise and exam-oriented.
-      - **Usage:** Simple sentence to show context.
+      FORMATTING & LANGUAGE INSTRUCTIONS:
+      - If Subject is MARATHI: All fields in **Marathi (Devanagari)**.
+      - If Subject is ENGLISH:
+        * word: English (Roman)
+        * meaning: English Definition + **(Marathi Meaning in Devanagari)**. Example: "Benevolent" -> "Kind, generous (दयाळू, परोपकारी)"
+        * usage: English sentence
       
       Output strictly in JSON.
     `;
@@ -400,7 +406,7 @@ export const generateVocab = async (subject: Subject, category: VocabCategory): 
             type: Type.OBJECT,
             properties: {
               word: { type: Type.STRING, description: "The word, idiom, or phrase" },
-              meaning: { type: Type.STRING },
+              meaning: { type: Type.STRING, description: "Meaning. Include Marathi (Devanagari) if subject is English." },
               usage: { type: Type.STRING, description: "Example sentence" },
               type: { type: Type.STRING, description: "e.g., 'Noun (PYQ 2019)' or 'Adjective (Related)'" }
             },
@@ -498,7 +504,7 @@ export const generateDescriptiveQA = async (topic: string): Promise<DescriptiveQ
          - The question should not be factual; it must challenge the student to critique, analyze, or synthesize literary theories (Samiksha).
          - Focus on: Literary Flows (Pravah), Aesthetics (Saundaryashastra), Feminist/Dalit/Gramin perspectives, or specific critical analysis of the topic.
       
-      2. Provide a 'Model Research Answer' in highly academic Marathi (Praman Bhasha/Samiksha Bhasha) that includes:
+      2. Provide a 'Model Research Answer' in highly academic Marathi (Praman Bhasha/Samiksha Bhasha - Devanagari Script) that includes:
          - **Prastavana (Introduction):** Historical context and literary significance.
          - **Gaba (Core Analysis):** Deep critical evaluation. You MUST reference famous critics (e.g., Bhalchandra Nemade, V.L. Kulkarni, Durga Bhagwat, M.P. Rege) where relevant.
          - **Taulanik Abhyas (Comparative):** Compare with other writers or eras if applicable.
@@ -517,9 +523,9 @@ export const generateDescriptiveQA = async (topic: string): Promise<DescriptiveQ
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            question: { type: Type.STRING, description: "PhD/University level analytical question in Marathi" },
-            modelAnswer: { type: Type.STRING, description: "Full academic answer in Marathi Markdown" },
-            keyPoints: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Critical terms and points" }
+            question: { type: Type.STRING, description: "PhD/University level analytical question in Marathi (Devanagari)" },
+            modelAnswer: { type: Type.STRING, description: "Full academic answer in Marathi Markdown (Devanagari)" },
+            keyPoints: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Critical terms and points in Marathi" }
           },
           required: ["question", "modelAnswer", "keyPoints"]
         }
