@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Subject, VocabWord, VocabCategory, LoadingState } from '../types';
 import { generateVocab, playTextToSpeech } from '../services/gemini';
-import { BookA, Loader2, ArrowLeft, RotateCw, Volume2, Bookmark, GraduationCap } from 'lucide-react';
+import { BookA, Loader2, ArrowLeft, RotateCw, Volume2, GraduationCap, Quote, ArrowRightLeft, Spline, WholeWord } from 'lucide-react';
 
 interface VocabModeProps {
   onBack: () => void;
@@ -43,23 +43,36 @@ export const VocabMode: React.FC<VocabModeProps> = ({ onBack }) => {
     }
   }
 
-  const getCategoryTitle = (cat: VocabCategory, sub: Subject) => {
-      if (sub === Subject.MARATHI) {
-          switch(cat) {
-              case 'IDIOMS': return 'म्हणी व वाक्प्रचार (Idioms)';
-              case 'SYNONYMS': return 'समानार्थी शब्द (Synonyms)';
-              case 'ANTONYMS': return 'विरुद्धार्थी शब्द (Antonyms)';
-              case 'ONE_WORD': return 'शब्दसमूहाबद्दल एक शब्द';
-          }
-      } else {
-          switch(cat) {
-              case 'IDIOMS': return 'Idioms & Phrases';
-              case 'SYNONYMS': return 'Synonyms';
-              case 'ANTONYMS': return 'Antonyms';
-              case 'ONE_WORD': return 'One Word Substitution';
-          }
+  const getCategoryConfig = (cat: VocabCategory, sub: Subject) => {
+      const isMarathi = sub === Subject.MARATHI;
+      switch(cat) {
+          case 'IDIOMS': 
+            return { 
+                label: isMarathi ? 'म्हणी व वाक्प्रचार (Idioms)' : 'Idioms & Phrases',
+                icon: Quote,
+                desc: isMarathi ? 'Language richness' : 'Figurative expressions'
+            };
+          case 'SYNONYMS': 
+            return { 
+                label: isMarathi ? 'समानार्थी शब्द (Synonyms)' : 'Synonyms',
+                icon: Spline,
+                desc: isMarathi ? 'Similar meanings' : 'Similar words'
+            };
+          case 'ANTONYMS': 
+            return { 
+                label: isMarathi ? 'विरुद्धार्थी शब्द (Antonyms)' : 'Antonyms',
+                icon: ArrowRightLeft,
+                desc: isMarathi ? 'Opposite meanings' : 'Opposites'
+            };
+          case 'ONE_WORD': 
+            return { 
+                label: isMarathi ? 'शब्दसमूहाबद्दल एक शब्द' : 'One Word Substitution',
+                icon: WholeWord,
+                desc: isMarathi ? 'Concise expression' : 'Vocabulary precision'
+            };
+          default:
+            return { label: cat, icon: BookA, desc: '' };
       }
-      return cat;
   }
 
   return (
@@ -70,12 +83,13 @@ export const VocabMode: React.FC<VocabModeProps> = ({ onBack }) => {
 
       <div className="flex flex-col md:flex-row gap-6 items-start">
         {/* Sidebar Controls */}
-        <div className="w-full md:w-72 bg-white rounded-xl shadow-md border border-slate-100 overflow-hidden shrink-0 sticky top-24">
+        <div className="w-full md:w-80 bg-white rounded-xl shadow-md border border-slate-100 overflow-hidden shrink-0 sticky top-24">
              <div className="p-4 bg-indigo-900 text-white">
                 <h2 className="font-bold flex items-center gap-2">
                 <BookA size={20} className="text-yellow-400" />
                 Vocabulary Bank
                 </h2>
+                <p className="text-xs text-indigo-300 mt-1">Enhance your word power for MPSC</p>
             </div>
             
             <div className="p-4 space-y-6">
@@ -100,19 +114,28 @@ export const VocabMode: React.FC<VocabModeProps> = ({ onBack }) => {
                 <div>
                     <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Category</label>
                     <div className="space-y-1">
-                        {(['IDIOMS', 'SYNONYMS', 'ANTONYMS', 'ONE_WORD'] as VocabCategory[]).map(cat => (
-                            <button
-                                key={cat}
-                                onClick={() => setCategory(cat)}
-                                className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                                    category === cat 
-                                    ? 'bg-indigo-50 text-indigo-700 border-l-4 border-indigo-600' 
-                                    : 'text-slate-600 hover:bg-slate-50 hover:text-indigo-600'
-                                }`}
-                            >
-                                {getCategoryTitle(cat, subject)}
-                            </button>
-                        ))}
+                        {(['IDIOMS', 'SYNONYMS', 'ANTONYMS', 'ONE_WORD'] as VocabCategory[]).map(cat => {
+                            const config = getCategoryConfig(cat, subject);
+                            const Icon = config.icon;
+                            return (
+                                <button
+                                    key={cat}
+                                    onClick={() => setCategory(cat)}
+                                    className={`w-full text-left px-3 py-3 rounded-lg text-sm font-medium transition-all flex items-center gap-3 ${
+                                        category === cat 
+                                        ? 'bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-sm' 
+                                        : 'text-slate-600 hover:bg-slate-50 border border-transparent'
+                                    }`}
+                                >
+                                    <div className={`p-1.5 rounded-md ${category === cat ? 'bg-indigo-100' : 'bg-slate-100'}`}>
+                                        <Icon size={16} />
+                                    </div>
+                                    <div>
+                                        <div className="leading-tight">{config.label}</div>
+                                    </div>
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
 
@@ -130,7 +153,10 @@ export const VocabMode: React.FC<VocabModeProps> = ({ onBack }) => {
         {/* Main Card Area */}
         <div className="flex-1 min-w-0">
              <div className="mb-6 flex justify-between items-center">
-                 <h1 className="text-2xl font-bold text-slate-900">{getCategoryTitle(category, subject)}</h1>
+                 <div>
+                    <h1 className="text-2xl font-bold text-slate-900">{getCategoryConfig(category, subject).label}</h1>
+                    <p className="text-slate-500 text-sm">Reviewing {subject} vocabulary</p>
+                 </div>
                  <span className="text-sm bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full font-medium border border-indigo-100">
                     {words.length} Items Loaded
                  </span>

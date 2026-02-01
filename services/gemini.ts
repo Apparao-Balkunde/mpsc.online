@@ -294,12 +294,13 @@ export const generatePYQs = async (subject: Subject, year: string, examType: Exa
       Return strictly as JSON.
     `;
 
+    // Use MODEL_FAST without search tools to improve reliability and prevent XHR timeouts.
+    // Training data is sufficient for historical questions.
     const response = await ai.models.generateContent({
-      model: MODEL_PRO,
+      model: MODEL_FAST,
       contents: prompt,
       config: {
         responseMimeType: "application/json",
-        tools: [{ googleSearch: {} }],
         responseSchema: {
           type: Type.ARRAY,
           items: {

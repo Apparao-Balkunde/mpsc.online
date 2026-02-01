@@ -26,17 +26,12 @@ const GRAMMAR_STRUCTURE: Record<Subject, TopicGroup[]> = {
       ]
     },
     {
-      category: "शब्दांच्या जाती - विकारी (Declinable POS)",
+      category: "शब्दांच्या जाती (Parts of Speech)",
       topics: [
-        "नाम: प्रकार, लिंग, वचन, विभक्ती (Noun: Gender, Number, Case)",
-        "सर्वनाम: प्रकार व उपयोग (Pronoun Types)",
-        "विशेषण: प्रकार व अवस्था (Adjective Types)",
-        "क्रियापद: प्रकार, अर्थ, आख्यात (Verb & Tense Forms)"
-      ]
-    },
-    {
-      category: "शब्दांच्या जाती - अविकारी (Indeclinable POS)",
-      topics: [
+        "नाम: प्रकार, लिंग, वचन, विभक्ती (Noun)",
+        "सर्वनाम: प्रकार व उपयोग (Pronoun)",
+        "विशेषण: प्रकार व अवस्था (Adjective)",
+        "क्रियापद: प्रकार, अर्थ, आख्यात (Verb)",
         "क्रियाविशेषण अव्यय (Adverb)",
         "शब्दयोगी अव्यय (Preposition)",
         "उभयान्वयी अव्यय (Conjunction)",
