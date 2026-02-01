@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Subject, LoadingState, RuleExplanation } from '../types';
 import { generateStudyNotes, generateConciseExplanation, playTextToSpeech } from '../services/gemini';
-import { Book, Send, Loader2, ArrowLeft, Lightbulb, Search, ListFilter, GraduationCap, ChevronDown, ChevronRight, ArrowRight, Save, Check, Volume2, Folder, Layout, Info, CheckCircle2, FileText, Minimize2, Maximize2 } from 'lucide-react';
+import { Book, Send, Loader2, ArrowLeft, Lightbulb, Search, ListFilter, GraduationCap, ChevronDown, ChevronRight, ArrowRight, Save, Check, Volume2, Folder, Layout, Info, CheckCircle2, FileText, Minimize2, Maximize2, X } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 interface StudyModeProps {
@@ -492,64 +492,100 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
                                         key={idx} 
                                         className={`rounded-lg transition-all duration-200 overflow-hidden ${
                                             expandedRule === ruleItem 
-                                            ? 'bg-indigo-50 ring-1 ring-indigo-200 shadow-sm my-2' 
+                                            ? 'bg-transparent' 
                                             : 'hover:bg-slate-50'
                                         }`}
                                    >
                                     <button
                                         onClick={() => toggleRule(ruleItem)}
-                                        className="w-full text-left py-2.5 px-3 flex items-center justify-between group"
+                                        className={`w-full text-left py-2.5 px-3 flex items-center justify-between group ${expandedRule === ruleItem ? 'hidden' : ''}`}
                                     >
                                         <div className="flex items-center gap-3">
-                                            <FileText size={14} className={`${expandedRule === ruleItem ? 'text-indigo-600' : 'text-slate-300'}`} />
-                                            <span className={`text-sm font-medium transition-colors ${expandedRule === ruleItem ? 'text-indigo-900' : 'text-slate-600'}`}>
+                                            <FileText size={14} className="text-slate-300" />
+                                            <span className="text-sm font-medium text-slate-600 group-hover:text-indigo-600 transition-colors">
                                                 {ruleItem}
                                             </span>
                                         </div>
-                                        {expandedRule === ruleItem 
-                                            ? <ChevronDown size={14} className="text-indigo-600 shrink-0" /> 
-                                            : <ChevronRight size={14} className="text-slate-300 shrink-0 group-hover:text-indigo-400 opacity-0 group-hover:opacity-100 transition-all" />
-                                        }
+                                        <ChevronRight size={14} className="text-slate-300 shrink-0 group-hover:text-indigo-400 opacity-0 group-hover:opacity-100 transition-all" />
                                     </button>
                                     
                                     {expandedRule === ruleItem && (
-                                        <div className="px-4 pb-4 pt-1 ml-1 border-t border-indigo-100">
-                                            {loadingExplanation && !ruleExplanations[ruleItem] ? (
-                                                <div className="flex flex-col items-center justify-center text-xs text-slate-500 py-6 bg-white/50 rounded-lg">
-                                                    <Loader2 size={20} className="animate-spin mb-2 text-indigo-500"/>
-                                                    <p>Consulting AI Tutor...</p>
+                                        <div className="px-1 pb-4 pt-1">
+                                            <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200">
+                                                {/* Header with Rule Name */}
+                                                <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 p-4 flex justify-between items-center text-white sticky top-0 z-10">
+                                                    <h3 className="text-lg font-bold flex items-center gap-2">
+                                                        <Book size={20} className="text-indigo-200" />
+                                                        {ruleItem}
+                                                    </h3>
+                                                    <button 
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setExpandedRule(null);
+                                                        }}
+                                                        className="text-indigo-200 hover:text-white transition-colors hover:bg-indigo-600/50 p-1 rounded-full"
+                                                    >
+                                                        <Minimize2 size={18} />
+                                                    </button>
                                                 </div>
-                                            ) : (
-                                                <div className="space-y-3 my-3">
-                                                    <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
-                                                        <h4 className="text-[10px] font-bold text-slate-400 uppercase mb-1 flex items-center gap-1">
-                                                            <Info size={10} /> Core Rule
-                                                        </h4>
-                                                        <p className="text-sm text-slate-800 leading-relaxed font-medium">
-                                                            {ruleExplanations[ruleItem]?.rule}
-                                                        </p>
-                                                    </div>
-                                                    <div className="bg-emerald-50 p-3 rounded-lg border border-emerald-100">
-                                                        <h4 className="text-[10px] font-bold text-emerald-700 uppercase mb-1 flex items-center gap-1">
-                                                            <CheckCircle2 size={10} /> Example
-                                                        </h4>
-                                                        <p className="text-sm text-emerald-900 font-medium italic">
-                                                            "{ruleExplanations[ruleItem]?.example}"
-                                                        </p>
-                                                    </div>
+
+                                                {/* Scrollable Content Area */}
+                                                <div className="p-5 max-h-[400px] overflow-y-auto bg-slate-50/50">
+                                                    {loadingExplanation && !ruleExplanations[ruleItem] ? (
+                                                        <div className="flex flex-col items-center justify-center text-xs text-slate-500 py-10">
+                                                            <Loader2 size={32} className="animate-spin mb-3 text-indigo-500"/>
+                                                            <p className="font-medium">Consulting AI Tutor...</p>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="space-y-6">
+                                                            {/* Rule Section */}
+                                                            <div className="bg-blue-50/80 p-5 rounded-xl border border-blue-100 shadow-sm relative transition-shadow">
+                                                                 <div className="absolute top-0 right-0 p-2 opacity-10 pointer-events-none">
+                                                                    <Info size={40} className="text-blue-600"/>
+                                                                 </div>
+                                                                <h4 className="text-xs font-bold text-blue-700 uppercase mb-3 flex items-center gap-2 border-b border-blue-200 pb-2">
+                                                                    <Info size={14} /> Rule Concept
+                                                                </h4>
+                                                                <p className="text-slate-800 leading-relaxed font-medium text-base">
+                                                                    {ruleExplanations[ruleItem]?.rule}
+                                                                </p>
+                                                            </div>
+
+                                                            {/* Example Section */}
+                                                            <div className="bg-amber-50/80 p-5 rounded-xl border border-amber-100 shadow-sm relative">
+                                                                 <div className="absolute top-0 right-0 p-2 opacity-10 pointer-events-none">
+                                                                    <CheckCircle2 size={40} className="text-amber-600"/>
+                                                                 </div>
+                                                                <h4 className="text-xs font-bold text-amber-700 uppercase mb-3 flex items-center gap-2 border-b border-amber-200 pb-2">
+                                                                    <CheckCircle2 size={14} /> MPSC Exam Examples
+                                                                </h4>
+                                                                <ul className="space-y-3">
+                                                                  {ruleExplanations[ruleItem]?.examples?.map((ex, i) => (
+                                                                    <li key={i} className="text-lg text-amber-900 font-serif italic pl-4 border-l-4 border-amber-400 py-1 bg-amber-100/30 rounded-r-lg flex gap-2">
+                                                                      <span className="not-italic font-sans text-amber-600 text-xs font-bold mt-1.5 opacity-60">Ex {i+1}.</span>
+                                                                      <span>"{ex}"</span>
+                                                                    </li>
+                                                                  ))}
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                 </div>
-                                            )}
-                                            
-                                            <button 
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    generateNotes(ruleItem);
-                                                }}
-                                                className="w-full text-xs flex items-center justify-center text-indigo-700 bg-indigo-100 hover:bg-indigo-200 font-bold py-2.5 rounded-lg transition-colors border border-indigo-200"
-                                            >
-                                                <Layout size={14} className="mr-1.5"/>
-                                                Generate Full Detailed Notes
-                                            </button>
+                                                
+                                                {/* Footer Actions */}
+                                                <div className="p-3 bg-slate-100 border-t border-slate-200 flex justify-end">
+                                                    <button 
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            generateNotes(ruleItem);
+                                                        }}
+                                                        className="text-sm flex items-center gap-2 text-indigo-700 bg-white hover:bg-indigo-50 font-bold px-4 py-2 rounded-lg transition-colors border border-slate-200 hover:border-indigo-200 shadow-sm"
+                                                    >
+                                                        <Layout size={16} />
+                                                        Generate Detailed Notes
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
                                     )}
                                 </div>
@@ -562,7 +598,7 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
                     <div className="text-center py-12 bg-white rounded-xl border border-dashed border-slate-300">
                         <Search size={32} className="mx-auto text-slate-300 mb-2" />
                         <p className="text-slate-500 font-medium">No grammar rules match "{ruleFilter}"</p>
-                        <p className="text-xs text-slate-400 mt-1">Try checking for spelling errors, although our fuzzy search handles minor typos.</p>
+                        <p className="text-slate-400 mt-1">Try checking for spelling errors, although our fuzzy search handles minor typos.</p>
                     </div>
                 )}
               </div>

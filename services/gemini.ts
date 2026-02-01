@@ -9,7 +9,7 @@ const MODEL_PRO = 'gemini-3-pro-preview';
 const MODEL_TTS = 'gemini-2.5-flash-preview-tts';
 
 // --- LOCAL DATA CENTER (CACHING SYSTEM) ---
-const CACHE_PREFIX = 'MPSC_DATA_CENTER_';
+const CACHE_PREFIX = 'MPSC_DATA_CENTER_V2_';
 
 // Helper to generate consistent unique keys for storage
 const getCacheKey = (...args: string[]) => {
@@ -169,7 +169,7 @@ export const generateConciseExplanation = async (subject: Subject, topic: string
       
       Provide a JSON object with:
       1. rule: A concise but comprehensive explanation (2-4 sentences) of the core grammar rule. Mention exceptions if crucial.
-      2. example: An exam-oriented example sentence (with analysis if needed in brackets).
+      2. examples: An array of 2-3 distinct, exam-oriented example sentences that demonstrate this rule. Include brief analysis in brackets if helpful.
       
       Language Requirement:
       - Marathi Subject: Explain STRICTLY in Marathi (Devanagari).
@@ -187,22 +187,25 @@ export const generateConciseExplanation = async (subject: Subject, topic: string
           type: Type.OBJECT,
           properties: {
             rule: { type: Type.STRING },
-            example: { type: Type.STRING }
+            examples: { 
+              type: Type.ARRAY,
+              items: { type: Type.STRING }
+            }
           },
-          required: ["rule", "example"]
+          required: ["rule", "examples"]
         }
       }
     });
 
     const jsonText = response.text;
-    if (!jsonText) return { rule: "Explanation not available", example: "" };
+    if (!jsonText) return { rule: "Explanation not available", examples: [] };
     
     const data = JSON.parse(jsonText) as RuleExplanation;
     saveToDataCenter(cacheKey, data);
     return data;
   } catch (error) {
     console.error("Error generating explanation:", error);
-    return { rule: "Could not load explanation.", example: "" };
+    return { rule: "Could not load explanation.", examples: [] };
   }
 };
 

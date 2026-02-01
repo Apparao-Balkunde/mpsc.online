@@ -50,7 +50,7 @@ export interface CurrentAffairItem {
 
 export interface RuleExplanation {
   rule: string;
-  example: string;
+  examples: string[];
 }
 
 export interface DescriptiveQA {
