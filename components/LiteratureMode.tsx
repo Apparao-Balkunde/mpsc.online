@@ -9,14 +9,14 @@ interface LiteratureModeProps {
 }
 
 const LIT_TOPICS = [
-  "मराठी साहित्यातील सौंदर्यशास्त्र (Aesthetics in Marathi Lit)",
-  "दलित साहित्याचे वैचारिक अधिष्ठान (Ideology of Dalit Lit)",
-  "स्त्रीवादी साहित्याची समीक्षा (Feminist Literary Criticism)",
-  "संत साहित्याची सामाजिक फलश्रुती (Social Impact of Sant Lit)",
-  "१९६० नंतरचे मराठी साहित्य प्रवाह (Post-1960 Literary Flows)",
-  "बा.सी. मर्ढेकर आणि नवकाव्य (B.S. Mardhekar & Modern Poetry)",
-  "ग्रामीण साहित्यातील वास्तववाद (Realism in Rural Lit)",
-  "मराठी कादंबरीची वाटचाल (Evolution of Marathi Novel)"
+  "दलित साहित्यातील विद्रोहाचे स्वरूप आणि आंबेडकरी विचारधारेचा प्रभाव (Revolt in Dalit Lit & Ambedkarite Ideology)",
+  "गौरी देशपांडे आणि सानिया यांच्या साहित्यातील स्त्रीवादी जाणिवांचा तौलनिक अभ्यास (Comparative Feminist Consciousness: Gauri Deshpande & Saniya)",
+  "'कोसला' कादंबरी: मराठी कादंबरीतील स्थित्यंतर आणि अस्तित्ववाद ('Kosla': Existentialism & Paradigm Shift)",
+  "मर्ढेकरांच्या कवितेतील विसंवाद आणि सौंदर्यशास्त्रीय भूमिका (Alienation & Aesthetics in Mardhekar's Poetry)",
+  "ग्रामीण साहित्याचे स्वरूप: 'बनगरवाडी' आणि 'पाचोळा'चा विशेष संदर्भ (Nature of Rural Lit: Ref 'Bangarwadi' & 'Pachola')",
+  "संत तुकारामांच्या अभंगांमधील समाजप्रबोधन आणि भक्तीचे स्वरूप (Social Reform & Devotion in Sant Tukaram's Abhangs)",
+  "विजय तेंडुलकर आणि महेश एलकुंचवार यांच्या नाटकांची सामाजिक-राजकीय चिकित्सा (Socio-Political Analysis of Tendulkar & Elkunchwar's Plays)",
+  "भालचंद्र नेमाडे यांचा 'देशीवाद' आणि जागतिकीकरणाचा साहित्यावरील परिणाम (Nemade's 'Deshivad' & Impact of Globalization)"
 ];
 
 export const LiteratureMode: React.FC<LiteratureModeProps> = ({ onBack }) => {
