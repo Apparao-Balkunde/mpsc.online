@@ -434,3 +434,21 @@ export const QuizMode: React.FC<QuizModeProps> = ({ initialSubject = Subject.MAR
                   <button
                     onClick={resetQuiz}
                     className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 shadow-lg flex items-center justify-center gap-2"
+                  >
+                      <RefreshCcw size={20}/> Take Another Quiz
+                  </button>
+                  <button
+                    onClick={handleDownloadPDF}
+                    disabled={isGeneratingPDF}
+                    className="flex-1 bg-slate-800 text-white py-3 rounded-xl font-bold hover:bg-slate-900 shadow-lg flex items-center justify-center gap-2 disabled:opacity-70"
+                  >
+                      {isGeneratingPDF ? <Loader2 size={20} className="animate-spin" /> : <Download size={20}/>}
+                      {isGeneratingPDF ? 'Generating PDF...' : 'Download Result PDF'}
+                  </button>
+              </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
