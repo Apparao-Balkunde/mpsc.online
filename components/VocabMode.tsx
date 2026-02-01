@@ -20,15 +20,15 @@ export const VocabMode: React.FC<VocabModeProps> = ({ onBack }) => {
   const [isFlipped, setIsFlipped] = useState(false);
 
   useEffect(() => {
-    fetchVocab();
+    fetchVocab(false); // Initial load uses cache
   }, [subject, category]);
 
-  const fetchVocab = async () => {
+  const fetchVocab = async (forceRefresh = false) => {
     setStatus('loading');
-    setWords([]);
+    setWords([]); // Clear existing words immediately to show refresh state
     setViewMode('LIST');
     try {
-      const data = await generateVocab(subject, category);
+      const data = await generateVocab(subject, category, forceRefresh);
       setWords(data);
       setStatus('success');
     } catch (e) {
@@ -175,7 +175,7 @@ export const VocabMode: React.FC<VocabModeProps> = ({ onBack }) => {
                 </div>
 
                 <button 
-                    onClick={fetchVocab}
+                    onClick={() => fetchVocab(true)} // Force refresh here
                     disabled={status === 'loading'}
                     className="w-full flex items-center justify-center gap-2 bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition-colors shadow-sm"
                 >

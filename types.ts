@@ -61,4 +61,16 @@ export interface DescriptiveQA {
   keyPoints: string[];
 }
 
+export interface QuizResultRecord {
+    topic: string;
+    score: number;
+    total: number;
+    date: string;
+}
+
+export interface UserProgress {
+  studyTopicsViewed: string[];
+  quizzesCompleted: QuizResultRecord[];
+}
+
 export type LoadingState = 'idle' | 'loading' | 'success' | 'error';

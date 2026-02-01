@@ -16,7 +16,11 @@ const LIT_TOPICS = [
   "ग्रामीण साहित्याचे स्वरूप: 'बनगरवाडी' आणि 'पाचोळा'चा विशेष संदर्भ (Nature of Rural Lit: Ref 'Bangarwadi' & 'Pachola')",
   "संत तुकारामांच्या अभंगांमधील समाजप्रबोधन आणि भक्तीचे स्वरूप (Social Reform & Devotion in Sant Tukaram's Abhangs)",
   "विजय तेंडुलकर आणि महेश एलकुंचवार यांच्या नाटकांची सामाजिक-राजकीय चिकित्सा (Socio-Political Analysis of Tendulkar & Elkunchwar's Plays)",
-  "भालचंद्र नेमाडे यांचा 'देशीवाद' आणि जागतिकीकरणाचा साहित्यावरील परिणाम (Nemade's 'Deshivad' & Impact of Globalization)"
+  "भालचंद्र नेमाडे यांचा 'देशीवाद' आणि जागतिकीकरणाचा साहित्यावरील परिणाम (Nemade's 'Deshivad' & Impact of Globalization)",
+  "आधुनिक मराठी नाटकातील स्त्रियांचे चित्रण: समस्या आणि स्वरूप (Role of Women in Modern Marathi Drama: Issues & Nature)",
+  "मराठी कादंबरीकारांवर पाश्चात्य साहित्य प्रवाहांचा (उदा. अस्तित्ववाद) प्रभाव (Influence of Western Literary Movements like Existentialism on Marathi Novelists)",
+  "पु.ल. देशपांडे आणि व.पु. काळे यांच्या कथनशैलीचा तौलनिक अभ्यास (Comparative Narrative Styles: P.L. Deshpande & V.P. Kale)",
+  "'सिंहासन' कादंबरीतील सामाजिक-राजकीय वास्तवाचे चित्रण (Socio-Political Commentary in 'Sinhasan' Novel)"
 ];
 
 export const LiteratureMode: React.FC<LiteratureModeProps> = ({ onBack }) => {

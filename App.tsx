@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { StudyMode } from './components/StudyMode';
 import { QuizMode } from './components/QuizMode';
@@ -7,18 +7,33 @@ import { CurrentAffairsMode } from './components/CurrentAffairsMode';
 import { VocabMode } from './components/VocabMode';
 import { BookmarksMode } from './components/BookmarksMode';
 import { LiteratureMode } from './components/LiteratureMode';
-import { Subject, Mode } from './types';
-import { BookOpen, BrainCircuit, Languages, History, Newspaper, ArrowRight as ArrowIcon, BookA, Bookmark, PenTool } from 'lucide-react';
+import { Subject, Mode, UserProgress } from './types';
+import { getProgress } from './services/progress';
+import { BookOpen, BrainCircuit, Languages, History, Newspaper, ArrowRight as ArrowIcon, BookA, Bookmark, PenTool, TrendingUp, CheckCircle2, PieChart } from 'lucide-react';
 
 const App: React.FC = () => {
   const [mode, setMode] = useState<Mode>(Mode.HOME);
   const [selectedSubject, setSelectedSubject] = useState<Subject>(Subject.MARATHI);
+  const [progress, setProgress] = useState<UserProgress>({ studyTopicsViewed: [], quizzesCompleted: [] });
+
+  useEffect(() => {
+    // Load progress when returning to home
+    if (mode === Mode.HOME) {
+        setProgress(getProgress());
+    }
+  }, [mode]);
 
   // Simplified navigation handler
   const navigate = (newMode: Mode, subject?: Subject) => {
     if (subject) setSelectedSubject(subject);
     setMode(newMode);
   };
+
+  const getQuizAvg = () => {
+    if (progress.quizzesCompleted.length === 0) return 0;
+    const sum = progress.quizzesCompleted.reduce((acc, curr) => acc + (curr.score / curr.total) * 100, 0);
+    return Math.round(sum / progress.quizzesCompleted.length);
+  }
 
   // Render Home Dashboard
   const renderHome = () => (
@@ -31,6 +46,45 @@ const App: React.FC = () => {
           Comprehensive AI-powered preparation for Marathi and English papers. 
           Generate notes, practice quizzes, and review previous year questions for Rajyaseva, Group B, and Group C.
         </p>
+      </div>
+
+      {/* Progress Section */}
+      <div className="mb-10 bg-gradient-to-r from-indigo-50 to-slate-50 rounded-2xl p-6 border border-indigo-100 shadow-sm">
+        <h3 className="text-lg font-bold text-indigo-900 mb-4 flex items-center gap-2">
+            <TrendingUp className="text-indigo-600" /> Your Progress
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-col items-center text-center">
+                 <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 mb-2">
+                    <CheckCircle2 size={20} />
+                 </div>
+                 <div className="text-2xl font-black text-slate-800">{progress.studyTopicsViewed.length}</div>
+                 <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Topics Studied</div>
+            </div>
+            <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-col items-center text-center">
+                 <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mb-2">
+                    <BrainCircuit size={20} />
+                 </div>
+                 <div className="text-2xl font-black text-slate-800">{progress.quizzesCompleted.length}</div>
+                 <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Quizzes Taken</div>
+            </div>
+            <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-col items-center text-center">
+                 <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600 mb-2">
+                    <PieChart size={20} />
+                 </div>
+                 <div className="text-2xl font-black text-slate-800">{getQuizAvg()}%</div>
+                 <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Avg Score</div>
+            </div>
+             <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-col items-center text-center justify-center">
+                 <button 
+                    onClick={() => navigate(Mode.STUDY, Subject.MARATHI)}
+                    className="w-full h-full flex flex-col items-center justify-center text-indigo-600 hover:text-indigo-800 transition-colors"
+                 >
+                    <span className="text-sm font-bold">Keep Learning</span>
+                    <ArrowIcon size={16} className="mt-1" />
+                 </button>
+            </div>
+        </div>
       </div>
 
       <div className="grid md:grid-cols-3 gap-8 mb-12">
@@ -122,7 +176,7 @@ const App: React.FC = () => {
                 onClick={() => setMode(Mode.PYQ)}
                 className="relative z-10 bg-yellow-400 text-indigo-900 px-4 py-2 rounded-lg font-bold hover:bg-yellow-300 transition-all shadow-lg flex items-center justify-center gap-2 w-full text-sm"
              >
-                Solve PYQs <ArrowRight className="w-4 h-4" />
+                Solve PYQs <ArrowIcon size={16} />
              </button>
           </div>
 
@@ -142,7 +196,7 @@ const App: React.FC = () => {
                 onClick={() => setMode(Mode.VOCAB)}
                 className="relative z-10 bg-purple-400 text-purple-950 px-4 py-2 rounded-lg font-bold hover:bg-purple-300 transition-all shadow-lg flex items-center justify-center gap-2 w-full text-sm"
              >
-                Learn Words <ArrowRight className="w-4 h-4" />
+                Learn Words <ArrowIcon size={16} />
              </button>
           </div>
 
@@ -162,7 +216,7 @@ const App: React.FC = () => {
                 onClick={() => setMode(Mode.CURRENT_AFFAIRS)}
                 className="relative z-10 bg-emerald-400 text-emerald-950 px-4 py-2 rounded-lg font-bold hover:bg-emerald-300 transition-all shadow-lg flex items-center justify-center gap-2 w-full text-sm"
              >
-                Read News <ArrowRight className="w-4 h-4" />
+                Read News <ArrowIcon size={16} />
              </button>
           </div>
 
@@ -182,7 +236,7 @@ const App: React.FC = () => {
                 onClick={() => setMode(Mode.BOOKMARKS)}
                 className="relative z-10 bg-pink-400 text-pink-950 px-4 py-2 rounded-lg font-bold hover:bg-pink-300 transition-all shadow-lg flex items-center justify-center gap-2 w-full text-sm"
              >
-                View Saved <ArrowRight className="w-4 h-4" />
+                View Saved <ArrowIcon size={16} />
              </button>
           </div>
       </div>
@@ -206,62 +260,48 @@ const App: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 font-sans">
-      <Header currentMode={mode} onNavigate={setMode} />
-      
-      <main className="flex-grow">
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 pb-12">
+      <Header currentMode={mode} onNavigate={(m) => navigate(m)} />
+
+      <main className="pt-4">
         {mode === Mode.HOME && renderHome()}
+        
         {mode === Mode.STUDY && (
-          <StudyMode 
-            initialSubject={selectedSubject} 
-            onBack={() => setMode(Mode.HOME)} 
-          />
+           <StudyMode initialSubject={selectedSubject} onBack={() => navigate(Mode.HOME)} />
         )}
+        
         {mode === Mode.QUIZ && (
-          <QuizMode 
-            initialSubject={selectedSubject} 
-            onBack={() => setMode(Mode.HOME)} 
-          />
+           <QuizMode initialSubject={selectedSubject} onBack={() => navigate(Mode.HOME)} />
         )}
+        
         {mode === Mode.PYQ && (
-          <PYQMode 
-            onBack={() => setMode(Mode.HOME)} 
-          />
+           <PYQMode onBack={() => navigate(Mode.HOME)} />
         )}
-        {mode === Mode.VOCAB && (
-          <VocabMode 
-            onBack={() => setMode(Mode.HOME)} 
-          />
-        )}
+
         {mode === Mode.CURRENT_AFFAIRS && (
-          <CurrentAffairsMode 
-            onBack={() => setMode(Mode.HOME)} 
-          />
+            <CurrentAffairsMode onBack={() => navigate(Mode.HOME)} />
         )}
-         {mode === Mode.BOOKMARKS && (
-          <BookmarksMode 
-            onBack={() => setMode(Mode.HOME)} 
-          />
+
+        {mode === Mode.VOCAB && (
+            <VocabMode onBack={() => navigate(Mode.HOME)} />
         )}
+        
+        {mode === Mode.BOOKMARKS && (
+            <BookmarksMode onBack={() => navigate(Mode.HOME)} />
+        )}
+
         {mode === Mode.LITERATURE && (
-          <LiteratureMode 
-            onBack={() => setMode(Mode.HOME)} 
-          />
+            <LiteratureMode onBack={() => navigate(Mode.HOME)} />
         )}
       </main>
 
-      <footer className="bg-slate-900 text-slate-400 py-6 mt-auto">
-        <div className="container mx-auto px-4 text-center">
-          <p>© {new Date().getFullYear()} MPSC Sarathi. Created for Aspirants.</p>
-          <p className="text-xs mt-2 opacity-50">Powered by Google Gemini AI</p>
-        </div>
-      </footer>
+      {mode === Mode.HOME && (
+        <footer className="text-center text-slate-400 py-6 text-sm border-t border-slate-200 mt-8">
+           <p>© {new Date().getFullYear()} MPSC Sarathi AI. Designed for Competitive Exam Aspirants.</p>
+        </footer>
+      )}
     </div>
   );
 };
-
-const ArrowRight = ({ className }: { className?: string }) => (
-  <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-);
 
 export default App;

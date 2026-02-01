@@ -236,9 +236,10 @@ export const generateQuiz = async (subject: Subject, topic: string, difficulty: 
          - EASY: Basic concepts.
          - MEDIUM: Standard MPSC Prelims level.
          - HARD: MPSC Mains level (Multi-statement).
-      2. **Crucial**: The 'explanation' field MUST be extremely detailed (minimum 100 words).
-         - Analyze ALL options.
-         - Break down the logic step-by-step.
+      2. **Crucial**: The 'explanation' field MUST be extremely detailed (minimum 150 words).
+         - Analyze ALL options deeply.
+         - **Comparative Analysis**: Explicitly explain why the correct answer is right AND why specific incorrect options are wrong.
+         - Break down the logic step-by-step to eliminate confusion.
       
       Return the response in strictly valid JSON format.
     `;
@@ -259,7 +260,7 @@ export const generateQuiz = async (subject: Subject, topic: string, difficulty: 
                 items: { type: Type.STRING }
               },
               correctAnswerIndex: { type: Type.INTEGER, description: "0-based index of the correct option" },
-              explanation: { type: Type.STRING, description: "Comprehensive explanation (min 100 words). For English subject, use Marathi (Devanagari) to explain." }
+              explanation: { type: Type.STRING, description: "Comprehensive explanation (min 150 words) with comparative analysis of options. For English subject, use Marathi (Devanagari) to explain." }
             },
             required: ["question", "options", "correctAnswerIndex", "explanation"]
           }
@@ -357,11 +358,15 @@ export const generatePYQs = async (subject: Subject, year: string, examType: Exa
   }
 };
 
-export const generateVocab = async (subject: Subject, category: VocabCategory): Promise<VocabWord[]> => {
+export const generateVocab = async (subject: Subject, category: VocabCategory, forceRefresh: boolean = false): Promise<VocabWord[]> => {
   // Use a new cache key suffix to ensure users get the new "PYQ + Related" format
   const cacheKey = getCacheKey('VOCAB_PYQ_REL_LANG', subject, category);
-  const cached = getFromDataCenter<VocabWord[]>(cacheKey);
-  if (cached) return cached;
+  
+  // Return cached data ONLY if forceRefresh is false
+  if (!forceRefresh) {
+    const cached = getFromDataCenter<VocabWord[]>(cacheKey);
+    if (cached) return cached;
+  }
 
   try {
     let categoryPrompt = '';

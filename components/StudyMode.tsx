@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Subject, LoadingState, RuleExplanation } from '../types';
 import { generateStudyNotes, generateConciseExplanation, playTextToSpeech } from '../services/gemini';
-import { Book, Send, Loader2, ArrowLeft, Lightbulb, Search, ListFilter, GraduationCap, ChevronDown, ChevronRight, ArrowRight, Save, Check, Volume2, Folder, Layout, Info, CheckCircle2, FileText, Minimize2, Maximize2, X, ChevronUp, Layers } from 'lucide-react';
+import { markTopicViewed, getProgress } from '../services/progress';
+import { Book, Send, Loader2, ArrowLeft, Lightbulb, Search, ListFilter, GraduationCap, ChevronDown, ChevronRight, ArrowRight, Save, Check, Volume2, Folder, Layout, Info, CheckCircle2, FileText, Minimize2, Maximize2, X, ChevronUp, Layers, CheckSquare } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 interface StudyModeProps {
@@ -174,6 +175,13 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
   // Logic for audio
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
 
+  // Progress Tracking
+  const [viewedTopics, setViewedTopics] = useState<string[]>([]);
+
+  useEffect(() => {
+    setViewedTopics(getProgress().studyTopicsViewed);
+  }, []);
+
   const generateNotes = async (topicToUse: string) => {
     if (!topicToUse.trim()) return;
 
@@ -186,6 +194,11 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
       const result = await generateStudyNotes(subject, topicToUse);
       setNotes(result);
       setStatus('success');
+      
+      // Update progress
+      markTopicViewed(topicToUse);
+      setViewedTopics(prev => [...new Set([...prev, topicToUse])]);
+
     } catch (error) {
       setStatus('error');
     }
@@ -209,6 +222,11 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
       try {
         const explanation = await generateConciseExplanation(subject, rule);
         setRuleExplanations(prev => ({ ...prev, [rule]: explanation }));
+        
+        // Mark rule as viewed even if full notes weren't generated, as they engaged with it
+        markTopicViewed(rule);
+        setViewedTopics(prev => [...new Set([...prev, rule])]);
+
       } catch (e) {
         console.error("Failed to load explanation", e);
       } finally {
@@ -422,7 +440,7 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
                  </div>
                  <div className="flex-1">
                      <p className="font-semibold text-sm">Quick Study Guide</p>
-                     <p className="text-xs text-indigo-700 mt-0.5">Browse topics by category or search below. Click to see quick explanations.</p>
+                     <p className="text-xs text-indigo-700 mt-0.5">Browse topics by category or search below. Checked items (<CheckSquare size={10} className="inline"/>) are topics you've studied.</p>
                  </div>
               </div>
 
@@ -493,6 +511,7 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
                                {group.topics.map((ruleItem, idx) => {
                                    const isLast = idx === group.topics.length - 1;
                                    const isExpanded = expandedRule === ruleItem;
+                                   const isViewed = viewedTopics.includes(ruleItem);
                                    
                                    return (
                                    <div key={idx} className={`relative ${!isLast ? 'border-b border-slate-100' : ''}`}>
@@ -507,13 +526,20 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
                                                 className="w-full text-left py-3 px-4 md:px-3 flex items-center justify-between group/item"
                                             >
                                                 <div className="flex items-center gap-3">
-                                                    <div className={`w-2 h-2 rounded-full transition-all ${isExpanded ? 'bg-indigo-500 scale-125' : 'bg-slate-300 group-hover/item:bg-indigo-300'}`} />
-                                                    <span className={`text-sm font-medium transition-colors ${isExpanded ? 'text-indigo-800 font-bold' : 'text-slate-600 group-hover/item:text-indigo-700'}`}>
+                                                    <div className={`w-2 h-2 rounded-full transition-all ${isExpanded ? 'bg-indigo-500 scale-125' : (isViewed ? 'bg-green-500' : 'bg-slate-300 group-hover/item:bg-indigo-300')}`} />
+                                                    <span className={`text-sm font-medium transition-colors ${isExpanded ? 'text-indigo-800 font-bold' : (isViewed ? 'text-slate-800' : 'text-slate-600 group-hover/item:text-indigo-700')}`}>
                                                         {ruleItem}
                                                     </span>
                                                 </div>
-                                                <div className={`transition-transform duration-200 ${isExpanded ? 'rotate-90 text-indigo-500' : 'text-slate-300 group-hover/item:text-slate-400'}`}>
-                                                    <ChevronRight size={16} />
+                                                <div className="flex items-center gap-3">
+                                                  {isViewed && (
+                                                     <span className="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-100 flex items-center gap-1">
+                                                       <CheckSquare size={10} /> Studied
+                                                     </span>
+                                                  )}
+                                                  <div className={`transition-transform duration-200 ${isExpanded ? 'rotate-90 text-indigo-500' : 'text-slate-300 group-hover/item:text-slate-400'}`}>
+                                                      <ChevronRight size={16} />
+                                                  </div>
                                                 </div>
                                             </button>
 

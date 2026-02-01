@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Subject, LoadingState, QuizQuestion, DifficultyLevel } from '../types';
 import { generateQuiz } from '../services/gemini';
+import { saveQuizResult } from '../services/progress';
 import { HelpCircle, CheckCircle2, XCircle, Loader2, ArrowLeft, RefreshCcw, Sparkles, Search, Play, Download, PieChart, Info, Eye, EyeOff, Gauge } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
@@ -87,6 +88,14 @@ export const QuizMode: React.FC<QuizModeProps> = ({ initialSubject = Subject.MAR
     });
     return score;
   };
+
+  const submitQuiz = () => {
+    setShowResults(true);
+    // Save progress
+    const score = calculateScore();
+    const total = questions.length;
+    saveQuizResult(topic || subject, score, total);
+  }
 
   const getStats = () => {
       const correct = calculateScore();
@@ -423,7 +432,7 @@ export const QuizMode: React.FC<QuizModeProps> = ({ initialSubject = Subject.MAR
 
           {!showResults ? (
               <button
-                onClick={() => setShowResults(true)}
+                onClick={submitQuiz}
                 disabled={userAnswers.includes(-1)}
                 className="w-full bg-green-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all"
               >
