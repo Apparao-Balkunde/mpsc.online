@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
-import { Subject, LoadingState, QuizQuestion } from '../types';
+import { Subject, LoadingState, QuizQuestion, DifficultyLevel } from '../types';
 import { generateQuiz } from '../services/gemini';
-import { HelpCircle, CheckCircle2, XCircle, Loader2, ArrowLeft, RefreshCcw, Sparkles, Search, Play, Download, PieChart, Info } from 'lucide-react';
+import { HelpCircle, CheckCircle2, XCircle, Loader2, ArrowLeft, RefreshCcw, Sparkles, Search, Play, Download, PieChart, Info, Eye, EyeOff, Gauge } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 
@@ -43,10 +43,12 @@ const SUGGESTED_TOPICS: Record<Subject, string[]> = {
 export const QuizMode: React.FC<QuizModeProps> = ({ initialSubject = Subject.MARATHI, onBack }) => {
   const [subject, setSubject] = useState<Subject>(initialSubject);
   const [topic, setTopic] = useState('');
+  const [difficulty, setDifficulty] = useState<DifficultyLevel>('MEDIUM');
   const [status, setStatus] = useState<LoadingState>('idle');
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [userAnswers, setUserAnswers] = useState<number[]>([]); // stores index of selected option
   const [showResults, setShowResults] = useState(false);
+  const [expandedExplanations, setExpandedExplanations] = useState<number[]>([]);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   
   const resultsRef = useRef<HTMLDivElement>(null);
@@ -58,10 +60,11 @@ export const QuizMode: React.FC<QuizModeProps> = ({ initialSubject = Subject.MAR
     setStatus('loading');
     setQuestions([]);
     setUserAnswers([]);
+    setExpandedExplanations([]);
     setShowResults(false);
 
     try {
-      const q = await generateQuiz(subject, topic);
+      const q = await generateQuiz(subject, topic, difficulty);
       setQuestions(q);
       setUserAnswers(new Array(q.length).fill(-1));
       setStatus('success');
@@ -98,6 +101,7 @@ export const QuizMode: React.FC<QuizModeProps> = ({ initialSubject = Subject.MAR
     setQuestions([]);
     setTopic('');
     setUserAnswers([]);
+    setExpandedExplanations([]);
     setShowResults(false);
   }
 
@@ -105,9 +109,24 @@ export const QuizMode: React.FC<QuizModeProps> = ({ initialSubject = Subject.MAR
     setTopic(suggestion);
   };
 
+  const toggleExplanation = (index: number) => {
+    setExpandedExplanations(prev => 
+      prev.includes(index) 
+        ? prev.filter(i => i !== index) 
+        : [...prev, index]
+    );
+  };
+
   const handleDownloadPDF = async () => {
     if (!resultsRef.current) return;
     setIsGeneratingPDF(true);
+
+    // Temporarily expand all explanations for PDF generation
+    const currentExpanded = [...expandedExplanations];
+    setExpandedExplanations(questions.map((_, i) => i));
+
+    // Wait for render cycle
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     try {
       const element = resultsRef.current;
@@ -144,7 +163,7 @@ export const QuizMode: React.FC<QuizModeProps> = ({ initialSubject = Subject.MAR
       
       pdf.setFontSize(10);
       pdf.setTextColor(100);
-      pdf.text(`Topic: ${topic || subject} | Date: ${new Date().toLocaleDateString()}`, margin, 22);
+      pdf.text(`Topic: ${topic || subject} | Difficulty: ${difficulty} | Date: ${new Date().toLocaleDateString()}`, margin, 22);
 
       // Main Content
       pdf.addImage(imgData, 'PNG', margin, 30, contentWidth, contentHeight);
@@ -160,6 +179,8 @@ export const QuizMode: React.FC<QuizModeProps> = ({ initialSubject = Subject.MAR
       console.error("PDF generation failed", error);
       alert("Failed to generate PDF. Please try again.");
     } finally {
+      // Restore previous state
+      setExpandedExplanations(currentExpanded);
       setIsGeneratingPDF(false);
     }
   };
@@ -204,6 +225,28 @@ export const QuizMode: React.FC<QuizModeProps> = ({ initialSubject = Subject.MAR
             </div>
 
             <form onSubmit={startQuiz}>
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
+                    <Gauge size={16} /> Difficulty Level
+                </label>
+                <div className="flex bg-slate-100 p-1 rounded-lg">
+                    {(['EASY', 'MEDIUM', 'HARD'] as DifficultyLevel[]).map((level) => (
+                        <button
+                            key={level}
+                            type="button"
+                            onClick={() => setDifficulty(level)}
+                            className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${
+                                difficulty === level 
+                                ? 'bg-white text-indigo-700 shadow-sm' 
+                                : 'text-slate-500 hover:text-slate-700'
+                            }`}
+                        >
+                            {level}
+                        </button>
+                    ))}
+                </div>
+              </div>
+
               <label className="block text-sm font-medium text-slate-700 mb-2">Enter Quiz Topic</label>
               <div className="flex gap-2 mb-4">
                   <div className="relative flex-1">
@@ -258,6 +301,9 @@ export const QuizMode: React.FC<QuizModeProps> = ({ initialSubject = Subject.MAR
           <Loader2 className="animate-spin h-12 w-12 text-indigo-600 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-slate-800">Preparing your questions...</h3>
           <p className="text-slate-500">Getting ready to challenge you!</p>
+          <div className="mt-2 text-xs font-semibold px-2 py-1 bg-indigo-50 text-indigo-600 inline-block rounded">
+            Level: {difficulty}
+          </div>
         </div>
       )}
 
@@ -272,7 +318,10 @@ export const QuizMode: React.FC<QuizModeProps> = ({ initialSubject = Subject.MAR
         <div className="space-y-6">
           {!showResults && (
              <div className="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm">
-                <h2 className="font-bold text-lg text-slate-800">{topic || subject} Quiz</h2>
+                <div>
+                    <h2 className="font-bold text-lg text-slate-800">{topic || subject} Quiz</h2>
+                    <span className="text-xs text-slate-500 font-semibold bg-slate-100 px-2 py-0.5 rounded ml-2">{difficulty}</span>
+                </div>
                 <span className="text-sm bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full font-medium">{userAnswers.filter(a => a !== -1).length}/{questions.length} Answered</span>
              </div>
           )}
@@ -282,7 +331,7 @@ export const QuizMode: React.FC<QuizModeProps> = ({ initialSubject = Subject.MAR
             {showResults && (
                 <div className="bg-white border border-indigo-100 rounded-xl p-6 shadow-sm text-center">
                     <h1 className="text-2xl font-bold text-indigo-900 mb-2">Quiz Results</h1>
-                    <p className="text-slate-500 mb-6">{subject} • {topic}</p>
+                    <p className="text-slate-500 mb-6">{subject} • {topic} • {difficulty}</p>
                     
                     <div className="flex justify-center items-center gap-4 md:gap-12 mb-6">
                         <div className="text-center">
@@ -342,11 +391,30 @@ export const QuizMode: React.FC<QuizModeProps> = ({ initialSubject = Subject.MAR
                 </div>
                 
                 {showResults && (
-                    <div className="mt-4 p-4 bg-yellow-50 text-yellow-900 rounded-lg text-sm border border-yellow-200">
-                        <strong className="block mb-1 font-bold flex items-center gap-2 text-yellow-700">
-                           <Info size={16} /> Explanation:
-                        </strong>
-                        <p className="leading-relaxed text-slate-800">{q.explanation}</p>
+                    <div className="mt-4">
+                        <button
+                            onClick={() => toggleExplanation(qIdx)}
+                            className="text-indigo-600 text-sm font-semibold flex items-center gap-2 hover:text-indigo-800 transition-colors focus:outline-none"
+                        >
+                            {expandedExplanations.includes(qIdx) ? (
+                                <>
+                                    <EyeOff size={16} /> Hide Explanation
+                                </>
+                            ) : (
+                                <>
+                                    <Eye size={16} /> Show Explanation
+                                </>
+                            )}
+                        </button>
+
+                        {expandedExplanations.includes(qIdx) && (
+                            <div className="mt-3 p-4 bg-yellow-50 text-yellow-900 rounded-lg text-sm border border-yellow-200 animate-in fade-in slide-in-from-top-2">
+                                <strong className="block mb-1 font-bold flex items-center gap-2 text-yellow-700">
+                                <Info size={16} /> Explanation:
+                                </strong>
+                                <p className="leading-relaxed text-slate-800">{q.explanation}</p>
+                            </div>
+                        )}
                     </div>
                 )}
               </div>
@@ -366,21 +434,3 @@ export const QuizMode: React.FC<QuizModeProps> = ({ initialSubject = Subject.MAR
                   <button
                     onClick={resetQuiz}
                     className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 shadow-lg flex items-center justify-center gap-2"
-                  >
-                      <RefreshCcw size={20}/> Take Another Quiz
-                  </button>
-                  <button
-                    onClick={handleDownloadPDF}
-                    disabled={isGeneratingPDF}
-                    className="flex-1 bg-slate-800 text-white py-3 rounded-xl font-bold hover:bg-slate-900 shadow-lg flex items-center justify-center gap-2 disabled:opacity-70"
-                  >
-                      {isGeneratingPDF ? <Loader2 size={20} className="animate-spin" /> : <Download size={20}/>}
-                      {isGeneratingPDF ? 'Generating PDF...' : 'Download Result PDF'}
-                  </button>
-              </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-};

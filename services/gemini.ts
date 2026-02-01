@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
-import { Subject, QuizQuestion, VocabWord, CurrentAffairItem, ExamType, VocabCategory, RuleExplanation, DescriptiveQA } from '../types';
+import { Subject, QuizQuestion, VocabWord, CurrentAffairItem, ExamType, VocabCategory, RuleExplanation, DescriptiveQA, DifficultyLevel } from '../types';
 
 const apiKey = process.env.API_KEY || '';
 const ai = new GoogleGenAI({ apiKey });
@@ -209,8 +209,8 @@ export const generateConciseExplanation = async (subject: Subject, topic: string
   }
 };
 
-export const generateQuiz = async (subject: Subject, topic: string): Promise<QuizQuestion[]> => {
-  const cacheKey = getCacheKey('QUIZ', subject, topic);
+export const generateQuiz = async (subject: Subject, topic: string, difficulty: DifficultyLevel = 'MEDIUM'): Promise<QuizQuestion[]> => {
+  const cacheKey = getCacheKey('QUIZ', subject, topic, difficulty);
   const cached = getFromDataCenter<QuizQuestion[]>(cacheKey);
   if (cached) return cached;
 
@@ -219,11 +219,16 @@ export const generateQuiz = async (subject: Subject, topic: string): Promise<Qui
       Generate 20 multiple choice questions (MCQs) for MPSC exam practice.
       Subject: ${subject}
       Topic: ${topic}
+      Difficulty Level: ${difficulty}
       Language: ${subject === Subject.MARATHI ? 'Marathi' : 'English'}
       
       Requirements:
-      1. Ensure questions cover various difficulty levels and aspects of the topic.
-      2. **Crucial**: The 'explanation' field MUST be detailed and educational (approx 30-50 words). 
+      1. Difficulty Guidelines:
+         - EASY: Basic concepts, direct definitions, simple identification.
+         - MEDIUM: Application of rules, exception identification, standard MPSC Prelims level.
+         - HARD: Complex sentences, multi-statement questions (A, B, C correct), deep conceptual analysis, MPSC Mains level.
+      2. Ensure questions cover various aspects of the topic.
+      3. **Crucial**: The 'explanation' field MUST be detailed and educational (approx 30-50 words). 
          - If Marathi Grammar: Explain the rule (नियम) clearly in Marathi.
          - If English Grammar: Explain the rule in English.
          - Explain WHY the answer is correct and briefly why others are incorrect if relevant.

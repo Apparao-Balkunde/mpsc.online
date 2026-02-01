@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { DescriptiveQA, LoadingState } from '../types';
 import { generateDescriptiveQA } from '../services/gemini';
-import { ArrowLeft, BookOpen, PenTool, Loader2, Sparkles, Eye, CheckCircle2, Copy, FileText, GraduationCap } from 'lucide-react';
+import { ArrowLeft, BookOpen, PenTool, Loader2, Sparkles, Eye, CheckCircle2, Copy, FileText, GraduationCap, Lightbulb, Feather, Scale } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 interface LiteratureModeProps {
@@ -107,6 +107,38 @@ export const LiteratureMode: React.FC<LiteratureModeProps> = ({ onBack }) => {
           </div>
         </div>
       </div>
+
+      {/* Study Tips Section - Visible when idle */}
+      {!qaData && status !== 'loading' && (
+        <div className="grid md:grid-cols-3 gap-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
+           <div className="bg-blue-50 p-5 rounded-xl border border-blue-100">
+              <h3 className="font-bold text-blue-800 mb-2 flex items-center gap-2">
+                 <Lightbulb size={18} /> Structure (रचना)
+              </h3>
+              <p className="text-sm text-blue-900/80 leading-relaxed">
+                 Start with a historical context (Introduction). The body must analyze the core theme (Gaba). Conclude with a synthesis of the impact (Nishkarsh).
+              </p>
+           </div>
+           
+           <div className="bg-purple-50 p-5 rounded-xl border border-purple-100">
+              <h3 className="font-bold text-purple-800 mb-2 flex items-center gap-2">
+                 <Feather size={18} /> Critical Terms (समीक्षा)
+              </h3>
+              <p className="text-sm text-purple-900/80 leading-relaxed">
+                 Use academic terms like 'सौंदर्यशास्त्र' (Aesthetics), 'अस्तित्ववाद' (Existentialism). Quote critics like Nemade or P.S. Rege to add weight.
+              </p>
+           </div>
+           
+           <div className="bg-emerald-50 p-5 rounded-xl border border-emerald-100">
+              <h3 className="font-bold text-emerald-800 mb-2 flex items-center gap-2">
+                 <Scale size={18} /> Comparison (तुलना)
+              </h3>
+              <p className="text-sm text-emerald-900/80 leading-relaxed">
+                 Always compare the work with contemporary pieces. For example, compare rural depictions in 'Bangarwadi' vs 'Pachola'.
+              </p>
+           </div>
+        </div>
+      )}
 
       {status === 'loading' && (
         <div className="text-center py-16 bg-white rounded-xl border border-slate-100 shadow-sm">

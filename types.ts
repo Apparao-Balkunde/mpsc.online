@@ -19,6 +19,8 @@ export type ExamType = 'ALL' | 'RAJYASEVA' | 'GROUP_B' | 'GROUP_C';
 
 export type VocabCategory = 'IDIOMS' | 'SYNONYMS' | 'ANTONYMS' | 'ONE_WORD';
 
+export type DifficultyLevel = 'EASY' | 'MEDIUM' | 'HARD';
+
 export interface QuizQuestion {
   question: string;
   options: string[];
