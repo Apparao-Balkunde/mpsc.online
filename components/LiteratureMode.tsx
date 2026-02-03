@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { DescriptiveQA, LoadingState } from '../types';
 import { generateDescriptiveQA } from '../services/gemini';
-import { ArrowLeft, BookOpen, PenTool, Loader2, Sparkles, Eye, CheckCircle2, Copy, FileText, GraduationCap, Lightbulb, Feather, Scale } from 'lucide-react';
+import { ArrowLeft, BookOpen, PenTool, Loader2, Sparkles, Eye, CheckCircle2, Copy, FileText, GraduationCap, Lightbulb, Scale, BookMarked } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 interface LiteratureModeProps {
@@ -114,32 +114,45 @@ export const LiteratureMode: React.FC<LiteratureModeProps> = ({ onBack }) => {
 
       {/* Study Tips Section - Visible when idle */}
       {!qaData && status !== 'loading' && (
-        <div className="grid md:grid-cols-3 gap-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
-           <div className="bg-blue-50 p-5 rounded-xl border border-blue-100">
-              <h3 className="font-bold text-blue-800 mb-2 flex items-center gap-2">
-                 <Lightbulb size={18} /> Structure (रचना)
-              </h3>
-              <p className="text-sm text-blue-900/80 leading-relaxed">
-                 Start with a historical context (Introduction). The body must analyze the core theme (Gaba). Conclude with a synthesis of the impact (Nishkarsh).
-              </p>
+        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
+           <div className="flex items-center gap-2 mb-2 px-1">
+              <BookMarked className="text-indigo-600" />
+              <h3 className="text-lg font-bold text-slate-800">MPSC Mains Literature Strategy (अभ्यास पद्धती)</h3>
            </div>
            
-           <div className="bg-purple-50 p-5 rounded-xl border border-purple-100">
-              <h3 className="font-bold text-purple-800 mb-2 flex items-center gap-2">
-                 <Feather size={18} /> Critical Terms (समीक्षा)
-              </h3>
-              <p className="text-sm text-purple-900/80 leading-relaxed">
-                 Use academic terms like 'सौंदर्यशास्त्र' (Aesthetics), 'अस्तित्ववाद' (Existentialism). Quote critics like Nemade or P.S. Rege to add weight.
-              </p>
-           </div>
-           
-           <div className="bg-emerald-50 p-5 rounded-xl border border-emerald-100">
-              <h3 className="font-bold text-emerald-800 mb-2 flex items-center gap-2">
-                 <Scale size={18} /> Comparison (तुलना)
-              </h3>
-              <p className="text-sm text-emerald-900/80 leading-relaxed">
-                 Always compare the work with contemporary pieces. For example, compare rural depictions in 'Bangarwadi' vs 'Pachola'.
-              </p>
+           <div className="grid md:grid-cols-3 gap-4">
+              <div className="bg-blue-50 p-5 rounded-xl border border-blue-100 shadow-sm hover:shadow-md transition-shadow">
+                  <h4 className="font-bold text-blue-800 mb-3 text-sm uppercase tracking-wide flex items-center gap-2">
+                    <PenTool size={16} /> Answer Structure (रचना)
+                  </h4>
+                  <ul className="text-sm text-blue-900/80 space-y-2 list-disc list-outside pl-4">
+                      <li><strong>Introduction (प्रस्तावना):</strong> Briefly contextualize the author, their era (कालखंड), and the literary movement.</li>
+                      <li><strong>Body (गाभा):</strong> Focus on the core demand of the question. Use logical flow, not just story summary.</li>
+                      <li><strong>Conclusion (निष्कर्ष):</strong> Provide your own analytical synthesis or assessment, don't just summarize.</li>
+                  </ul>
+              </div>
+              
+              <div className="bg-purple-50 p-5 rounded-xl border border-purple-100 shadow-sm hover:shadow-md transition-shadow">
+                  <h4 className="font-bold text-purple-800 mb-3 text-sm uppercase tracking-wide flex items-center gap-2">
+                    <Scale size={16} /> Critical Analysis (समीक्षा)
+                  </h4>
+                   <ul className="text-sm text-purple-900/80 space-y-2 list-disc list-outside pl-4">
+                      <li>Move beyond simple description. Use literary terms like 'सौंदर्यशास्त्र' (Aesthetics) or 'अस्तित्ववाद' (Existentialism).</li>
+                      <li><strong>Comparative Study (तौलनिक अभ्यास):</strong> Compare the work with contemporary pieces (e.g., Rural life in 'Bangarwadi' vs 'Pachola').</li>
+                      <li>Quote renowned critics (e.g., Nemade, Hatkananglekar) to substantiate your points.</li>
+                  </ul>
+              </div>
+              
+              <div className="bg-emerald-50 p-5 rounded-xl border border-emerald-100 shadow-sm hover:shadow-md transition-shadow">
+                  <h4 className="font-bold text-emerald-800 mb-3 text-sm uppercase tracking-wide flex items-center gap-2">
+                    <FileText size={16} /> Using Model Answers
+                  </h4>
+                   <ul className="text-sm text-emerald-900/80 space-y-2 list-disc list-outside pl-4">
+                      <li><strong>Analyze Structure:</strong> Don't memorize. Observe how the AI links paragraphs and arguments.</li>
+                      <li><strong>Vocabulary Mining:</strong> Note down specific critical terms (Paribhashik Shabda) used in the model answer.</li>
+                      <li><strong>Self-Correction:</strong> Write your answer first, then compare with the model to identify missing dimensions.</li>
+                  </ul>
+              </div>
            </div>
         </div>
       )}
