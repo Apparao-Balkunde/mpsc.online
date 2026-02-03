@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Subject, LoadingState, RuleExplanation } from '../types';
 import { generateStudyNotes, generateConciseExplanation, playTextToSpeech } from '../services/gemini';
 import { markTopicViewed, getProgress } from '../services/progress';
-import { Book, Send, Loader2, ArrowLeft, Lightbulb, Search, ListFilter, GraduationCap, ChevronDown, ChevronRight, ArrowRight, Save, Check, Volume2, Folder, Layout, Info, CheckCircle2, FileText, Minimize2, Maximize2, X, ChevronUp, Layers, CheckSquare } from 'lucide-react';
+import { Book, Send, Loader2, ArrowLeft, Lightbulb, Search, ListFilter, GraduationCap, ChevronDown, ChevronRight, Save, Check, Volume2, Folder, CheckSquare, Target, AlertTriangle, CheckCircle2, FileText, Minimize2, Maximize2, Layers } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 interface StudyModeProps {
@@ -18,113 +18,213 @@ interface TopicGroup {
 const GRAMMAR_STRUCTURE: Record<Subject, TopicGroup[]> = {
   [Subject.MARATHI]: [
     {
-      category: "वर्णमाला व नियम (Alphabet & Basics)",
+      category: "१. वर्णविचार (Phonology & Alphabet)",
       topics: [
-        "मराठी वर्णमाला: स्वर, स्वरादी, व्यंजने (Alphabet Structure)",
-        "जोडाक्षरे व लेखन प्रकार (Conjunct Consonants)",
-        "संधी (Sandhi): स्वर, व्यंजन व विसर्ग संधी",
-        "विरामचिन्हे व शुद्धलेखन (Punctuation & Orthography)"
+        "मराठी वर्णमाला: स्वर, स्वरादी, व्यंजन (Alphabet Classification)",
+        "वर्णांचे उच्चारस्थान (Places of Articulation)",
+        "जोडाक्षरे व लेखन पद्धती (Conjunct Consonants)",
+        "संधी: स्वरसंधी नियमावली (Vowel Sandhi Rules)",
+        "संधी: व्यंजनसंधी व विसर्गसंधी (Consonant & Visarga Sandhi)"
       ]
     },
     {
-      category: "शब्दांच्या जाती (Parts of Speech)",
+      category: "२. नाम व नामाचे विकार (Nouns & Declension)",
       topics: [
-        "नाम: प्रकार, लिंग, वचन, विभक्ती (Noun)",
-        "सर्वनाम: प्रकार व उपयोग (Pronoun)",
-        "विशेषण: प्रकार व अवस्था (Adjective)",
-        "क्रियापद: प्रकार, अर्थ, आख्यात (Verb)",
-        "क्रियाविशेषण अव्यय (Adverb)",
-        "शब्दयोगी अव्यय (Preposition)",
-        "उभयान्वयी अव्यय (Conjunction)",
-        "केवलप्रयोगी अव्यय (Interjection)"
+        "नाम: प्रकार (सामान्यनाम, विशेषनाम, भाववाचक नाम)",
+        "लिंग विचार: नियम व अपवाद (Gender Rules)",
+        "वचन विचार: नियम व अपवाद (Number Rules)",
+        "विभक्ती: प्रत्यय व कारकार्थ (Case & Case Relations)",
+        "सामान्यरूप: नियम व उदाहरणे (Normal Form of Nouns)"
       ]
     },
     {
-      category: "वाक्य व व्याकरण (Sentence & Grammar)",
+      category: "३. सर्वनाम व विशेषण (Pronouns & Adjectives)",
       topics: [
-        "वाक्याचे प्रकार (Types of Sentences)",
-        "प्रयोग (Prayog): कर्तरी, कर्मणी, भावे",
-        "समास (Compound Words): अव्ययीभाव, तत्पुरुष, द्वंद्व, बहुव्रीही",
-        "वाक्यरुपांतर (Sentence Transformation)",
-        "वाक्यपृथक्करण (Sentence Analysis)",
-        "काळ व काळाचे प्रकार (Tenses)"
+        "सर्वनाम: प्रकार व उपयोग (Pronoun Types)",
+        "विशेषण: प्रकार (गुणवाचक, संख्यावाचक, सार्वनामिक)",
+        "विशेषणांचे उपयोग व तुलना (Usage of Adjectives)"
       ]
     },
     {
-      category: "शब्दसंपत्ती (Vocabulary)",
+      category: "४. क्रियापद व काळ (Verbs & Tenses)",
       topics: [
-        "अलंकार (Figures of Speech)",
-        "वृत्ते (Prosody/Meter)",
-        "शब्दसिद्धी: तत्सम, तद्भव, देशी, परभाषिक",
-        "वाक्प्रचार व म्हणी (Idioms & Proverbs)",
-        "समानार्थी व विरुद्धार्थी शब्द (Synonyms & Antonyms)"
+        "क्रियापद: सकर्मक, अकर्मक, द्विकर्मक, उभयविध",
+        "सिद्ध व साधित क्रियापदे (Derived Verbs)",
+        "काळ: वर्तमान, भूत, भविष्य (Tenses & Sub-types)",
+        "आख्यात विकार व अर्थ (Moods: Imperative, etc.)"
+      ]
+    },
+    {
+      category: "५. अव्यय विचार (Indeclinables)",
+      topics: [
+        "क्रियाविशेषण अव्यय: प्रकार (Adverbs)",
+        "शब्दयोगी अव्यय: प्रकार व सामान्यरूप (Prepositions)",
+        "उभयान्वयी अव्यय (Conjunctions)",
+        "केवलप्रयोगी अव्यय (Interjections)"
+      ]
+    },
+    {
+      category: "६. वाक्यरचना व प्रयोग (Syntax & Voice)",
+      topics: [
+        "प्रयोग: कर्तरी, कर्मणी, भावे (Voice Analysis)",
+        "संकर प्रयोग (Hybrid Voice Types)",
+        "वाक्यप्रकार: विधानार्थी, प्रश्नार्थी, उद्गारार्थी",
+        "वाक्यसंश्लेषण (Sentence Synthesis)",
+        "वाक्यपृथक्करण (Sentence Analysis)"
+      ]
+    },
+    {
+      category: "७. शब्दसिद्धी व समास (Word Formation)",
+      topics: [
+        "समास: अव्ययीभाव, तत्पुरुष (Compounds)",
+        "समास: द्वंद्व, बहुव्रीही (Compounds)",
+        "शब्दसिद्धी: तत्सम, तद्भव, देशी शब्द",
+        "परभाषीय शब्द: कानडी, गुजराती, पोर्तुगीज, फारसी",
+        "उपसर्ग व प्रत्यय घटित शब्द"
+      ]
+    },
+    {
+      category: "८. वृत्त, अलंकार व रस (Poetics)",
+      topics: [
+        "अलंकार: शब्दालंकार (यमक, अनुप्रास, श्लेष)",
+        "अलंकार: अर्थालंकार (उपमा, उत्प्रेक्षा, रूपक, इ.)",
+        "वृत्ते: अक्षरगणवृत्ते (भुजंगप्रयात, वसंततिलका)",
+        "वृत्ते: मात्रावृत्ते (दिंडी, आर्या)",
+        "काव्यरस: नवरस (The 9 Rasas)",
+        "शब्दशक्ती: अभिधा, लक्षणा, व्यंजना"
+      ]
+    },
+    {
+      category: "९. लेखन नियम (Writing Rules)",
+      topics: [
+        "शुद्धलेखनाचे नियम (Standard Spelling Rules)",
+        "विरामचिन्हे व त्यांचा वापर (Punctuation)"
       ]
     }
   ],
   [Subject.ENGLISH]: [
     {
-      category: "Fundamentals of Grammar",
+      category: "1. Fundamentals & Parts of Speech",
       topics: [
-        "Articles: A, An, The (Rules & Omission)",
-        "Nouns: Number, Gender & Case Rules",
-        "Pronouns: Personal, Relative, Reflexive",
-        "Adjectives: Degrees of Comparison",
-        "Verbs: Transitive, Intransitive & Auxiliaries"
+        "Articles: A, An, The (Definite & Indefinite Rules)",
+        "Nouns: Countable/Uncountable & Collective Nouns",
+        "Nouns: Number (Singular/Plural Tricks) & Gender",
+        "Pronouns: Personal, Relative, Reflexive Rules",
+        "Adjectives: Order, Position & confusing pairs (Little/Few)",
+        "Verbs: Transitive/Intransitive & State Verbs",
+        "Adverbs: Types, Placement & Inversion Rule"
       ]
     },
     {
-      category: "Tenses & Voice",
+      category: "2. Tenses & Time Expressions",
       topics: [
-        "Tenses: Present, Past, Future (Structure & Usage)",
-        "Subject-Verb Agreement (Concord Rules)",
-        "Active & Passive Voice (Transformation)",
-        "Direct & Indirect Speech (Narration)"
+        "Present Tense: Simple, Continuous, Perfect, Perfect Continuous",
+        "Past Tense: Simple, Continuous, Perfect, Perfect Continuous",
+        "Future Tense: Will vs Going to, Future Perfect",
+        "Sequence of Tenses Rules",
+        "Conditional Sentences: Zero, 1st, 2nd, 3rd Conditionals"
       ]
     },
     {
-      category: "Advanced Sentence Structure",
+      category: "3. Syntax & Agreement",
       topics: [
-        "Clauses: Noun, Adjective, Adverb Clauses",
-        "Types of Sentences: Simple, Compound, Complex",
-        "Question Tags & Frame Questions",
-        "Modal Auxiliaries & their Usage",
-        "Transformation: Affirmative to Negative",
-        "Transformation: Exclamatory to Assertive",
-        "Remove 'too' / Use 'so...that'"
+        "Subject-Verb Agreement (Concord): 20 Golden Rules",
+        "Non-Finite Verbs: Gerunds vs Infinitives",
+        "Participles: Present, Past & Dangling Participles",
+        "Modals: Usage of Can, Could, May, Might, Must",
+        "Causative Verbs: Make, Get, Have, Let",
+        "Subjunctive Mood (Wishes & Hypotheses)"
       ]
     },
     {
-      category: "Vocabulary & Usage",
+      category: "4. Sentence Transformations",
       topics: [
-        "Prepositions: Fixed & Phrasal Prepositions",
-        "Conjunctions & Connectors",
-        "Phrasal Verbs & Idioms",
-        "One Word Substitution",
-        "Common Errors in Sentence Construction",
-        "Punctuation Marks"
+        "Active & Passive Voice: All Tenses & Imperatives",
+        "Direct & Indirect Speech: Assertive, Interrogative, Exclamatory",
+        "Degrees of Comparison: Positive, Comparative, Superlative",
+        "Sentence Types: Simple, Compound, Complex Transformation",
+        "Question Tags: Rules & Exceptions",
+        "Remove 'Too' / Use 'So...That'"
       ]
     },
+    {
+      category: "5. Clauses & Structure",
+      topics: [
+        "Clauses: Noun Clause Identification",
+        "Clauses: Adjective (Relative) Clause Rules",
+        "Clauses: Adverb Clause Types (Time, Place, Reason)",
+        "Parallelism in Sentence Structure",
+        "Superfluous Expressions (Redundancy Errors)"
+      ]
+    },
+    {
+      category: "6. Vocabulary & Mechanics",
+      topics: [
+        "Prepositions: Fixed Prepositions (Good at, Afraid of)",
+        "Prepositions: Time & Place (In/On/At rules)",
+        "Conjunctions: Coordinating vs Subordinating",
+        "Phrasal Verbs: High Frequency List",
+        "Spotting the Error: Top 50 Common Mistakes",
+        "Punctuation & Capitalization Rules",
+        "One Word Substitution Themes"
+      ]
+    }
   ],
   [Subject.GS]: [
     {
-      category: "History & Culture",
+      category: "History & Culture (इतिहास)",
       topics: [
-        "Maharashtra: Social Reformers",
-        "History: 1857 Revolt in Maharashtra"
+        "Maharashtra: Social Reformers (Phule, Shahu, Ambedkar)",
+        "Modern India: 1857 Revolt & Maharashtra's Contribution",
+        "Maratha Empire: Administration, Forts, & Governance",
+        "Samyukta Maharashtra Movement (संयुक्त महाराष्ट्र चळवळ)",
+        "Revolutionary Movement in India & Maharashtra",
+        "Governor Generals and Viceroys of India"
       ]
     },
     {
-      category: "Polity & Constitution",
+      category: "Polity & Constitution (राज्यशास्त्र)",
       topics: [
-        "Indian Constitution: Fundamental Rights",
-        "Polity: Panchayat Raj Institutions"
+        "Preamble & Fundamental Rights (Articles 12-35)",
+        "Directive Principles (DPSP) & Fundamental Duties",
+        "Parliament: President, Lok Sabha, Rajya Sabha",
+        "State Legislature: Governor, Vidhan Sabha, Parishad",
+        "Panchayat Raj: 73rd & 74th Constitutional Amendments",
+        "Important Constitutional Bodies (ECI, UPSC, CAG)",
+        "Emergency Provisions (Article 352, 356, 360)"
       ]
     },
     {
-      category: "Geography & Economy",
+      category: "Geography (भूगोल)",
       topics: [
-        "Geography: Maharashtra River Systems",
-        "Economy: RBI Functions"
+        "Physical Geography of Maharashtra: Kokan, Sahyadri, Plateau",
+        "River Systems of Maharashtra (Godavari, Krishna, Tapi)",
+        "Climate, Soils and Crops of Maharashtra",
+        "Mineral Resources in Maharashtra",
+        "Population & Census 2011 Highlights (Maharashtra)",
+        "Solar System & Earth's Interior"
+      ]
+    },
+    {
+      category: "Economy (अर्थशास्त्र)",
+      topics: [
+        "RBI: Monetary Policy & Functions",
+        "National Income: GDP, GNP, NNP Concepts",
+        "Poverty & Unemployment in India (Committees)",
+        "Five Year Plans of India (NITI Aayog)",
+        "Banking Sector Reforms & Financial Inclusion",
+        "Public Finance: GST & Budget"
+      ]
+    },
+    {
+      category: "General Science (सामान्य विज्ञान)",
+      topics: [
+        "Physics: Light, Sound, Electricity basics",
+        "Chemistry: Atomic Structure, Acids, Bases, Salts",
+        "Biology: Human Body Systems (Digestive, Circulatory)",
+        "Diseases: Bacterial, Viral, Protozoan",
+        "Vitamins & Nutrition",
+        "Environment: Ecosystem, Pollution, Biodiversity"
       ]
     }
   ]
@@ -197,7 +297,10 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
       
       // Update progress
       markTopicViewed(topicToUse);
-      setViewedTopics(prev => [...new Set([...prev, topicToUse])]);
+      setViewedTopics(prev => {
+         if (prev.includes(topicToUse)) return prev;
+         return [...prev, topicToUse];
+      });
 
     } catch (error) {
       setStatus('error');
@@ -217,16 +320,18 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
 
     setExpandedRule(rule);
 
+    // Mark as viewed immediately when expanding
+    markTopicViewed(rule);
+    setViewedTopics(prev => {
+        if (prev.includes(rule)) return prev;
+        return [...prev, rule];
+    });
+
     if (!ruleExplanations[rule]) {
       setLoadingExplanation(true);
       try {
         const explanation = await generateConciseExplanation(subject, rule);
         setRuleExplanations(prev => ({ ...prev, [rule]: explanation }));
-        
-        // Mark rule as viewed even if full notes weren't generated, as they engaged with it
-        markTopicViewed(rule);
-        setViewedTopics(prev => [...new Set([...prev, rule])]);
-
       } catch (e) {
         console.error("Failed to load explanation", e);
       } finally {
@@ -252,6 +357,7 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
 
   const handleCollapseAll = () => {
     setOpenCategories({});
+    setExpandedRule(null);
   };
 
   const handleSaveNotes = () => {
@@ -375,7 +481,7 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                     }`}
                   >
-                    {s === Subject.MARATHI ? 'Marathi (मराठी)' : s}
+                    {s === Subject.MARATHI ? 'Marathi (मराठी)' : (s === Subject.GS ? 'General Studies (GS)' : s)}
                   </button>
                 ))}
               </div>
@@ -403,7 +509,7 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
               }`}
             >
               <ListFilter size={18} />
-              Common Grammar Rules
+              {subject === Subject.GS ? 'Common Syllabus Topics' : 'Common Grammar Rules'}
             </button>
           </div>
         </div>
@@ -419,7 +525,11 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
                     type="text"
                     value={topic}
                     onChange={(e) => setTopic(e.target.value)}
-                    placeholder={subject === Subject.MARATHI ? "e.g. प्रयोग, समास..." : "e.g. Tenses, Articles..."}
+                    placeholder={
+                        subject === Subject.MARATHI ? "e.g. प्रयोग, समास..." : 
+                        subject === Subject.GS ? "e.g. 1857 Revolt, President Powers..." : 
+                        "e.g. Tenses, Articles..."
+                    }
                     className="flex-1 rounded-lg border-slate-300 border p-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
                   />
                   <button
@@ -454,7 +564,7 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
                     type="text"
                     value={ruleFilter}
                     onChange={(e) => setRuleFilter(e.target.value)}
-                    placeholder={`Search ${subject} rules...`}
+                    placeholder={`Search ${subject === Subject.GS ? 'GS Syllabus' : subject + ' rules'}...`}
                     className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg leading-5 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm transition-all"
                     />
                 </div>
@@ -515,18 +625,19 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
                                    
                                    return (
                                    <div key={idx} className={`relative ${!isLast ? 'border-b border-slate-100' : ''}`}>
-                                        {/* Tree line visual */}
-                                        <div className="absolute left-6 top-0 bottom-0 w-px bg-slate-200 z-0 hidden md:block" />
+                                        {/* Tree line visual - Vertical */}
+                                        <div className="absolute left-[1.35rem] top-0 bottom-0 w-px bg-slate-200 z-0" />
                                         
-                                        <div className={`relative z-10 pl-0 md:pl-10 transition-colors ${isExpanded ? 'bg-indigo-50/50' : 'hover:bg-slate-50'}`}>
-                                            <div className="absolute left-6 top-1/2 w-4 h-px bg-slate-200 hidden md:block" />
+                                        <div className={`relative z-10 pl-10 transition-colors ${isExpanded ? 'bg-indigo-50/50' : 'hover:bg-slate-50'}`}>
+                                            {/* Tree line visual - Horizontal Connector */}
+                                            <div className="absolute left-[1.35rem] top-1/2 w-5 h-px bg-slate-200" />
                                             
                                             <button
                                                 onClick={() => toggleRule(ruleItem)}
-                                                className="w-full text-left py-3 px-4 md:px-3 flex items-center justify-between group/item"
+                                                className="w-full text-left py-3 px-3 flex items-center justify-between group/item"
                                             >
                                                 <div className="flex items-center gap-3">
-                                                    <div className={`w-2 h-2 rounded-full transition-all ${isExpanded ? 'bg-indigo-500 scale-125' : (isViewed ? 'bg-green-500' : 'bg-slate-300 group-hover/item:bg-indigo-300')}`} />
+                                                    <div className={`w-2 h-2 shrink-0 rounded-full transition-all ${isExpanded ? 'bg-indigo-500 scale-125' : (isViewed ? 'bg-green-500' : 'bg-slate-300 group-hover/item:bg-indigo-300')}`} />
                                                     <span className={`text-sm font-medium transition-colors ${isExpanded ? 'text-indigo-800 font-bold' : (isViewed ? 'text-slate-800' : 'text-slate-600 group-hover/item:text-indigo-700')}`}>
                                                         {ruleItem}
                                                     </span>
@@ -545,19 +656,19 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
 
                                             {/* Expanded Rule Details */}
                                             {isExpanded && (
-                                                <div className="px-4 pb-4 pt-0">
+                                                <div className="px-3 pb-4 pt-0">
                                                     <div className="bg-white rounded-lg shadow-lg border border-indigo-100 overflow-hidden animate-in zoom-in-95 duration-200 mt-2">
                                                         <div className="p-4 bg-indigo-50 border-b border-indigo-100 flex justify-between items-center">
                                                             <div className="flex items-center gap-2">
                                                                 <Book size={16} className="text-indigo-600" />
-                                                                <span className="text-xs font-bold text-indigo-700 uppercase tracking-wide">Quick Explanation</span>
+                                                                <span className="text-xs font-bold text-indigo-700 uppercase tracking-wide">Detailed Analysis</span>
                                                             </div>
                                                             <button onClick={() => generateNotes(ruleItem)} className="text-xs flex items-center gap-1 bg-white border border-indigo-200 text-indigo-700 px-2 py-1 rounded hover:bg-indigo-50 transition-colors">
                                                                 <FileText size={12} /> Full Notes
                                                             </button>
                                                         </div>
 
-                                                        <div className="p-5 max-h-[400px] overflow-y-auto">
+                                                        <div className="p-5 max-h-[500px] overflow-y-auto">
                                                             {loadingExplanation && !ruleExplanations[ruleItem] ? (
                                                                 <div className="flex flex-col items-center justify-center py-8">
                                                                     <Loader2 size={24} className="animate-spin text-indigo-500 mb-2"/>
@@ -565,23 +676,56 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
                                                                 </div>
                                                             ) : (
                                                                 <div className="space-y-4">
-                                                                    <div>
-                                                                        <p className="text-slate-800 leading-relaxed font-medium">
-                                                                            {ruleExplanations[ruleItem]?.rule}
+                                                                    {/* Definition Section */}
+                                                                    <div className="bg-indigo-50/50 p-4 rounded-lg border border-indigo-100">
+                                                                        <h5 className="text-xs font-bold text-indigo-900 uppercase tracking-wide mb-2 flex items-center gap-2">
+                                                                            <Book size={14} className="text-indigo-600"/> Definition & Rule
+                                                                        </h5>
+                                                                        <p className="text-slate-800 text-sm leading-relaxed font-medium">
+                                                                            {ruleExplanations[ruleItem]?.definition || "Loading definition..."}
                                                                         </p>
                                                                     </div>
-                                                                    <div className="bg-amber-50 rounded-lg p-3 border border-amber-100">
-                                                                        <h4 className="text-[10px] font-bold text-amber-800 uppercase mb-2 flex items-center gap-1">
-                                                                            <CheckCircle2 size={12} /> Examples
+
+                                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                                        {/* Importance Section */}
+                                                                        <div className="bg-blue-50/50 p-4 rounded-lg border border-blue-100">
+                                                                            <h5 className="text-xs font-bold text-blue-800 uppercase tracking-wide mb-2 flex items-center gap-2">
+                                                                                <Target size={14} className="text-blue-600"/> MPSC Relevance
+                                                                            </h5>
+                                                                            <p className="text-sm text-slate-700">
+                                                                                {ruleExplanations[ruleItem]?.importance}
+                                                                            </p>
+                                                                        </div>
+
+                                                                        {/* Nuances Section */}
+                                                                        <div className="bg-purple-50/50 p-4 rounded-lg border border-purple-100">
+                                                                            <h5 className="text-xs font-bold text-purple-800 uppercase tracking-wide mb-2 flex items-center gap-2">
+                                                                                <AlertTriangle size={14} className="text-purple-600"/> Nuances & Exceptions
+                                                                            </h5>
+                                                                            <p className="text-sm text-slate-700">
+                                                                                {ruleExplanations[ruleItem]?.nuances}
+                                                                            </p>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {/* Examples Section */}
+                                                                    <div className="mt-4">
+                                                                        <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                                            <GraduationCap size={14} className="text-indigo-600" /> 
+                                                                            MPSC Exam Examples
                                                                         </h4>
-                                                                        <ul className="space-y-2">
+                                                                        <div className="grid gap-3">
                                                                         {ruleExplanations[ruleItem]?.examples?.map((ex, i) => (
-                                                                            <li key={i} className="text-sm text-amber-900 font-serif italic flex gap-2">
-                                                                            <span className="not-italic font-sans text-amber-500 text-xs font-bold mt-0.5">•</span>
-                                                                            "{ex}"
-                                                                            </li>
+                                                                            <div key={i} className="bg-gradient-to-r from-amber-50 to-white p-3 rounded-lg border border-amber-100 flex gap-3 items-start shadow-sm">
+                                                                                <div className="bg-white text-amber-600 font-bold text-xs w-6 h-6 flex items-center justify-center rounded-full border border-amber-200 shrink-0 mt-0.5 shadow-sm">
+                                                                                    {i + 1}
+                                                                                </div>
+                                                                                <p className="text-slate-800 text-sm leading-relaxed font-serif italic">
+                                                                                    "{ex}"
+                                                                                </p>
+                                                                            </div>
                                                                         ))}
-                                                                        </ul>
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                             )}
@@ -599,8 +743,7 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
                 ) : (
                     <div className="text-center py-12 bg-white rounded-xl border border-dashed border-slate-300">
                         <Search size={32} className="mx-auto text-slate-300 mb-2" />
-                        <p className="text-slate-500 font-medium">No grammar rules match "{ruleFilter}"</p>
-                        <p className="text-slate-400 mt-1">Try checking for spelling errors, although our fuzzy search handles minor typos.</p>
+                        <p className="text-slate-500 font-medium">No topics match "{ruleFilter}"</p>
                     </div>
                 )}
               </div>
