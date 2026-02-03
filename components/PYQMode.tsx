@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Subject, LoadingState, QuizQuestion, ExamType } from '../types';
 import { generatePYQs } from '../services/gemini';
-import { History, Search, Loader2, ArrowLeft, Eye, CheckCircle2, AlertCircle, Filter, Bookmark, X, Calendar, Layers } from 'lucide-react';
+import { History, Search, Loader2, ArrowLeft, Eye, CheckCircle2, AlertCircle, Filter, Bookmark, X, Calendar, Layers, Info } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
 interface PYQModeProps {
+  initialSubject?: Subject;
   onBack: () => void;
 }
 
 const YEARS = Array.from({ length: 15 }, (_, i) => (2024 - i).toString());
 
-export const PYQMode: React.FC<PYQModeProps> = ({ onBack }) => {
+export const PYQMode: React.FC<PYQModeProps> = ({ initialSubject = Subject.MARATHI, onBack }) => {
   const [selectedYear, setSelectedYear] = useState<string>('2023');
-  const [subject, setSubject] = useState<Subject>(Subject.MARATHI);
+  const [subject, setSubject] = useState<Subject>(initialSubject);
   const [examType, setExamType] = useState<ExamType>('ALL');
   const [status, setStatus] = useState<LoadingState>('idle');
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
@@ -39,6 +41,12 @@ export const PYQMode: React.FC<PYQModeProps> = ({ onBack }) => {
       setStatus('error');
     }
   };
+
+  // Automatically fetch questions on initial load
+  useEffect(() => {
+    fetchQuestions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const toggleReveal = (index: number) => {
     if (revealedAnswers.includes(index)) {
@@ -90,7 +98,7 @@ export const PYQMode: React.FC<PYQModeProps> = ({ onBack }) => {
             >
               <option value={Subject.MARATHI}>Marathi (मराठी)</option>
               <option value={Subject.ENGLISH}>English</option>
-              <option value={Subject.GS}>General Studies</option>
+              <option value={Subject.GS}>General Studies (GS)</option>
             </select>
           </div>
 
@@ -258,9 +266,12 @@ export const PYQMode: React.FC<PYQModeProps> = ({ onBack }) => {
                         </div>
                         <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
                             <h5 className="font-bold text-slate-800 mb-2 text-sm uppercase tracking-wide flex items-center gap-1">
-                                Explanation
+                                <Info size={16} className="text-indigo-500" />
+                                Detailed Analysis
                             </h5>
-                            <p className="text-slate-600 text-sm leading-relaxed">{q.explanation}</p>
+                            <div className="text-slate-600 text-sm leading-relaxed prose prose-sm max-w-none">
+                                <ReactMarkdown>{q.explanation}</ReactMarkdown>
+                            </div>
                         </div>
                         </div>
                     )}
