@@ -9,7 +9,7 @@ import { BookmarksMode } from './components/BookmarksMode';
 import { LiteratureMode } from './components/LiteratureMode';
 import { Subject, Mode, UserProgress } from './types';
 import { getProgress } from './services/progress';
-import { BookOpen, BrainCircuit, Languages, History, Newspaper, ArrowRight as ArrowIcon, BookA, Bookmark, PenTool, TrendingUp, CheckCircle2, PieChart } from 'lucide-react';
+import { BookOpen, BrainCircuit, Languages, History, Newspaper, ArrowRight as ArrowIcon, BookA, Bookmark, PenTool, TrendingUp, CheckCircle2, PieChart, Globe } from 'lucide-react';
 
 const App: React.FC = () => {
   const [mode, setMode] = useState<Mode>(Mode.HOME);
@@ -43,8 +43,8 @@ const App: React.FC = () => {
           Ace Your <span className="text-indigo-600">MPSC Exam</span>
         </h1>
         <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-          Comprehensive AI-powered preparation for Marathi and English papers. 
-          Generate notes, practice quizzes, and review previous year questions for Rajyaseva, Group B, and Group C.
+          Comprehensive AI-powered preparation for Marathi, English, and General Studies. 
+          Generate notes, practice quizzes, and review detailed PYQ analysis for Rajyaseva and Combined Exams.
         </p>
       </div>
 
@@ -87,7 +87,7 @@ const App: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-8 mb-12">
+      <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-6 mb-12">
         {/* Marathi Card */}
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100 hover:border-indigo-200 transition-all group">
            <div className="h-28 bg-gradient-to-r from-orange-400 to-red-500 p-6 flex items-end justify-between">
@@ -113,25 +113,6 @@ const App: React.FC = () => {
            </div>
         </div>
 
-        {/* Marathi Literature Card */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100 hover:border-orange-200 transition-all group">
-           <div className="h-28 bg-gradient-to-r from-amber-500 to-orange-600 p-6 flex items-end justify-between">
-             <h2 className="text-2xl font-bold text-white">Marathi Sahitya</h2>
-             <PenTool className="text-white/80 w-10 h-10" />
-           </div>
-           <div className="p-6">
-              <p className="text-slate-600 mb-6 text-sm">Descriptive Answer Writing Practice for Marathi Literature Optional (Mains).</p>
-               <div className="flex">
-                  <button 
-                     onClick={() => navigate(Mode.LITERATURE)}
-                    className="flex-1 flex items-center justify-center gap-2 bg-orange-50 text-orange-800 py-2.5 rounded-lg font-semibold hover:bg-orange-100 transition text-sm"
-                  >
-                      <PenTool size={16} /> Start Writing Practice
-                  </button>
-              </div>
-           </div>
-        </div>
-
         {/* English Card */}
          <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100 hover:border-blue-200 transition-all group">
            <div className="h-28 bg-gradient-to-r from-blue-500 to-indigo-600 p-6 flex items-end justify-between">
@@ -152,6 +133,50 @@ const App: React.FC = () => {
                     className="flex-1 flex items-center justify-center gap-2 bg-indigo-600 text-white py-2.5 rounded-lg font-semibold hover:bg-indigo-700 transition text-sm"
                   >
                       <BrainCircuit size={16} /> Practice
+                  </button>
+              </div>
+           </div>
+        </div>
+
+        {/* General Studies Card */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100 hover:border-emerald-200 transition-all group">
+           <div className="h-28 bg-gradient-to-r from-emerald-500 to-teal-600 p-6 flex items-end justify-between">
+             <h2 className="text-2xl font-bold text-white">General Studies</h2>
+             <Globe className="text-white/80 w-10 h-10" />
+           </div>
+           <div className="p-6">
+              <p className="text-slate-600 mb-6 text-sm">History, Geography, Polity, Science & Economics for Prelims Detailed Analysis.</p>
+               <div className="flex gap-2">
+                  <button 
+                     onClick={() => navigate(Mode.STUDY, Subject.GS)}
+                    className="flex-1 flex items-center justify-center gap-2 bg-emerald-50 text-emerald-700 py-2.5 rounded-lg font-semibold hover:bg-emerald-100 transition text-sm"
+                  >
+                      <BookOpen size={16} /> Notes
+                  </button>
+                   <button 
+                    onClick={() => navigate(Mode.PYQ, Subject.GS)}
+                    className="flex-1 flex items-center justify-center gap-2 bg-emerald-600 text-white py-2.5 rounded-lg font-semibold hover:bg-emerald-700 transition text-sm"
+                  >
+                      <History size={16} /> PYQ Analysis
+                  </button>
+              </div>
+           </div>
+        </div>
+
+        {/* Marathi Literature Card */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100 hover:border-orange-200 transition-all group">
+           <div className="h-28 bg-gradient-to-r from-amber-500 to-orange-600 p-6 flex items-end justify-between">
+             <h2 className="text-2xl font-bold text-white">Marathi Sahitya</h2>
+             <PenTool className="text-white/80 w-10 h-10" />
+           </div>
+           <div className="p-6">
+              <p className="text-slate-600 mb-6 text-sm">Descriptive Answer Writing Practice for Marathi Literature Optional (Mains).</p>
+               <div className="flex">
+                  <button 
+                     onClick={() => navigate(Mode.LITERATURE)}
+                    className="flex-1 flex items-center justify-center gap-2 bg-orange-50 text-orange-800 py-2.5 rounded-lg font-semibold hover:bg-orange-100 transition text-sm"
+                  >
+                      <PenTool size={16} /> Start Writing Practice
                   </button>
               </div>
            </div>
@@ -252,8 +277,8 @@ const App: React.FC = () => {
             <p className="text-sm text-slate-600">For Marathi Literature, regular answer writing is key. Use the new <strong>Sahitya Mode</strong> to check your structure against AI models.</p>
         </div>
         <div className="bg-slate-100 p-6 rounded-xl">
-            <h4 className="font-bold text-slate-800 mb-2">Consistency</h4>
-            <p className="text-sm text-slate-600">Solve at least 50 MCQs daily. Use the Quiz mode here to generate fresh questions every time.</p>
+            <h4 className="font-bold text-slate-800 mb-2">General Studies Strategy</h4>
+            <p className="text-sm text-slate-600">For GS Prelims, analyze the options of PYQs thoroughly. Use the new <strong>GS Section</strong> to get detailed breakdowns of Science, History, and Polity.</p>
         </div>
       </div>
     </div>
@@ -275,7 +300,7 @@ const App: React.FC = () => {
         )}
         
         {mode === Mode.PYQ && (
-           <PYQMode onBack={() => navigate(Mode.HOME)} />
+           <PYQMode initialSubject={selectedSubject} onBack={() => navigate(Mode.HOME)} />
         )}
 
         {mode === Mode.CURRENT_AFFAIRS && (
