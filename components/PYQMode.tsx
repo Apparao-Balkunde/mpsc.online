@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Subject, LoadingState, QuizQuestion, ExamType, GSSubCategory } from '../types';
 import { generatePYQs } from '../services/gemini';
-import { History, Search, Loader2, ArrowLeft, Eye, CheckCircle2, Bookmark, Info, Calendar, Filter, BookOpen, ShieldCheck } from 'lucide-react';
+import { History, Search, Loader2, ArrowLeft, Eye, CheckCircle2, Bookmark, Info, Calendar, Filter, BookOpen, ShieldCheck, AlertCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 interface PYQModeProps {
@@ -44,10 +44,12 @@ export const PYQMode: React.FC<PYQModeProps> = ({ initialExamType = 'ALL', onBac
     setRevealedAnswers([]);
     setSearchKeyword('');
     try {
+      // Calling updated service with strict category enforcement
       const data = await generatePYQs(Subject.GS, selectedYear, examType, gsCategory);
       setQuestions(data);
       setStatus('success');
     } catch (e) {
+      console.error(e);
       setStatus('error');
     }
   };
@@ -81,9 +83,9 @@ export const PYQMode: React.FC<PYQModeProps> = ({ initialExamType = 'ALL', onBac
                 <ShieldCheck className="mr-2 text-indigo-600" />
                 Pure GS PYQ Archive (2010-2025)
             </h2>
-            <p className="text-slate-600 text-sm font-medium">Authentic General Studies Archive. Targeted set of 100 questions.</p>
+            <p className="text-slate-600 text-sm font-medium">Authentic Section-Wise Archive. Enforced Category Integrity.</p>
           </div>
-          <span className="hidden md:block text-xs bg-indigo-600 text-white px-3 py-1 rounded-full font-bold uppercase tracking-wider">100 Question Set Capacity</span>
+          <span className="hidden md:block text-xs bg-indigo-600 text-white px-3 py-1 rounded-full font-bold uppercase tracking-wider">Strict Local Cache: V13</span>
         </div>
 
         <div className="p-6 grid grid-cols-1 md:grid-cols-4 gap-4 bg-white items-end">
@@ -97,7 +99,7 @@ export const PYQMode: React.FC<PYQModeProps> = ({ initialExamType = 'ALL', onBac
               </select>
           </div>
           <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase mb-2">GS Section</label>
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-2">GS Section (Strict)</label>
               <select value={gsCategory} onChange={(e) => setGsCategory(e.target.value as GSSubCategory)} className="w-full rounded-lg border-slate-300 border p-2.5 text-sm font-semibold focus:ring-2 focus:ring-indigo-500 bg-amber-50">
                 {GS_SECTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
               </select>
@@ -109,7 +111,7 @@ export const PYQMode: React.FC<PYQModeProps> = ({ initialExamType = 'ALL', onBac
             </select>
           </div>
           <button onClick={fetchQuestions} disabled={status === 'loading'} className="w-full bg-indigo-600 text-white p-2.5 rounded-lg hover:bg-indigo-700 transition-all font-bold shadow-md flex items-center justify-center gap-2">
-            {status === 'loading' ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />} Get Questions
+            {status === 'loading' ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />} Fetch Archive
           </button>
         </div>
       </div>
@@ -117,9 +119,20 @@ export const PYQMode: React.FC<PYQModeProps> = ({ initialExamType = 'ALL', onBac
       {status === 'loading' && (
         <div className="text-center py-20 bg-white rounded-xl shadow-sm border border-slate-100">
           <Loader2 className="animate-spin h-12 w-12 text-indigo-600 mx-auto mb-4" />
-          <p className="text-slate-600 font-bold">Accessing 100 Questions Set...</p>
-          <p className="text-slate-400 text-xs mt-1">Downloading {examType} {selectedYear} Archive. Please wait for the large set sync.</p>
+          <p className="text-slate-600 font-bold">Accessing {gsCategory} Archives...</p>
+          <p className="text-slate-400 text-xs mt-1">Filtering for ${examType} ${selectedYear}. Serving locally if already indexed.</p>
         </div>
+      )}
+
+      {status === 'error' && (
+          <div className="bg-red-50 border border-red-200 text-red-700 p-8 rounded-xl flex flex-col items-center gap-4">
+              <AlertCircle size={48} />
+              <div className="text-center">
+                  <h3 className="font-bold text-xl">Download Interrupted</h3>
+                  <p className="text-sm">Unable to retrieve the 100-question set. Please check your internet or try another year.</p>
+              </div>
+              <button onClick={fetchQuestions} className="bg-red-600 text-white px-6 py-2 rounded-lg font-bold">Retry</button>
+          </div>
       )}
 
       {status === 'success' && (
@@ -127,13 +140,14 @@ export const PYQMode: React.FC<PYQModeProps> = ({ initialExamType = 'ALL', onBac
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
             <div className="flex items-center text-indigo-800 font-bold text-sm">
                 <CheckCircle2 size={18} className="mr-2 text-green-600" />
-                <span>Found {questions.length} questions for {selectedYear}</span>
+                <span>Section: {gsCategory} | Found {questions.length} Questions</span>
             </div>
             <div className="relative w-full md:w-64">
                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                <input type="text" value={searchKeyword} onChange={(e) => setSearchKeyword(e.target.value)} placeholder="Search questions..." className="block w-full pl-9 pr-8 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-colors" />
+                <input type="text" value={searchKeyword} onChange={(e) => setSearchKeyword(e.target.value)} placeholder="Filter these questions..." className="block w-full pl-9 pr-8 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-colors" />
             </div>
           </div>
+          
           {filteredQuestions.length > 0 ? filteredQuestions.map((q, idx) => (
             <div key={idx} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow">
                 <div className="p-6">
@@ -143,7 +157,7 @@ export const PYQMode: React.FC<PYQModeProps> = ({ initialExamType = 'ALL', onBac
                             <div>
                                 <div className="flex items-center gap-2 mb-2">
                                     <span className="bg-amber-100 text-amber-800 text-[10px] font-black px-2 py-0.5 rounded uppercase">{q.examSource || `${examType} ${selectedYear}`}</span>
-                                    <span className="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded">{gsCategory === 'ALL' ? 'GS Mix' : gsCategory}</span>
+                                    <span className="bg-indigo-600 text-white text-[10px] font-black px-2 py-0.5 rounded shadow-sm">{gsCategory}</span>
                                 </div>
                                 <p className="text-lg text-slate-900 font-bold leading-relaxed">{q.question}</p>
                             </div>
@@ -178,7 +192,7 @@ export const PYQMode: React.FC<PYQModeProps> = ({ initialExamType = 'ALL', onBac
                     </div>
                 </div>
             </div>
-          )) : <div className="text-center py-20 bg-white rounded-xl border border-dashed border-slate-300"><p className="text-slate-500 font-bold">No results found.</p></div>}
+          )) : <div className="text-center py-20 bg-white rounded-xl border border-dashed border-slate-300"><p className="text-slate-500 font-bold">No questions found matching your filter.</p></div>}
         </div>
       )}
     </div>
