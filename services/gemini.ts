@@ -8,7 +8,7 @@ const MODEL_FAST = 'gemini-3-flash-preview';
 const MODEL_PRO = 'gemini-3-pro-preview';
 const MODEL_TTS = 'gemini-2.5-flash-preview-tts';
 
-const CACHE_VERSION_PREFIX = 'MPSC_SARATHI_V17_MOCK_'; 
+const CACHE_VERSION_PREFIX = 'MPSC_SARATHI_V18_MOCK_'; 
 const DB_NAME = 'MPSC_Sarathi_Local_DB';
 const STORE_NAME = 'exam_data_cache';
 
@@ -68,28 +68,31 @@ export const generateMockTest = async (examType: ExamType, questionCount: number
 
   let prompt = "";
   if (examType === 'RAJYASEVA') {
-    prompt = `Generate exactly ${questionCount} high-quality General Studies questions for MPSC Rajyaseva Prelims. 
-    Mix: History, Polity, Geography, Economics, Science. 
-    Language: Marathi (Devanagari). 
-    Format: JSON array with fields: question, options (4 strings), correctAnswerIndex (0-3), explanation (concise Marathi).`;
+    prompt = `Generate a set of exactly ${questionCount} MCQs for MPSC Rajyaseva GS Paper 1. 
+    Mix topics like History, Geography, Polity, Economics, and Science. 
+    Questions must be in Marathi (Devanagari). 
+    Return as a JSON array where each object has: question, options (4 strings), correctAnswerIndex (0-3), and explanation (detailed Marathi analysis).`;
   } else {
-    let mix = "40% Marathi, 30% English, 30% GS";
-    if (focus === 'MARATHI_HEAVY') mix = "70% Marathi, 15% English, 15% GS";
-    if (focus === 'ENGLISH_HEAVY') mix = "15% Marathi, 70% English, 15% GS";
-    if (focus === 'GS_HEAVY') mix = "15% Marathi, 15% English, 70% GS";
+    let mixDescription = "Balanced mix of Marathi, English, and GS";
+    if (focus === 'MARATHI_HEAVY') mixDescription = "Focusing mostly on Marathi Grammar";
+    if (focus === 'ENGLISH_HEAVY') mixDescription = "Focusing mostly on English Grammar";
+    if (focus === 'GS_HEAVY') mixDescription = "Focusing mostly on General Studies";
 
-    prompt = `Generate exactly ${questionCount} questions for MPSC Combined (Group B/C) Exam.
-    Subject Mix: ${mix}.
-    Questions in Marathi for Marathi/GS sections, and English for English section. 
-    Format: JSON array with fields: question, options (4 strings), correctAnswerIndex (0-3), explanation (concise Marathi).`;
+    prompt = `Generate a set of exactly ${questionCount} MCQs for MPSC Combined (Group B/C) Exam.
+    Subject Priority: ${mixDescription}.
+    Marathi and GS questions in Marathi, English questions in English (explanations in Marathi).
+    Return as a JSON array where each object has: question, options (4 strings), correctAnswerIndex (0-3), and explanation (detailed Marathi analysis).`;
   }
 
   try {
+    const isLargeBatch = questionCount > 20;
     const response = await ai.models.generateContent({
-      model: MODEL_FAST,
+      model: isLargeBatch ? MODEL_PRO : MODEL_FAST,
       contents: prompt,
       config: {
+        systemInstruction: "You are a professional MPSC exam paper setter. Provide high-yield, exam-oriented questions strictly in JSON format. Ensure all Marathi text is valid Devanagari.",
         responseMimeType: "application/json",
+        thinkingConfig: { thinkingBudget: isLargeBatch ? 4096 : 0 },
         responseSchema: {
           type: Type.ARRAY,
           items: {
@@ -106,12 +109,12 @@ export const generateMockTest = async (examType: ExamType, questionCount: number
       }
     });
 
-    if (!response.text) throw new Error("Empty response from AI");
+    if (!response.text) throw new Error("AI returned empty content");
     const data = JSON.parse(response.text) as QuizQuestion[];
     await saveLocalData(key, data);
     return data;
   } catch (err) {
-    console.error("Generation failed:", err);
+    console.error("Mock generation failed:", err);
     throw err;
   }
 };
