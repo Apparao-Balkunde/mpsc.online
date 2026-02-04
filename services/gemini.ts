@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type, Modality } from "@google/genai";
-import { Subject, QuizQuestion, VocabWord, CurrentAffairItem, ExamType, GSSubCategory, VocabCategory, RuleExplanation, DescriptiveQA, DifficultyLevel } from '../types';
+import { Subject, QuizQuestion, VocabWord, CurrentAffairItem, ExamType, GSSubCategory, VocabCategory, RuleExplanation, DescriptiveQA, DifficultyLevel, SubjectFocus } from '../types';
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
@@ -8,7 +8,7 @@ const MODEL_FAST = 'gemini-3-flash-preview';
 const MODEL_PRO = 'gemini-3-pro-preview';
 const MODEL_TTS = 'gemini-2.5-flash-preview-tts';
 
-const CACHE_VERSION_PREFIX = 'MPSC_SARATHI_V15_MOCK_'; 
+const CACHE_VERSION_PREFIX = 'MPSC_SARATHI_V16_MOCK_'; 
 const DB_NAME = 'MPSC_Sarathi_Local_DB';
 const STORE_NAME = 'exam_data_cache';
 
@@ -59,23 +59,25 @@ const saveLocalData = async (key: string, data: any) => {
   }
 };
 
-export const generateMockTest = async (examType: ExamType): Promise<QuizQuestion[]> => {
-  const key = getCacheKey('MOCK_TEST', examType);
+export const generateMockTest = async (examType: ExamType, questionCount: number = 10, focus: SubjectFocus = 'BALANCED'): Promise<QuizQuestion[]> => {
+  const key = getCacheKey('MOCK_TEST', examType, questionCount.toString(), focus);
   const cached = await getLocalData<QuizQuestion[]>(key);
   if (cached) return cached;
 
   let prompt = "";
-  let count = 0;
-
+  
   if (examType === 'RAJYASEVA') {
-    count = 100;
     prompt = `Generate exactly 100 General Studies questions for MPSC Rajyaseva Prelims pattern. 
     Mix topics: History, Geography, Polity, Economics, Science, Environment. 
     Questions must be in Marathi. For each question, provide 4 options, the correct answer index, and a brief 50-word explanation in Marathi.`;
   } else {
-    count = 10;
-    prompt = `Generate a Mock Test for MPSC Combined (Group B/C) with exactly 10 questions.
-    Distribution: 4 Marathi Grammar questions, 3 English Grammar questions, 3 General Studies questions.
+    let distribution = "40% Marathi Grammar, 30% English Grammar, 30% General Studies";
+    if (focus === 'MARATHI_HEAVY') distribution = "60% Marathi Grammar, 20% English Grammar, 20% General Studies";
+    if (focus === 'ENGLISH_HEAVY') distribution = "20% Marathi Grammar, 60% English Grammar, 20% General Studies";
+    if (focus === 'GS_HEAVY') distribution = "20% Marathi Grammar, 20% English Grammar, 60% General Studies";
+
+    prompt = `Generate a Mock Test for MPSC Combined (Group B/C) with exactly ${questionCount} questions.
+    Requested Subject Mix: ${distribution}.
     Marathi and English questions should be in their respective languages but meanings/explanations in Marathi. 
     GS questions in Marathi. Provide 4 options, correct answer index, and explanation for each.`;
   }
@@ -107,7 +109,6 @@ export const generateMockTest = async (examType: ExamType): Promise<QuizQuestion
   return data;
 };
 
-// ... keep existing functions (generatePYQs, generateVocab, etc.) ...
 export const generatePYQs = async (subject: Subject, year: string, examType: ExamType, subCategory: GSSubCategory = 'ALL'): Promise<QuizQuestion[]> => {
   const key = getCacheKey('PYQ_STRICT', examType, year, subCategory);
   const cached = await getLocalData<QuizQuestion[]>(key);
