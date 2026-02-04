@@ -44,7 +44,7 @@ const App: React.FC = () => {
         </h1>
         <p className="text-lg text-slate-600 max-w-2xl mx-auto">
           AI-powered study companion for Marathi, English, and General Studies. 
-          Analyze PYQs from 2010 to 2025 with section-wise expert explanations.
+          Analyze GS PYQs from 2010 to 2025 with expert explanations.
         </p>
       </div>
 
@@ -94,16 +94,13 @@ const App: React.FC = () => {
              <Languages className="text-white/80 w-8 h-8" />
            </div>
            <div className="p-6">
-              <p className="text-slate-600 mb-4 text-sm">Vyakaran, Vocabulary & Comprehensive Notes.</p>
-              <div className="grid grid-cols-3 gap-2">
-                  <button onClick={() => navigate(Mode.STUDY, Subject.MARATHI)} className="bg-indigo-50 text-indigo-700 py-2 rounded-lg font-bold hover:bg-indigo-100 transition text-xs flex flex-col items-center gap-1">
-                      <BookOpen size={14} /> Study
+              <p className="text-slate-600 mb-6 text-sm">Vyakaran, Vocabulary & Comprehensive Notes.</p>
+              <div className="grid grid-cols-2 gap-3">
+                  <button onClick={() => navigate(Mode.STUDY, Subject.MARATHI)} className="bg-indigo-50 text-indigo-700 py-3 rounded-xl font-bold hover:bg-indigo-100 transition text-sm flex flex-col items-center gap-1">
+                      <BookOpen size={16} /> Study
                   </button>
-                   <button onClick={() => navigate(Mode.QUIZ, Subject.MARATHI)} className="bg-indigo-600 text-white py-2 rounded-lg font-bold hover:bg-indigo-700 transition text-xs flex flex-col items-center gap-1">
-                      <BrainCircuit size={14} /> Quiz
-                  </button>
-                   <button onClick={() => navigate(Mode.PYQ, Subject.MARATHI)} className="bg-orange-100 text-orange-800 py-2 rounded-lg font-bold hover:bg-orange-200 transition text-xs flex flex-col items-center gap-1">
-                      <History size={14} /> PYQs
+                   <button onClick={() => navigate(Mode.QUIZ, Subject.MARATHI)} className="bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition text-sm flex flex-col items-center gap-1">
+                      <BrainCircuit size={16} /> Practice Quiz
                   </button>
               </div>
            </div>
@@ -116,25 +113,22 @@ const App: React.FC = () => {
              <Languages className="text-white/80 w-8 h-8" />
            </div>
            <div className="p-6">
-              <p className="text-slate-600 mb-4 text-sm">MPSC Combined & Rajyaseva Pattern.</p>
-               <div className="grid grid-cols-3 gap-2">
-                  <button onClick={() => navigate(Mode.STUDY, Subject.ENGLISH)} className="bg-indigo-50 text-indigo-700 py-2 rounded-lg font-bold hover:bg-indigo-100 transition text-xs flex flex-col items-center gap-1">
-                      <BookOpen size={14} /> Study
+              <p className="text-slate-600 mb-6 text-sm">MPSC Combined & Rajyaseva Pattern.</p>
+               <div className="grid grid-cols-2 gap-3">
+                  <button onClick={() => navigate(Mode.STUDY, Subject.ENGLISH)} className="bg-indigo-50 text-indigo-700 py-3 rounded-xl font-bold hover:bg-indigo-100 transition text-sm flex flex-col items-center gap-1">
+                      <BookOpen size={16} /> Study
                   </button>
-                   <button onClick={() => navigate(Mode.QUIZ, Subject.ENGLISH)} className="bg-indigo-600 text-white py-2 rounded-lg font-bold hover:bg-indigo-700 transition text-xs flex flex-col items-center gap-1">
-                      <BrainCircuit size={14} /> Quiz
-                  </button>
-                  <button onClick={() => navigate(Mode.PYQ, Subject.ENGLISH)} className="bg-blue-100 text-blue-800 py-2 rounded-lg font-bold hover:bg-blue-200 transition text-xs flex flex-col items-center gap-1">
-                      <History size={14} /> PYQs
+                   <button onClick={() => navigate(Mode.QUIZ, Subject.ENGLISH)} className="bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition text-sm flex flex-col items-center gap-1">
+                      <BrainCircuit size={16} /> Practice Quiz
                   </button>
               </div>
            </div>
         </div>
 
-        {/* General Studies Card - Revamped */}
+        {/* General Studies Card - Revamped focus */}
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100 hover:border-emerald-200 transition-all group xl:col-span-1">
            <div className="h-24 bg-gradient-to-r from-emerald-500 to-teal-600 p-6 flex items-end justify-between">
-             <h2 className="text-xl font-bold text-white">General Studies (GS)</h2>
+             <h2 className="text-xl font-bold text-white">GS PYQ Center</h2>
              <Globe className="text-white/80 w-8 h-8" />
            </div>
            <div className="p-6">
@@ -163,12 +157,12 @@ const App: React.FC = () => {
              <div className="absolute top-0 right-0 opacity-10"><History size={140} /></div>
              <div className="relative z-10">
                 <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
-                    <History className="text-yellow-400" /> PYQs
+                    <History className="text-yellow-400" /> GS PYQs
                 </h3>
-                <p className="text-indigo-200 text-sm mb-6">Authentic 2010-2025 archive.</p>
+                <p className="text-indigo-200 text-sm mb-6">Authentic 2010-2025 GS archive.</p>
              </div>
              <button onClick={() => setMode(Mode.PYQ)} className="relative z-10 bg-yellow-400 text-indigo-900 px-4 py-2 rounded-lg font-bold hover:bg-yellow-300 transition-all shadow-lg flex items-center justify-center gap-2 w-full text-sm">
-                Explore All PYQs <ArrowIcon size={16} />
+                Explore Archive <ArrowIcon size={16} />
              </button>
           </div>
 
@@ -211,21 +205,6 @@ const App: React.FC = () => {
              </button>
           </div>
       </div>
-
-      <div className="grid md:grid-cols-3 gap-6">
-        <div className="bg-slate-100 p-6 rounded-xl border border-slate-200">
-            <h4 className="font-bold text-slate-800 mb-2">GS Section-wise Study</h4>
-            <p className="text-sm text-slate-600">History (समाजसुधारक), Geography (नदी प्रणाली), Polity (घटनादुरुस्त्या) ya vishayavar vishesh laksh dya. AI analysis pratyek section che tricky points clear karel.</p>
-        </div>
-        <div className="bg-slate-100 p-6 rounded-xl border border-slate-200">
-            <h4 className="font-bold text-slate-800 mb-2">Rajyaseva Prelims 2025</h4>
-            <p className="text-sm text-slate-600">Aata Rajyaseva Prelims 2025 sathi sarv latest questions with authentic solutions available ahet. Mains descriptive pattern sathi 'Sahitya' mode vapra.</p>
-        </div>
-        <div className="bg-slate-100 p-6 rounded-xl border border-slate-200">
-            <h4 className="font-bold text-slate-800 mb-2">Combined Exam Mastery</h4>
-            <p className="text-sm text-slate-600">Group B ani Group C chya prelims sathi section-wise accuracy vadhvne garjeche ahe. 2010 pasunche sarv PYQs solve karun patterns samjun ghya.</p>
-        </div>
-      </div>
     </div>
   );
 
@@ -245,7 +224,7 @@ const App: React.FC = () => {
         )}
         
         {mode === Mode.PYQ && (
-           <PYQMode initialSubject={selectedSubject} initialExamType={selectedExamType} onBack={() => navigate(Mode.HOME)} />
+           <PYQMode initialExamType={selectedExamType} onBack={() => navigate(Mode.HOME)} />
         )}
 
         {mode === Mode.CURRENT_AFFAIRS && (
