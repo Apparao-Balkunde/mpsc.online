@@ -177,6 +177,7 @@ export const generateVocab = async (subject: Subject, category: VocabCategory, f
     }
   });
 
+  
   const data = JSON.parse(response.text);
   await saveLocalData(key, data);
   return data;
