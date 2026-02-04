@@ -10,7 +10,7 @@ const MODEL_PRO = 'gemini-3-pro-preview';
 const MODEL_TTS = 'gemini-2.5-flash-preview-tts';
 
 // --- ROBUST LOCAL DATA CENTER (IndexedDB) ---
-const CACHE_VERSION_PREFIX = 'MPSC_SARATHI_V11_'; // Incremented for fresh schema
+const CACHE_VERSION_PREFIX = 'MPSC_SARATHI_V12_'; // Incremented for schema improvements
 const DB_NAME = 'MPSC_Sarathi_Local_DB';
 const STORE_NAME = 'exam_data_cache';
 
@@ -116,7 +116,7 @@ export const generatePYQs = async (subject: Subject, year: string, examType: Exa
 };
 
 export const generateVocab = async (subject: Subject, category: VocabCategory, forceRefresh = false): Promise<VocabWord[]> => {
-  const key = getCacheKey('VOCAB_TRICKY', subject, category);
+  const key = getCacheKey('VOCAB_ENHANCED', subject, category);
   
   if (!forceRefresh) {
     const cached = await getLocalData<VocabWord[]>(key);
@@ -126,15 +126,21 @@ export const generateVocab = async (subject: Subject, category: VocabCategory, f
   const prompt = `
     Generate 50 high-yield MPSC vocabulary items for ${subject} ${category}.
     
-    CRITICAL REQUIREMENT:
-    For each word, algorithmically identify and include "TRICKY PAIRS" or "COMMONLY CONFUSED WORDS".
-    - For English: pairs like principal/principle, stationery/stationary, complement/compliment.
-    - For Marathi: pairs with similar pronunciation but different meaning (शब्दांच्या जोड्या/शब्दयुग्मे) like पाणी (water) vs पाणि (hand), दिन (day) vs दीन (poor).
+    SPECIAL TASK - TRICKY COMPARISONS:
+    For every word, you MUST identify and include a "TRICKY PAIR" or "CONFUSING WORD".
+    MPSC aspirants often confuse these due to spelling or pronunciation.
     
-    Format these tricky pairs clearly in the 'relatedWords' array as "Tricky Pair: [word] - [meaning]".
-    Also include 2 synonyms and 2 antonyms in 'relatedWords'.
+    EXAMPLES TO MODEL:
+    - English: 'Device' (noun) vs 'Devise' (verb), 'Complement' vs 'Compliment', 'Accept' vs 'Except'.
+    - Marathi: 'पाणी' (Water) vs 'पाणि' (Hand), 'दिन' (Day) vs 'दीन' (Poor), 'सूत' (Thread) vs 'सुत' (Son).
     
-    Everything must be in the respective language context with Marathi meanings for both subjects.
+    SCHEMA INSTRUCTIONS:
+    - Include exactly 2 Synonyms and 2 Antonyms.
+    - Add exactly 1 "Tricky Pair" entry.
+    - FORMAT for Tricky Pair: "VS: [word] - [meaning/nuance]"
+    - All meanings for both English and Marathi subjects must be in Marathi.
+    
+    Return as a strict JSON array.
   `;
   
   const response = await ai.models.generateContent({
