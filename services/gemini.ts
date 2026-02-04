@@ -2,51 +2,57 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { Subject, QuizQuestion, VocabWord, CurrentAffairItem, ExamType, GSSubCategory, VocabCategory, RuleExplanation, DescriptiveQA, DifficultyLevel } from '../types';
 
-// Initializing the GoogleGenAI client directly with process.env.API_KEY
+// Initializing the GoogleGenAI client
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const MODEL_FAST = 'gemini-3-flash-preview';
 const MODEL_PRO = 'gemini-3-pro-preview';
 const MODEL_TTS = 'gemini-2.5-flash-preview-tts';
 
-// --- LOCAL DATA CENTER (INDEXED DB CACHING SYSTEM) ---
-const CACHE_PREFIX = 'MPSC_DATA_CENTER_V6_';
-const DB_NAME = 'MPSC_Sarathi_DB';
-const STORE_NAME = 'ai_responses';
-const DB_VERSION = 1;
+// --- ROBUST LOCAL DATA CENTER (IndexedDB) ---
+// Using V10 to ensure a clean slate and avoid any previous 'mixed' data
+const CACHE_VERSION_PREFIX = 'MPSC_SARATHI_V10_';
+const DB_NAME = 'MPSC_Sarathi_Local_DB';
+const STORE_NAME = 'exam_data_cache';
 
-const getCacheKey = (...args: string[]) => {
-  return CACHE_PREFIX + args.join('_').toUpperCase().replace(/[^A-Z0-9_]/g, '_');
+/**
+ * Generates a unique, strict key for each request type to prevent data pollution.
+ */
+const getCacheKey = (type: string, ...parts: string[]) => {
+  return (CACHE_VERSION_PREFIX + type + '_' + parts.join('_')).toUpperCase().replace(/[^A-Z0-9_]/g, '_');
 };
 
 const openDB = (): Promise<IDBDatabase> => {
   return new Promise((resolve, reject) => {
-    if (!window.indexedDB) {
-        reject("IndexedDB not supported");
-        return;
-    }
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result);
-    request.onupgradeneeded = (event) => {
-      const db = (event.target as IDBOpenDBRequest).result;
+    const request = indexedDB.open(DB_NAME, 1);
+    request.onupgradeneeded = (e) => {
+      const db = (e.target as IDBOpenDBRequest).result;
       if (!db.objectStoreNames.contains(STORE_NAME)) {
         db.createObjectStore(STORE_NAME);
       }
     };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
   });
 };
 
-const getFromDataCenter = async <T>(key: string): Promise<T | null> => {
+/**
+ * Strict Local Retrieval: If data exists, return it immediately.
+ */
+const getLocalData = async <T>(key: string): Promise<T | null> => {
   try {
     const db = await openDB();
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const transaction = db.transaction(STORE_NAME, 'readonly');
       const store = transaction.objectStore(STORE_NAME);
       const request = store.get(key);
       request.onsuccess = () => {
-          if (request.result) resolve(request.result as T);
-          else resolve(null);
+        if (request.result) {
+          console.log(`[Cache Hit] Serving ${key} from Local DB`);
+          resolve(request.result as T);
+        } else {
+          resolve(null);
+        }
       };
       request.onerror = () => resolve(null);
     });
@@ -55,124 +61,46 @@ const getFromDataCenter = async <T>(key: string): Promise<T | null> => {
   }
 };
 
-const saveToDataCenter = async (key: string, data: any) => {
+/**
+ * Save data to Local DB for offline/subsequent use.
+ */
+const saveLocalData = async (key: string, data: any) => {
   try {
     const db = await openDB();
     const transaction = db.transaction(STORE_NAME, 'readwrite');
     const store = transaction.objectStore(STORE_NAME);
     store.put(data, key);
+    console.log(`[Cache Save] Data for ${key} stored locally.`);
   } catch (e) {
-    console.error("Critical storage failure in IDB", e);
+    console.error("Local storage failed", e);
   }
 };
 
-export const playTextToSpeech = async (text: string): Promise<void> => {
-  const cacheKey = getCacheKey('TTS', text.substring(0, 50));
-  try {
-    let base64Audio = await getFromDataCenter<string>(cacheKey);
-    if (!base64Audio) {
-        const response = await ai.models.generateContent({
-            model: MODEL_TTS,
-            contents: [{ parts: [{ text }] }],
-            config: {
-                responseModalities: [Modality.AUDIO],
-                speechConfig: {
-                    voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } },
-                },
-            },
-        });
-        base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-        if (base64Audio) await saveToDataCenter(cacheKey, base64Audio);
-    }
-    if (!base64Audio) throw new Error("No audio data received");
-    const audioBytes = atob(base64Audio);
-    const len = audioBytes.length;
-    const bytes = new Uint8Array(len);
-    for (let i = 0; i < len; i++) bytes[i] = audioBytes.charCodeAt(i);
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
-    const dataInt16 = new Int16Array(bytes.buffer);
-    const frameCount = dataInt16.length;
-    const buffer = ctx.createBuffer(1, frameCount, 24000);
-    const channelData = buffer.getChannelData(0);
-    for (let i = 0; i < frameCount; i++) channelData[i] = dataInt16[i] / 32768.0;
-    const source = ctx.createBufferSource();
-    source.buffer = buffer;
-    source.connect(ctx.destination);
-    source.start();
-  } catch (error) { console.error("TTS Error:", error); }
-};
+// --- API SERVICES WITH STRICT CACHING ---
 
-export const generateQuiz = async (subject: Subject, topic: string, difficulty: DifficultyLevel = 'MEDIUM', subCategory?: GSSubCategory): Promise<QuizQuestion[]> => {
-  const cacheKey = getCacheKey('QUIZ_V4', subject, topic, difficulty, subCategory || 'NONE');
-  const cached = await getFromDataCenter<QuizQuestion[]>(cacheKey);
+export const generatePYQs = async (subject: Subject, year: string, examType: ExamType, subCategory: GSSubCategory = 'ALL'): Promise<QuizQuestion[]> => {
+  // Key now includes ExamType and SubCategory to prevent mixing
+  const key = getCacheKey('PYQ', examType, year, subCategory);
+  
+  // 1. Check Local DB First
+  const cached = await getLocalData<QuizQuestion[]>(key);
   if (cached) return cached;
 
+  // 2. Call Gemini ONLY if not in local storage
+  console.log(`[API Call] Fetching ${examType} ${year} GS from Gemini...`);
   const prompt = `
-    Generate 20 MPSC pattern MCQs.
-    Subject: ${subject}
-    Section: ${subCategory || 'General'}
-    Topic: ${topic}
-    Difficulty: ${difficulty}
-    
-    LANGUAGE:
-    1. MARATHI: Everything in Marathi (Devanagari).
-    2. ENGLISH: Q/Options in English, Explanation in English + Marathi (Devanagari).
-    3. GS: Q in Marathi, Detailed explanation in Marathi.
-    
-    REQUIREMENTS:
-    - Detailed explanation (150+ words) analyzing ALL 4 options.
-    - Strict MPSC Prelims/Mains pattern.
-    - Return JSON array.
-  `;
-
-  const response = await ai.models.generateContent({
-    model: MODEL_FAST,
-    contents: prompt,
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.ARRAY,
-        items: {
-          type: Type.OBJECT,
-          properties: {
-            question: { type: Type.STRING },
-            options: { type: Type.ARRAY, items: { type: Type.STRING } },
-            correctAnswerIndex: { type: Type.INTEGER },
-            explanation: { type: Type.STRING }
-          },
-          required: ["question", "options", "correctAnswerIndex", "explanation"]
-        }
-      }
-    }
-  });
-
-  const data = JSON.parse(response.text) as QuizQuestion[];
-  await saveToDataCenter(cacheKey, data);
-  return data;
-};
-
-export const generatePYQs = async (subject: Subject, year: string, examType: ExamType = 'ALL', subCategory?: GSSubCategory): Promise<QuizQuestion[]> => {
-  const cacheKey = getCacheKey('PYQ_PURE_GS_V1', subject, year, examType, subCategory || 'NONE');
-  const cached = await getFromDataCenter<QuizQuestion[]>(cacheKey);
-  if (cached) return cached;
-
-  // Extremely strict prompt to prevent language mixing
-  const prompt = `
-    You are the official MPSC GS Expert. I need AUTHENTIC General Studies (GS) questions from the ${year} prelims.
-    
-    EXAM: MPSC ${examType} (Strictly only return questions from this specific exam).
+    STRICT MPSC GS ARCHIVE REQUEST.
+    EXAM: MPSC ${examType}
     YEAR: ${year}
-    SUBJECT: ${subject} (General Studies)
-    SECTION: ${subCategory === 'ALL' ? 'Complete GS Archive' : subCategory}
+    SECTION: ${subCategory === 'ALL' ? 'Complete General Studies' : subCategory}
     
-    STRICT COMPLIANCE RULES:
-    1. PURE GS ONLY: DO NOT include any Marathi Language, Marathi Grammar, English Grammar, or Comprehension Passages. This request is for GS Paper 1 only (History, Polity, Geography, Economics, Science, Environment).
-    2. NO MIXING: If Exam is RAJYASEVA, do NOT include Combined Group B or C questions.
-    3. LANGUAGE: The output (Questions, Options, and Detailed Analytical Explanations) MUST be entirely in MARATHI (Devanagari).
-    4. QUALITY: Provide 15-20 highly relevant questions that actually appeared in the ${year} exam for the selected section.
-    5. ANALYSIS: Each explanation must be 200+ words in Marathi, analyzing all options and providing relevant background.
-    
-    Return as a clean JSON array.
+    RULES:
+    - ONLY return questions from the actual ${examType} ${year} exam.
+    - NO mixing with other exam types.
+    - NO Marathi/English language or grammar questions.
+    - ALL content (Q, Options, Explanation) MUST be in MARATHI.
+    - Provide a deep 250-word analysis for each answer in Marathi.
+    - Return a JSON array of 20 questions.
   `;
 
   const response = await ai.models.generateContent({
@@ -198,144 +126,172 @@ export const generatePYQs = async (subject: Subject, year: string, examType: Exa
   });
 
   const data = JSON.parse(response.text) as QuizQuestion[];
-  await saveToDataCenter(cacheKey, data);
+  
+  // 3. Save for future local serving
+  await saveLocalData(key, data);
+  return data;
+};
+
+export const generateQuiz = async (subject: Subject, topic: string, difficulty: DifficultyLevel, subCategory?: GSSubCategory): Promise<QuizQuestion[]> => {
+  const key = getCacheKey('QUIZ', subject, topic, difficulty, subCategory || 'NONE');
+  
+  const cached = await getLocalData<QuizQuestion[]>(key);
+  if (cached) return cached;
+
+  const prompt = `Generate 15 MPSC MCQs for ${subject}, Topic: ${topic}, Difficulty: ${difficulty}. Section: ${subCategory}. Everything in Marathi. Detailed 200-word analysis for each.`;
+  
+  const response = await ai.models.generateContent({
+    model: MODEL_FAST,
+    contents: prompt,
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.ARRAY,
+        items: {
+          type: Type.OBJECT,
+          properties: {
+            question: { type: Type.STRING },
+            options: { type: Type.ARRAY, items: { type: Type.STRING } },
+            correctAnswerIndex: { type: Type.INTEGER },
+            explanation: { type: Type.STRING }
+          },
+          required: ["question", "options", "correctAnswerIndex", "explanation"]
+        }
+      }
+    }
+  });
+
+  const data = JSON.parse(response.text);
+  await saveLocalData(key, data);
+  return data;
+};
+
+export const generateVocab = async (subject: Subject, category: VocabCategory, forceRefresh = false): Promise<VocabWord[]> => {
+  const key = getCacheKey('VOCAB', subject, category);
+  
+  if (!forceRefresh) {
+    const cached = await getLocalData<VocabWord[]>(key);
+    if (cached) return cached;
+  }
+
+  const prompt = `Generate 50 MPSC high-yield vocab for ${subject} ${category}. Include Marathi meanings, usage, synonyms/antonyms. JSON format.`;
+  
+  const response = await ai.models.generateContent({
+    model: MODEL_FAST,
+    contents: prompt,
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.ARRAY,
+        items: {
+          type: Type.OBJECT,
+          properties: {
+            word: { type: Type.STRING },
+            meaning: { type: Type.STRING },
+            usage: { type: Type.STRING },
+            type: { type: Type.STRING },
+            relatedWords: { type: Type.ARRAY, items: { type: Type.STRING } }
+          },
+          required: ["word", "meaning", "usage", "type", "relatedWords"]
+        }
+      }
+    }
+  });
+
+  const data = JSON.parse(response.text);
+  await saveLocalData(key, data);
   return data;
 };
 
 export const generateStudyNotes = async (subject: Subject, topic: string): Promise<string> => {
-  const cacheKey = getCacheKey('NOTES_V2', subject, topic);
-  const cached = await getFromDataCenter<string>(cacheKey);
+  const key = getCacheKey('NOTES', subject, topic);
+  const cached = await getLocalData<string>(key);
   if (cached) return cached;
 
-  const prompt = `
-    Generate comprehensive MPSC Mains-level study notes for Subject: ${subject}, Topic: ${topic}.
-    Requirements:
-    - Language: Marathi (for Marathi/GS), Mix of English and Marathi (for English subject).
-    - Depth: Advanced analysis, including nuances and exceptions.
-    - Format: Structured Markdown with headings, bullet points, and tables.
-    - Special: Include at least 3-4 examples from actual past MPSC papers (Rajyaseva/Combined) if applicable.
-    - Focus on common traps and errors aspirants make.
-  `;
+  const prompt = `Generate expert MPSC study notes for ${subject}: ${topic}. Use Markdown. Language: Marathi.`;
   const response = await ai.models.generateContent({ model: MODEL_FAST, contents: prompt });
-  const result = response.text || "No notes generated.";
-  await saveToDataCenter(cacheKey, result);
-  return result;
+  const data = response.text || "";
+  
+  if (data) await saveLocalData(key, data);
+  return data;
 };
 
-export const generateConciseExplanation = async (subject: Subject, topic: string): Promise<RuleExplanation> => {
-    const prompt = `Provide detailed JSON with definition, importance, nuances, examples for Subject: ${subject}, Topic: ${topic}. 
-    Ensure it reflects MPSC Mains level depth. Use Marathi for explanations. 
-    Include high-quality exam-oriented examples.`;
+export const playTextToSpeech = async (text: string): Promise<void> => {
+  const key = getCacheKey('TTS', text.substring(0, 30));
+  let base64 = await getLocalData<string>(key);
+
+  if (!base64) {
     const response = await ai.models.generateContent({
-        model: MODEL_FAST,
-        contents: prompt,
-        config: {
-            responseMimeType: "application/json",
-            responseSchema: {
-                type: Type.OBJECT,
-                properties: {
-                    definition: { type: Type.STRING },
-                    importance: { type: Type.STRING },
-                    nuances: { type: Type.STRING },
-                    examples: { type: Type.ARRAY, items: { type: Type.STRING } }
-                }
-            }
-        }
+      model: MODEL_TTS,
+      contents: [{ parts: [{ text }] }],
+      config: {
+        responseModalities: [Modality.AUDIO],
+        speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } } },
+      },
     });
-    return JSON.parse(response.text);
+    base64 = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+    if (base64) await saveLocalData(key, base64);
+  }
+
+  if (base64) {
+    const audioBytes = atob(base64);
+    const len = audioBytes.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) bytes[i] = audioBytes.charCodeAt(i);
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+    const dataInt16 = new Int16Array(bytes.buffer);
+    const buffer = ctx.createBuffer(1, dataInt16.length, 24000);
+    const channelData = buffer.getChannelData(0);
+    for (let i = 0; i < dataInt16.length; i++) channelData[i] = dataInt16[i] / 32768.0;
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(ctx.destination);
+    source.start();
+  }
 };
 
-export const generateVocab = async (subject: Subject, category: VocabCategory, forceRefresh: boolean = false): Promise<VocabWord[]> => {
-    const cacheKey = getCacheKey('VOCAB_EXTENDED_V7', subject, category);
-    if (!forceRefresh) {
-        const cached = await getFromDataCenter<VocabWord[]>(cacheKey);
-        if (cached) return cached;
-    }
+// Simplified wrappers for other components
+export const generateCurrentAffairs = async (category: string, language: string): Promise<CurrentAffairItem[]> => {
+  const key = getCacheKey('NEWS', category, language);
+  const cached = await getLocalData<CurrentAffairItem[]>(key);
+  if (cached) return cached;
 
-    const prompt = `
-      Generate a list of 60 high-yield vocabulary items for ${subject} in the category ${category}, specifically targeted for MPSC Rajyaseva and Combined Exams.
-      
-      CRITICAL ENHANCEMENT FOR RELATED WORDS:
-      - Each item MUST include synonyms, antonyms, AND commonly confused word pairs (paronyms, homophones, homonyms).
-      - For English: Examples like 'affect/effect', 'principal/principle', 'stationery/stationary'.
-      - For Marathi: Examples like 'पाणी/पाणि', 'दिन/दीन', 'सूत/सुत' (शब्दयुग्मे/समानोच्चारी शब्द).
-      - Prefix them clearly:
-        - English: 'Syn:', 'Ant:', 'Confused Pair:'.
-        - Marathi: 'समानार्थी:', 'विरुद्धार्थी:', 'समान उच्चार/युग्म:'.
-      
-      Output strictly in JSON format.
-    `;
-
-    const response = await ai.models.generateContent({
-        model: MODEL_FAST,
-        contents: prompt,
-        config: {
-            responseMimeType: "application/json",
-            responseSchema: {
-                type: Type.ARRAY,
-                items: {
-                    type: Type.OBJECT,
-                    properties: {
-                        word: { type: Type.STRING },
-                        meaning: { type: Type.STRING },
-                        usage: { type: Type.STRING },
-                        type: { type: Type.STRING },
-                        relatedWords: { 
-                            type: Type.ARRAY, 
-                            items: { type: Type.STRING }
-                        }
-                    },
-                    required: ["word", "meaning", "usage", "type", "relatedWords"]
-                }
-            }
-        }
-    });
-    const data = JSON.parse(response.text) as VocabWord[];
-    await saveToDataCenter(cacheKey, data);
-    return data;
-};
-
-export const generateCurrentAffairs = async (category: string, language: 'Marathi' | 'English'): Promise<CurrentAffairItem[]> => {
-    const prompt = `Generate 6 recent MPSC current affairs for category ${category} in ${language}. JSON format.`;
-    const response = await ai.models.generateContent({
-        model: MODEL_FAST,
-        contents: prompt,
-        config: {
-            responseMimeType: "application/json",
-            responseSchema: {
-                type: Type.ARRAY,
-                items: {
-                    type: Type.OBJECT,
-                    properties: {
-                        headline: { type: Type.STRING },
-                        description: { type: Type.STRING },
-                        date: { type: Type.STRING },
-                        category: { type: Type.STRING },
-                        examRelevance: { type: Type.STRING }
-                    }
-                }
-            }
-        }
-    });
-    return JSON.parse(response.text);
+  const response = await ai.models.generateContent({
+    model: MODEL_FAST,
+    contents: `Generate 6 MPSC news for ${category} in ${language}. JSON.`,
+    config: { responseMimeType: "application/json" }
+  });
+  const data = JSON.parse(response.text);
+  await saveLocalData(key, data);
+  return data;
 };
 
 export const generateDescriptiveQA = async (topic: string): Promise<DescriptiveQA> => {
-    const prompt = `Academic Marathi Literature analysis for topic ${topic}. PhD/MPSC level. JSON with question, modelAnswer, keyPoints.`;
+  const key = getCacheKey('LIT', topic);
+  const cached = await getLocalData<DescriptiveQA>(key);
+  if (cached) return cached;
+
+  const response = await ai.models.generateContent({
+    model: MODEL_PRO,
+    contents: `Literature analysis for ${topic}. JSON.`,
+    config: { responseMimeType: "application/json" }
+  });
+  const data = JSON.parse(response.text);
+  await saveLocalData(key, data);
+  return data;
+};
+
+export const generateConciseExplanation = async (subject: Subject, topic: string): Promise<RuleExplanation> => {
+    const key = getCacheKey('EXPLAIN', subject, topic);
+    const cached = await getLocalData<RuleExplanation>(key);
+    if (cached) return cached;
+
     const response = await ai.models.generateContent({
-        model: MODEL_PRO,
-        contents: prompt,
-        config: {
-            responseMimeType: "application/json",
-            responseSchema: {
-                type: Type.OBJECT,
-                properties: {
-                    question: { type: Type.STRING },
-                    modelAnswer: { type: Type.STRING },
-                    keyPoints: { type: Type.ARRAY, items: { type: Type.STRING } }
-                }
-            }
-        }
+        model: MODEL_FAST,
+        contents: `Explain ${subject} ${topic} in detail. JSON.`,
+        config: { responseMimeType: "application/json" }
     });
-    return JSON.parse(response.text);
+    const data = JSON.parse(response.text);
+    await saveLocalData(key, data);
+    return data;
 };
