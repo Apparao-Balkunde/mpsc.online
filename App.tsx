@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { StudyMode } from './components/StudyMode';
@@ -7,25 +8,25 @@ import { CurrentAffairsMode } from './components/CurrentAffairsMode';
 import { VocabMode } from './components/VocabMode';
 import { BookmarksMode } from './components/BookmarksMode';
 import { LiteratureMode } from './components/LiteratureMode';
-import { Subject, Mode, UserProgress } from './types';
+import { Subject, Mode, UserProgress, ExamType } from './types';
 import { getProgress } from './services/progress';
 import { BookOpen, BrainCircuit, Languages, History, Newspaper, ArrowRight as ArrowIcon, BookA, Bookmark, PenTool, TrendingUp, CheckCircle2, PieChart, Globe } from 'lucide-react';
 
 const App: React.FC = () => {
   const [mode, setMode] = useState<Mode>(Mode.HOME);
   const [selectedSubject, setSelectedSubject] = useState<Subject>(Subject.MARATHI);
+  const [selectedExamType, setSelectedExamType] = useState<ExamType>('ALL');
   const [progress, setProgress] = useState<UserProgress>({ studyTopicsViewed: [], quizzesCompleted: [] });
 
   useEffect(() => {
-    // Load progress when returning to home
     if (mode === Mode.HOME) {
         setProgress(getProgress());
     }
   }, [mode]);
 
-  // Simplified navigation handler
-  const navigate = (newMode: Mode, subject?: Subject) => {
+  const navigate = (newMode: Mode, subject?: Subject, examType: ExamType = 'ALL') => {
     if (subject) setSelectedSubject(subject);
+    setSelectedExamType(examType);
     setMode(newMode);
   };
 
@@ -35,7 +36,6 @@ const App: React.FC = () => {
     return Math.round(sum / progress.quizzesCompleted.length);
   }
 
-  // Render Home Dashboard
   const renderHome = () => (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
       <div className="text-center mb-12">
@@ -43,15 +43,14 @@ const App: React.FC = () => {
           Ace Your <span className="text-indigo-600">MPSC Exam</span>
         </h1>
         <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-          Comprehensive AI-powered preparation for Marathi, English, and General Studies. 
-          Generate notes, practice quizzes, and review detailed PYQ analysis for Rajyaseva and Combined Exams.
+          AI-powered study companion for Marathi, English, and General Studies. 
+          Analyze PYQs from 2010 to 2025 with section-wise expert explanations.
         </p>
       </div>
 
-      {/* Progress Section */}
       <div className="mb-10 bg-gradient-to-r from-indigo-50 to-slate-50 rounded-2xl p-6 border border-indigo-100 shadow-sm">
         <h3 className="text-lg font-bold text-indigo-900 mb-4 flex items-center gap-2">
-            <TrendingUp className="text-indigo-600" /> Your Progress
+            <TrendingUp className="text-indigo-600" /> Your Prep Progress
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-col items-center text-center">
@@ -73,41 +72,38 @@ const App: React.FC = () => {
                     <PieChart size={20} />
                  </div>
                  <div className="text-2xl font-black text-slate-800">{getQuizAvg()}%</div>
-                 <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Avg Score</div>
+                 <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Avg Accuracy</div>
             </div>
              <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-col items-center text-center justify-center">
                  <button 
                     onClick={() => navigate(Mode.STUDY, Subject.MARATHI)}
                     className="w-full h-full flex flex-col items-center justify-center text-indigo-600 hover:text-indigo-800 transition-colors"
                  >
-                    <span className="text-sm font-bold">Keep Learning</span>
+                    <span className="text-sm font-bold">Continue Study</span>
                     <ArrowIcon size={16} className="mt-1" />
                  </button>
             </div>
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-6 mb-12">
+      <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6 mb-12">
         {/* Marathi Card */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100 hover:border-indigo-200 transition-all group">
-           <div className="h-28 bg-gradient-to-r from-orange-400 to-red-500 p-6 flex items-end justify-between">
-             <h2 className="text-2xl font-bold text-white">Marathi Grammar</h2>
-             <Languages className="text-white/80 w-10 h-10" />
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100 hover:border-orange-200 transition-all group">
+           <div className="h-24 bg-gradient-to-r from-orange-400 to-red-500 p-6 flex items-end justify-between">
+             <h2 className="text-xl font-bold text-white">Marathi (मराठी)</h2>
+             <Languages className="text-white/80 w-8 h-8" />
            </div>
            <div className="p-6">
-              <p className="text-slate-600 mb-6 text-sm">Master Vyakaran (Grammar), Comprehension, and Vocabulary for Prelims/Mains.</p>
-              <div className="flex gap-2">
-                  <button 
-                    onClick={() => navigate(Mode.STUDY, Subject.MARATHI)}
-                    className="flex-1 flex items-center justify-center gap-2 bg-indigo-50 text-indigo-700 py-2.5 rounded-lg font-semibold hover:bg-indigo-100 transition text-sm"
-                  >
-                      <BookOpen size={16} /> Learn
+              <p className="text-slate-600 mb-4 text-sm">Vyakaran, Vocabulary & Comprehensive Notes.</p>
+              <div className="grid grid-cols-3 gap-2">
+                  <button onClick={() => navigate(Mode.STUDY, Subject.MARATHI)} className="bg-indigo-50 text-indigo-700 py-2 rounded-lg font-bold hover:bg-indigo-100 transition text-xs flex flex-col items-center gap-1">
+                      <BookOpen size={14} /> Study
                   </button>
-                   <button 
-                    onClick={() => navigate(Mode.QUIZ, Subject.MARATHI)}
-                    className="flex-1 flex items-center justify-center gap-2 bg-indigo-600 text-white py-2.5 rounded-lg font-semibold hover:bg-indigo-700 transition text-sm"
-                  >
-                      <BrainCircuit size={16} /> Practice
+                   <button onClick={() => navigate(Mode.QUIZ, Subject.MARATHI)} className="bg-indigo-600 text-white py-2 rounded-lg font-bold hover:bg-indigo-700 transition text-xs flex flex-col items-center gap-1">
+                      <BrainCircuit size={14} /> Quiz
+                  </button>
+                   <button onClick={() => navigate(Mode.PYQ, Subject.MARATHI)} className="bg-orange-100 text-orange-800 py-2 rounded-lg font-bold hover:bg-orange-200 transition text-xs flex flex-col items-center gap-1">
+                      <History size={14} /> PYQs
                   </button>
               </div>
            </div>
@@ -115,69 +111,47 @@ const App: React.FC = () => {
 
         {/* English Card */}
          <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100 hover:border-blue-200 transition-all group">
-           <div className="h-28 bg-gradient-to-r from-blue-500 to-indigo-600 p-6 flex items-end justify-between">
-             <h2 className="text-2xl font-bold text-white">English Grammar</h2>
-             <Languages className="text-white/80 w-10 h-10" />
+           <div className="h-24 bg-gradient-to-r from-blue-500 to-indigo-600 p-6 flex items-end justify-between">
+             <h2 className="text-xl font-bold text-white">English Grammar</h2>
+             <Languages className="text-white/80 w-8 h-8" />
            </div>
            <div className="p-6">
-              <p className="text-slate-600 mb-6 text-sm">Master Grammar for MPSC, UPSC, SSC & CDS exams.</p>
-               <div className="flex gap-2">
-                  <button 
-                     onClick={() => navigate(Mode.STUDY, Subject.ENGLISH)}
-                    className="flex-1 flex items-center justify-center gap-2 bg-indigo-50 text-indigo-700 py-2.5 rounded-lg font-semibold hover:bg-indigo-100 transition text-sm"
-                  >
-                      <BookOpen size={16} /> Learn
+              <p className="text-slate-600 mb-4 text-sm">MPSC Combined & Rajyaseva Pattern.</p>
+               <div className="grid grid-cols-3 gap-2">
+                  <button onClick={() => navigate(Mode.STUDY, Subject.ENGLISH)} className="bg-indigo-50 text-indigo-700 py-2 rounded-lg font-bold hover:bg-indigo-100 transition text-xs flex flex-col items-center gap-1">
+                      <BookOpen size={14} /> Study
                   </button>
-                   <button 
-                    onClick={() => navigate(Mode.QUIZ, Subject.ENGLISH)}
-                    className="flex-1 flex items-center justify-center gap-2 bg-indigo-600 text-white py-2.5 rounded-lg font-semibold hover:bg-indigo-700 transition text-sm"
-                  >
-                      <BrainCircuit size={16} /> Practice
+                   <button onClick={() => navigate(Mode.QUIZ, Subject.ENGLISH)} className="bg-indigo-600 text-white py-2 rounded-lg font-bold hover:bg-indigo-700 transition text-xs flex flex-col items-center gap-1">
+                      <BrainCircuit size={14} /> Quiz
+                  </button>
+                  <button onClick={() => navigate(Mode.PYQ, Subject.ENGLISH)} className="bg-blue-100 text-blue-800 py-2 rounded-lg font-bold hover:bg-blue-200 transition text-xs flex flex-col items-center gap-1">
+                      <History size={14} /> PYQs
                   </button>
               </div>
            </div>
         </div>
 
-        {/* General Studies Card */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100 hover:border-emerald-200 transition-all group">
-           <div className="h-28 bg-gradient-to-r from-emerald-500 to-teal-600 p-6 flex items-end justify-between">
-             <h2 className="text-2xl font-bold text-white">General Studies</h2>
-             <Globe className="text-white/80 w-10 h-10" />
+        {/* General Studies Card - Revamped */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100 hover:border-emerald-200 transition-all group xl:col-span-1">
+           <div className="h-24 bg-gradient-to-r from-emerald-500 to-teal-600 p-6 flex items-end justify-between">
+             <h2 className="text-xl font-bold text-white">General Studies (GS)</h2>
+             <Globe className="text-white/80 w-8 h-8" />
            </div>
            <div className="p-6">
-              <p className="text-slate-600 mb-6 text-sm">History, Geography, Polity, Science & Economics for Prelims Detailed Analysis.</p>
-               <div className="flex gap-2">
-                  <button 
-                     onClick={() => navigate(Mode.STUDY, Subject.GS)}
-                    className="flex-1 flex items-center justify-center gap-2 bg-emerald-50 text-emerald-700 py-2.5 rounded-lg font-semibold hover:bg-emerald-100 transition text-sm"
-                  >
-                      <BookOpen size={16} /> Notes
+              <p className="text-slate-600 mb-4 text-sm font-bold">Prelims PYQ Analysis (2010-2025)</p>
+               <div className="space-y-2">
+                  <button onClick={() => navigate(Mode.PYQ, Subject.GS, 'RAJYASEVA')} className="w-full flex items-center justify-between bg-emerald-50 text-emerald-800 px-4 py-2.5 rounded-xl font-bold hover:bg-emerald-100 transition text-xs">
+                      <span>Rajyaseva Prelims (राज्यसेवा)</span>
+                      <ArrowIcon size={14} />
                   </button>
-                   <button 
-                    onClick={() => navigate(Mode.PYQ, Subject.GS)}
-                    className="flex-1 flex items-center justify-center gap-2 bg-emerald-600 text-white py-2.5 rounded-lg font-semibold hover:bg-emerald-700 transition text-sm"
-                  >
-                      <History size={16} /> PYQ Analysis
-                  </button>
-              </div>
-           </div>
-        </div>
-
-        {/* Marathi Literature Card */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100 hover:border-orange-200 transition-all group">
-           <div className="h-28 bg-gradient-to-r from-amber-500 to-orange-600 p-6 flex items-end justify-between">
-             <h2 className="text-2xl font-bold text-white">Marathi Sahitya</h2>
-             <PenTool className="text-white/80 w-10 h-10" />
-           </div>
-           <div className="p-6">
-              <p className="text-slate-600 mb-6 text-sm">Descriptive Answer Writing Practice for Marathi Literature Optional (Mains).</p>
-               <div className="flex">
-                  <button 
-                     onClick={() => navigate(Mode.LITERATURE)}
-                    className="flex-1 flex items-center justify-center gap-2 bg-orange-50 text-orange-800 py-2.5 rounded-lg font-semibold hover:bg-orange-100 transition text-sm"
-                  >
-                      <PenTool size={16} /> Start Writing Practice
-                  </button>
+                  <div className="grid grid-cols-2 gap-2">
+                      <button onClick={() => navigate(Mode.PYQ, Subject.GS, 'GROUP_B')} className="bg-teal-600 text-white py-2.5 rounded-xl font-bold hover:bg-teal-700 transition text-xs flex flex-col items-center gap-1">
+                          Group B (गट-ब)
+                      </button>
+                      <button onClick={() => navigate(Mode.PYQ, Subject.GS, 'GROUP_C')} className="bg-cyan-600 text-white py-2.5 rounded-xl font-bold hover:bg-cyan-700 transition text-xs flex flex-col items-center gap-1">
+                          Group C (गट-क)
+                      </button>
+                  </div>
               </div>
            </div>
         </div>
@@ -185,100 +159,71 @@ const App: React.FC = () => {
 
       {/* Feature Sections */}
       <div className="grid md:grid-cols-4 gap-6 mb-16">
-          {/* PYQ Quick Access */}
           <div className="bg-indigo-900 rounded-2xl p-6 text-white flex flex-col justify-between shadow-xl relative overflow-hidden">
-             <div className="absolute top-0 right-0 opacity-10">
-                <History size={140} />
-             </div>
+             <div className="absolute top-0 right-0 opacity-10"><History size={140} /></div>
              <div className="relative z-10">
                 <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
-                    <History className="text-yellow-400" />
-                    PYQs
+                    <History className="text-yellow-400" /> PYQs
                 </h3>
-                <p className="text-indigo-200 text-sm mb-6">Authentic questions from Rajyaseva, Group B, Group C.</p>
+                <p className="text-indigo-200 text-sm mb-6">Authentic 2010-2025 archive.</p>
              </div>
-             <button 
-                onClick={() => setMode(Mode.PYQ)}
-                className="relative z-10 bg-yellow-400 text-indigo-900 px-4 py-2 rounded-lg font-bold hover:bg-yellow-300 transition-all shadow-lg flex items-center justify-center gap-2 w-full text-sm"
-             >
-                Solve PYQs <ArrowIcon size={16} />
+             <button onClick={() => setMode(Mode.PYQ)} className="relative z-10 bg-yellow-400 text-indigo-900 px-4 py-2 rounded-lg font-bold hover:bg-yellow-300 transition-all shadow-lg flex items-center justify-center gap-2 w-full text-sm">
+                Explore All PYQs <ArrowIcon size={16} />
              </button>
           </div>
 
-          {/* Vocabulary Quick Access */}
           <div className="bg-purple-900 rounded-2xl p-6 text-white flex flex-col justify-between shadow-xl relative overflow-hidden">
-             <div className="absolute top-0 right-0 opacity-10">
-                <BookA size={140} />
-             </div>
+             <div className="absolute top-0 right-0 opacity-10"><BookA size={140} /></div>
              <div className="relative z-10">
                 <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
-                    <BookA className="text-purple-300" />
-                    Vocab
+                    <BookA className="text-purple-300" /> Vocab
                 </h3>
-                <p className="text-purple-200 text-sm mb-6">Idioms, Phrases, Synonyms & Antonyms.</p>
+                <p className="text-purple-200 text-sm mb-6">Tricky words & idioms.</p>
              </div>
-             <button 
-                onClick={() => setMode(Mode.VOCAB)}
-                className="relative z-10 bg-purple-400 text-purple-950 px-4 py-2 rounded-lg font-bold hover:bg-purple-300 transition-all shadow-lg flex items-center justify-center gap-2 w-full text-sm"
-             >
+             <button onClick={() => setMode(Mode.VOCAB)} className="relative z-10 bg-purple-400 text-purple-950 px-4 py-2 rounded-lg font-bold hover:bg-purple-300 transition-all shadow-lg flex items-center justify-center gap-2 w-full text-sm">
                 Learn Words <ArrowIcon size={16} />
              </button>
           </div>
 
-          {/* Current Affairs Quick Access */}
-           <div className="bg-emerald-900 rounded-2xl p-6 text-white flex flex-col justify-between shadow-xl relative overflow-hidden">
-             <div className="absolute top-0 right-0 opacity-10">
-                <Newspaper size={140} />
-             </div>
+          <div className="bg-emerald-900 rounded-2xl p-6 text-white flex flex-col justify-between shadow-xl relative overflow-hidden">
+             <div className="absolute top-0 right-0 opacity-10"><Newspaper size={140} /></div>
              <div className="relative z-10">
                 <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
-                    <Newspaper className="text-emerald-300" />
-                    News
+                    <Newspaper className="text-emerald-300" /> News
                 </h3>
-                <p className="text-emerald-100 text-sm mb-6">Daily updates on Maharashtra & India events.</p>
+                <p className="text-emerald-100 text-sm mb-6">Maharashtra & India events.</p>
              </div>
-             <button 
-                onClick={() => setMode(Mode.CURRENT_AFFAIRS)}
-                className="relative z-10 bg-emerald-400 text-emerald-950 px-4 py-2 rounded-lg font-bold hover:bg-emerald-300 transition-all shadow-lg flex items-center justify-center gap-2 w-full text-sm"
-             >
-                Read News <ArrowIcon size={16} />
+             <button onClick={() => setMode(Mode.CURRENT_AFFAIRS)} className="relative z-10 bg-emerald-400 text-emerald-950 px-4 py-2 rounded-lg font-bold hover:bg-emerald-300 transition-all shadow-lg flex items-center justify-center gap-2 w-full text-sm">
+                Current Affairs <ArrowIcon size={16} />
              </button>
           </div>
 
-           {/* Bookmarks Quick Access */}
            <div className="bg-pink-900 rounded-2xl p-6 text-white flex flex-col justify-between shadow-xl relative overflow-hidden">
-             <div className="absolute top-0 right-0 opacity-10">
-                <Bookmark size={140} />
-             </div>
+             <div className="absolute top-0 right-0 opacity-10"><Bookmark size={140} /></div>
              <div className="relative z-10">
                 <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
-                    <Bookmark className="text-pink-300" fill="currentColor" />
-                    Saved
+                    <Bookmark className="text-pink-300" fill="currentColor" /> Saved
                 </h3>
-                <p className="text-pink-100 text-sm mb-6">Review your bookmarked important questions.</p>
+                <p className="text-pink-100 text-sm mb-6">Review your marks.</p>
              </div>
-             <button 
-                onClick={() => setMode(Mode.BOOKMARKS)}
-                className="relative z-10 bg-pink-400 text-pink-950 px-4 py-2 rounded-lg font-bold hover:bg-pink-300 transition-all shadow-lg flex items-center justify-center gap-2 w-full text-sm"
-             >
-                View Saved <ArrowIcon size={16} />
+             <button onClick={() => setMode(Mode.BOOKMARKS)} className="relative z-10 bg-pink-400 text-pink-950 px-4 py-2 rounded-lg font-bold hover:bg-pink-300 transition-all shadow-lg flex items-center justify-center gap-2 w-full text-sm">
+                View Bookmarks <ArrowIcon size={16} />
              </button>
           </div>
       </div>
 
-      {/* Quick Tips Section */}
       <div className="grid md:grid-cols-3 gap-6">
-        <div className="bg-slate-100 p-6 rounded-xl">
-            <h4 className="font-bold text-slate-800 mb-2">Grammar Focus</h4>
-            <p className="text-sm text-slate-600">MPSC asks deep conceptual questions. Don't just memorize rules, understand the logic (Contextual Grammar).</p>
+        <div className="bg-slate-100 p-6 rounded-xl border border-slate-200">
+            <h4 className="font-bold text-slate-800 mb-2">GS Section-wise Study</h4>
+            <p className="text-sm text-slate-600">History (समाजसुधारक), Geography (नदी प्रणाली), Polity (घटनादुरुस्त्या) ya vishayavar vishesh laksh dya. AI analysis pratyek section che tricky points clear karel.</p>
         </div>
-        <div className="bg-slate-100 p-6 rounded-xl">
-            <h4 className="font-bold text-slate-800 mb-2">Descriptive Practice</h4>
-            <p className="text-sm text-slate-600">For Marathi Literature, regular answer writing is key. Use the new <strong>Sahitya Mode</strong> to check your structure against AI models.</p>
+        <div className="bg-slate-100 p-6 rounded-xl border border-slate-200">
+            <h4 className="font-bold text-slate-800 mb-2">Rajyaseva Prelims 2025</h4>
+            <p className="text-sm text-slate-600">Aata Rajyaseva Prelims 2025 sathi sarv latest questions with authentic solutions available ahet. Mains descriptive pattern sathi 'Sahitya' mode vapra.</p>
         </div>
-        <div className="bg-slate-100 p-6 rounded-xl">
-            <h4 className="font-bold text-slate-800 mb-2">General Studies Strategy</h4>
-            <p className="text-sm text-slate-600">For GS Prelims, analyze the options of PYQs thoroughly. Use the new <strong>GS Section</strong> to get detailed breakdowns of Science, History, and Polity.</p>
+        <div className="bg-slate-100 p-6 rounded-xl border border-slate-200">
+            <h4 className="font-bold text-slate-800 mb-2">Combined Exam Mastery</h4>
+            <p className="text-sm text-slate-600">Group B ani Group C chya prelims sathi section-wise accuracy vadhvne garjeche ahe. 2010 pasunche sarv PYQs solve karun patterns samjun ghya.</p>
         </div>
       </div>
     </div>
@@ -300,7 +245,7 @@ const App: React.FC = () => {
         )}
         
         {mode === Mode.PYQ && (
-           <PYQMode initialSubject={selectedSubject} onBack={() => navigate(Mode.HOME)} />
+           <PYQMode initialSubject={selectedSubject} initialExamType={selectedExamType} onBack={() => navigate(Mode.HOME)} />
         )}
 
         {mode === Mode.CURRENT_AFFAIRS && (
@@ -320,11 +265,9 @@ const App: React.FC = () => {
         )}
       </main>
 
-      {mode === Mode.HOME && (
-        <footer className="text-center text-slate-400 py-6 text-sm border-t border-slate-200 mt-8">
-           <p>© {new Date().getFullYear()} MPSC Sarathi AI. Designed for Competitive Exam Aspirants.</p>
-        </footer>
-      )}
+      <footer className="text-center text-slate-400 py-6 text-sm border-t border-slate-200 mt-8">
+          <p>© {new Date().getFullYear()} MPSC Sarathi AI. Empowering Maharashtra's Future Officers.</p>
+      </footer>
     </div>
   );
 };
