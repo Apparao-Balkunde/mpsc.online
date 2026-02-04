@@ -152,22 +152,25 @@ export const generateQuiz = async (subject: Subject, topic: string, difficulty: 
 };
 
 export const generatePYQs = async (subject: Subject, year: string, examType: ExamType = 'ALL', subCategory?: GSSubCategory): Promise<QuizQuestion[]> => {
-  const cacheKey = getCacheKey('PYQ_V5', subject, year, examType, subCategory || 'NONE');
+  const cacheKey = getCacheKey('PYQ_V6', subject, year, examType, subCategory || 'NONE');
   const cached = await getFromDataCenter<QuizQuestion[]>(cacheKey);
   if (cached) return cached;
 
   const prompt = `
-    Generate 15 authentic MPSC PYQs.
-    Subject: ${subject}
-    Section (If GS): ${subCategory || 'Mix'}
+    You are an expert MPSC trainer. Generate 15 authentic Previous Year Questions (PYQs).
+    Exam: MPSC ${examType} (e.g. Rajyaseva, Combined Group B/C)
     Year: ${year}
-    Exam: ${examType}
+    Subject: ${subject}
+    GS Section: ${subCategory || 'General Mix'}
     
-    RULES:
-    - Include exam source (e.g. "Rajyaseva 2017").
-    - Detailed explanation (150 words) in Marathi for GS/Marathi, Mix for English.
-    - For GS, prioritize: ${subCategory === 'ALL' ? 'Mixed Syllabus' : subCategory}.
-    - Return JSON array.
+    STRICT RULES:
+    - Questions must reflect the actual difficulty and pattern of MPSC between 2010 and 2025.
+    - For 2025, include high-probability prelims questions or actual reported ones if available.
+    - LANGUAGE: For GS and Marathi subjects, everything (Q, Options, Explanation) MUST be in Marathi (Devanagari).
+    - EXPLANATION: Provide a detailed "Sectional Analysis" (200+ words). Explain why the answer is correct and why other options are incorrect.
+    - SOURCE: Mention the source like "MPSC Rajyaseva Prelims ${year}" or "Combined Group B ${year}".
+    
+    Return as a JSON array.
   `;
 
   const response = await ai.models.generateContent({
@@ -186,7 +189,7 @@ export const generatePYQs = async (subject: Subject, year: string, examType: Exa
             explanation: { type: Type.STRING },
             examSource: { type: Type.STRING }
           },
-          required: ["question", "options", "correctAnswerIndex", "explanation"]
+          required: ["question", "options", "correctAnswerIndex", "explanation", "examSource"]
         }
       }
     }
