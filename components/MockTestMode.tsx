@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ExamType, LoadingState, QuizQuestion, SubjectFocus } from '../types';
 import { generateMockTest } from '../services/gemini';
-import { ShieldCheck, Timer, ArrowLeft, ArrowRight, CheckCircle2, AlertCircle, Loader2, Save, Send, Eye, Copy, Check, Settings2, SlidersHorizontal, LayoutGrid, RotateCcw } from 'lucide-react';
+import { ShieldCheck, Timer, ArrowLeft, ArrowRight, CheckCircle2, AlertCircle, Loader2, Save, Send, Eye, Copy, Check, Settings2, SlidersHorizontal, LayoutGrid, RotateCcw, Zap } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 interface MockTestModeProps {
@@ -23,16 +23,17 @@ export const MockTestMode: React.FC<MockTestModeProps> = ({ onBack }) => {
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const startTest = async () => {
+  const startTest = async (customCount?: number) => {
+    const finalCount = customCount || questionCount;
     setStatus('loading');
     setQuestions([]);
     try {
-      const data = await generateMockTest(examType, questionCount, subjectFocus);
+      const data = await generateMockTest(examType, finalCount, subjectFocus);
       if (!data || data.length === 0) throw new Error("No data generated");
       
       setQuestions(data);
       setUserAnswers(new Array(data.length).fill(-1));
-      setTimeLeft(data.length * 90); // 1.5 mins per question
+      setTimeLeft(data.length * 90); 
       setStatus('success');
       setIsFinished(false);
       setCurrentIdx(0);
@@ -82,10 +83,9 @@ export const MockTestMode: React.FC<MockTestModeProps> = ({ onBack }) => {
     setTimeout(() => setCopiedIdx(null), 2000);
   };
 
-  // Sync default count based on exam type
   useEffect(() => {
     if (examType === 'RAJYASEVA') {
-        setQuestionCount(25); // Default to manageable 25 for Rajyaseva web version
+        setQuestionCount(20); 
     } else {
         setQuestionCount(10);
     }
@@ -94,14 +94,22 @@ export const MockTestMode: React.FC<MockTestModeProps> = ({ onBack }) => {
   if (status === 'error') {
     return (
       <div className="max-w-4xl mx-auto p-6">
-        <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-10 text-center">
+        <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-10 text-center shadow-xl">
             <AlertCircle size={48} className="mx-auto mb-4 text-red-600" />
-            <h2 className="text-2xl font-black text-red-900 mb-2">Generation Failed</h2>
-            <p className="text-red-700 mb-6">MPSC papers are complex and AI sometimes hits a limit. Please try with a smaller question count (e.g. 10 or 25).</p>
-            <div className="flex justify-center gap-4">
-                <button onClick={() => setStatus('idle')} className="bg-white text-slate-700 border border-slate-300 px-6 py-2 rounded-xl font-bold">Back to Settings</button>
-                <button onClick={startTest} className="bg-red-600 text-white px-6 py-2 rounded-xl font-bold flex items-center gap-2">
-                    <RotateCcw size={18}/> Retry Generation
+            <h2 className="text-2xl font-black text-red-900 mb-2">Generation Limit Exceeded</h2>
+            <p className="text-red-700 mb-8 max-w-md mx-auto">
+                मराठीतील स्पष्टीकरणासह जास्त प्रश्न जनरेट करताना AI ला मर्यादा येऊ शकतात. 
+                कृपया लहान संच (५ किंवा १० प्रश्न) निवडून पहा.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <button onClick={() => setStatus('idle')} className="bg-white text-slate-700 border border-slate-300 px-6 py-3 rounded-xl font-bold hover:bg-slate-50 transition-all">
+                    Change Settings
+                </button>
+                <button onClick={() => startTest(5)} className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-indigo-700 shadow-md transition-all">
+                    <Zap size={18}/> Try 5 Questions
+                </button>
+                <button onClick={() => startTest(10)} className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-emerald-700 shadow-md transition-all">
+                    <Zap size={18}/> Try 10 Questions
                 </button>
             </div>
         </div>
@@ -119,8 +127,8 @@ export const MockTestMode: React.FC<MockTestModeProps> = ({ onBack }) => {
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100">
           <div className="p-8 bg-indigo-700 text-white text-center">
             <ShieldCheck size={48} className="mx-auto mb-4 text-yellow-400" />
-            <h2 className="text-3xl font-black mb-2">MPSC Full Mock Test</h2>
-            <p className="text-indigo-100">AI-generated papers based on latest exam patterns.</p>
+            <h2 className="text-3xl font-black mb-2">MPSC AI Mock Test</h2>
+            <p className="text-indigo-100">Intelligent paper generation for your success.</p>
           </div>
           
           <div className="p-8 space-y-8">
@@ -130,59 +138,59 @@ export const MockTestMode: React.FC<MockTestModeProps> = ({ onBack }) => {
                 className={`p-6 rounded-2xl border-2 text-left transition-all ${examType === 'RAJYASEVA' ? 'border-indigo-600 bg-indigo-50 shadow-md' : 'border-slate-100 hover:border-slate-200'}`}
               >
                 <h3 className="font-black text-xl mb-2 text-indigo-900">Rajyaseva Prelims</h3>
-                <ul className="text-sm text-slate-600 space-y-1">
-                  <li>• GS Paper 1 Pattern</li>
-                  <li>• Targeted Difficulty</li>
-                  <li>• All GS Sections</li>
-                </ul>
+                <p className="text-xs text-slate-500 mb-2">Pattern: GS Paper 1</p>
+                <div className="h-1 w-full bg-indigo-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-indigo-600" style={{ width: '100%' }}></div>
+                </div>
               </button>
               
               <button 
                 onClick={() => setExamType('GROUP_B')}
                 className={`p-6 rounded-2xl border-2 text-left transition-all ${examType === 'GROUP_B' ? 'border-indigo-600 bg-indigo-50 shadow-md' : 'border-slate-100 hover:border-slate-200'}`}
               >
-                <h3 className="font-black text-xl mb-2 text-indigo-900">Combined Mock</h3>
-                <ul className="text-sm text-slate-600 space-y-1">
-                  <li>• Dynamic Question Count</li>
-                  <li>• Flexible Subject Mix</li>
-                  <li>• Marathi, English & GS</li>
-                </ul>
+                <h3 className="font-black text-xl mb-2 text-indigo-900">Combined B/C</h3>
+                <p className="text-xs text-slate-500 mb-2">Pattern: Mixed Sub. Mock</p>
+                <div className="h-1 w-full bg-emerald-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-emerald-600" style={{ width: '100%' }}></div>
+                </div>
               </button>
             </div>
 
-            {/* Config Panel */}
-            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 space-y-6 animate-in slide-in-from-top-2">
+            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 space-y-6">
                  <div className="flex items-center gap-2 text-indigo-900 font-black text-sm uppercase tracking-widest mb-2">
-                    <Settings2 size={18} /> Test Configuration
+                    <Settings2 size={18} /> Mock Test Settings
                  </div>
                  
                  <div className="space-y-4">
                     <div className="flex justify-between items-center">
                         <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                            <SlidersHorizontal size={14} /> Number of Questions: <span className="text-indigo-600 text-lg font-black">{questionCount}</span>
+                            <SlidersHorizontal size={14} /> Questions to Generate: <span className="text-indigo-600 text-lg font-black">{questionCount}</span>
                         </label>
                     </div>
                     <input 
                         type="range" 
-                        min="10" 
-                        max={examType === 'RAJYASEVA' ? "50" : "40"} 
-                        step={examType === 'RAJYASEVA' ? "5" : "10"} 
+                        min="5" 
+                        max="40" 
+                        step="5" 
                         value={questionCount} 
                         onChange={(e) => setQuestionCount(parseInt(e.target.value))}
                         className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
                     />
                     <div className="flex justify-between text-[10px] font-bold text-slate-400 px-1">
-                        <span>10</span>
-                        <span>25</span>
-                        <span>{examType === 'RAJYASEVA' ? "50" : "40"}</span>
+                        <span>5</span>
+                        <span>20</span>
+                        <span>40 (Max)</span>
                     </div>
-                    <p className="text-[10px] text-slate-400 italic font-medium">* Higher counts take longer to generate.</p>
+                    <div className="flex items-center gap-2 mt-2 bg-blue-50 p-2 rounded-lg border border-blue-100">
+                        <Zap size={12} className="text-blue-600" />
+                        <p className="text-[10px] text-blue-700 font-bold italic">Small batches (5-10) generate faster and more accurately.</p>
+                    </div>
                  </div>
 
                  {examType !== 'RAJYASEVA' && (
                  <div className="space-y-3">
                     <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                        <LayoutGrid size={14} /> Subject Focus
+                        <LayoutGrid size={14} /> Subject Priority
                     </label>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                         {[
@@ -204,18 +212,11 @@ export const MockTestMode: React.FC<MockTestModeProps> = ({ onBack }) => {
                  )}
             </div>
 
-            <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 flex gap-3">
-              <AlertCircle className="text-amber-600 shrink-0" size={20} />
-              <div className="text-sm text-amber-800">
-                <strong>Instructions:</strong> Once the test starts, the timer will begin. AI will generate unique questions for your session.
-              </div>
-            </div>
-
             <button 
-              onClick={startTest}
+              onClick={() => startTest()}
               className="w-full bg-indigo-600 text-white py-4 rounded-xl font-black text-xl hover:bg-indigo-700 shadow-xl transition-all active:scale-95"
             >
-              GENERATE & START TEST
+              GENERATE MOCK TEST
             </button>
           </div>
         </div>
@@ -227,17 +228,18 @@ export const MockTestMode: React.FC<MockTestModeProps> = ({ onBack }) => {
     return (
       <div className="max-w-4xl mx-auto p-20 text-center">
         <Loader2 className="animate-spin h-16 w-16 text-indigo-600 mx-auto mb-6" />
-        <h2 className="text-2xl font-black text-slate-800">AI is Drafting Your Paper...</h2>
-        <p className="text-slate-500 mt-2">Constructing {questionCount} questions for {examType}.</p>
+        <h2 className="text-2xl font-black text-slate-800">Setting up the Exam...</h2>
+        <p className="text-slate-500 mt-2">AI is preparing {questionCount} unique questions for you.</p>
         <div className="mt-8 max-w-md mx-auto bg-slate-100 h-2 rounded-full overflow-hidden">
-            <div className="bg-indigo-600 h-full animate-[loading_10s_ease-in-out_infinite]" style={{ width: '60%' }}></div>
+            <div className="bg-indigo-600 h-full animate-[loading_12s_ease-in-out_infinite]"></div>
         </div>
-        <p className="text-slate-400 text-xs mt-4 italic">Marathi translation and analytical explanations are being verified.</p>
+        <p className="text-slate-400 text-[10px] mt-4 uppercase tracking-widest font-black">Scanning Pattern & Difficulty</p>
         <style>{`
             @keyframes loading {
                 0% { width: 0%; }
-                50% { width: 70%; }
-                100% { width: 90%; }
+                20% { width: 40%; }
+                70% { width: 85%; }
+                100% { width: 95%; }
             }
         `}</style>
       </div>
@@ -249,9 +251,9 @@ export const MockTestMode: React.FC<MockTestModeProps> = ({ onBack }) => {
       <div className="flex-1 space-y-6">
         <div className="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden sticky top-24 z-30">
           <div className="px-6 py-4 bg-slate-900 text-white flex justify-between items-center">
-             <div>
-               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{examType} MOCK</span>
-               <h3 className="font-bold">{isFinished ? 'Performance Analysis' : 'Exam in Progress'}</h3>
+             <div className="flex items-center gap-3">
+               <span className="bg-indigo-600 px-2 py-0.5 rounded text-[10px] font-black">{examType}</span>
+               <h3 className="font-bold">{isFinished ? 'Test Results' : 'Mock Test Live'}</h3>
              </div>
              {!isFinished && (
                <div className="flex items-center gap-2 bg-slate-800 px-4 py-2 rounded-xl border border-slate-700">
@@ -265,14 +267,14 @@ export const MockTestMode: React.FC<MockTestModeProps> = ({ onBack }) => {
         {isFinished ? (
           <div className="space-y-6">
             <div className="bg-white rounded-2xl shadow-xl p-10 text-center border-4 border-indigo-100">
-              <h1 className="text-4xl font-black text-indigo-900 mb-4">Result Summary</h1>
+              <h1 className="text-4xl font-black text-indigo-900 mb-4">Final Score</h1>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-8">
                  <div className="bg-indigo-50 p-6 rounded-2xl">
-                    <div className="text-xs font-black text-indigo-400 uppercase">Total Questions</div>
+                    <div className="text-xs font-black text-indigo-400 uppercase">Questions</div>
                     <div className="text-4xl font-black text-indigo-800">{questions.length}</div>
                  </div>
                  <div className="bg-emerald-50 p-6 rounded-2xl">
-                    <div className="text-xs font-black text-emerald-400 uppercase">Correct Answers</div>
+                    <div className="text-xs font-black text-emerald-400 uppercase">Correct</div>
                     <div className="text-4xl font-black text-emerald-800">{getScore()}</div>
                  </div>
                  <div className="bg-slate-50 p-6 rounded-2xl col-span-2 md:col-span-1">
@@ -280,12 +282,12 @@ export const MockTestMode: React.FC<MockTestModeProps> = ({ onBack }) => {
                     <div className="text-4xl font-black text-slate-800">{questions.length > 0 ? Math.round((getScore() / questions.length) * 100) : 0}%</div>
                  </div>
               </div>
-              <button onClick={() => setStatus('idle')} className="bg-indigo-600 text-white px-10 py-4 rounded-xl font-black shadow-lg hover:bg-indigo-700">NEW TEST</button>
+              <button onClick={() => setStatus('idle')} className="bg-indigo-600 text-white px-10 py-4 rounded-xl font-black shadow-lg hover:bg-indigo-700 transition-all">TRY ANOTHER PAPER</button>
             </div>
 
             <div className="space-y-6">
                <h3 className="text-xl font-black text-slate-800 flex items-center gap-2">
-                 <Eye className="text-indigo-600" /> Detailed Review
+                 <Eye className="text-indigo-600" /> Review Questions
                </h3>
                {questions.map((q, idx) => (
                  <div key={idx} className="bg-white rounded-2xl shadow-md p-8 border border-slate-200">
