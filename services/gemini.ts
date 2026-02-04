@@ -8,7 +8,7 @@ const MODEL_FAST = 'gemini-3-flash-preview';
 const MODEL_PRO = 'gemini-3-pro-preview';
 const MODEL_TTS = 'gemini-2.5-flash-preview-tts';
 
-const CACHE_VERSION_PREFIX = 'MPSC_SARATHI_V16_MOCK_'; 
+const CACHE_VERSION_PREFIX = 'MPSC_SARATHI_V17_MOCK_'; 
 const DB_NAME = 'MPSC_Sarathi_Local_DB';
 const STORE_NAME = 'exam_data_cache';
 
@@ -64,49 +64,56 @@ export const generateMockTest = async (examType: ExamType, questionCount: number
   const cached = await getLocalData<QuizQuestion[]>(key);
   if (cached) return cached;
 
-  let prompt = "";
-  
-  if (examType === 'RAJYASEVA') {
-    prompt = `Generate exactly 100 General Studies questions for MPSC Rajyaseva Prelims pattern. 
-    Mix topics: History, Geography, Polity, Economics, Science, Environment. 
-    Questions must be in Marathi. For each question, provide 4 options, the correct answer index, and a brief 50-word explanation in Marathi.`;
-  } else {
-    let distribution = "40% Marathi Grammar, 30% English Grammar, 30% General Studies";
-    if (focus === 'MARATHI_HEAVY') distribution = "60% Marathi Grammar, 20% English Grammar, 20% General Studies";
-    if (focus === 'ENGLISH_HEAVY') distribution = "20% Marathi Grammar, 60% English Grammar, 20% General Studies";
-    if (focus === 'GS_HEAVY') distribution = "20% Marathi Grammar, 20% English Grammar, 60% General Studies";
+  console.log(`Generating Mock Test: ${examType}, Count: ${questionCount}`);
 
-    prompt = `Generate a Mock Test for MPSC Combined (Group B/C) with exactly ${questionCount} questions.
-    Requested Subject Mix: ${distribution}.
-    Marathi and English questions should be in their respective languages but meanings/explanations in Marathi. 
-    GS questions in Marathi. Provide 4 options, correct answer index, and explanation for each.`;
+  let prompt = "";
+  if (examType === 'RAJYASEVA') {
+    prompt = `Generate exactly ${questionCount} high-quality General Studies questions for MPSC Rajyaseva Prelims. 
+    Mix: History, Polity, Geography, Economics, Science. 
+    Language: Marathi (Devanagari). 
+    Format: JSON array with fields: question, options (4 strings), correctAnswerIndex (0-3), explanation (concise Marathi).`;
+  } else {
+    let mix = "40% Marathi, 30% English, 30% GS";
+    if (focus === 'MARATHI_HEAVY') mix = "70% Marathi, 15% English, 15% GS";
+    if (focus === 'ENGLISH_HEAVY') mix = "15% Marathi, 70% English, 15% GS";
+    if (focus === 'GS_HEAVY') mix = "15% Marathi, 15% English, 70% GS";
+
+    prompt = `Generate exactly ${questionCount} questions for MPSC Combined (Group B/C) Exam.
+    Subject Mix: ${mix}.
+    Questions in Marathi for Marathi/GS sections, and English for English section. 
+    Format: JSON array with fields: question, options (4 strings), correctAnswerIndex (0-3), explanation (concise Marathi).`;
   }
 
-  const response = await ai.models.generateContent({
-    model: MODEL_FAST,
-    contents: prompt,
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.ARRAY,
-        items: {
-          type: Type.OBJECT,
-          properties: {
-            question: { type: Type.STRING },
-            options: { type: Type.ARRAY, items: { type: Type.STRING } },
-            correctAnswerIndex: { type: Type.INTEGER },
-            explanation: { type: Type.STRING },
-            examSource: { type: Type.STRING }
-          },
-          required: ["question", "options", "correctAnswerIndex", "explanation"]
+  try {
+    const response = await ai.models.generateContent({
+      model: MODEL_FAST,
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              question: { type: Type.STRING },
+              options: { type: Type.ARRAY, items: { type: Type.STRING } },
+              correctAnswerIndex: { type: Type.INTEGER },
+              explanation: { type: Type.STRING }
+            },
+            required: ["question", "options", "correctAnswerIndex", "explanation"]
+          }
         }
       }
-    }
-  });
+    });
 
-  const data = JSON.parse(response.text) as QuizQuestion[];
-  await saveLocalData(key, data);
-  return data;
+    if (!response.text) throw new Error("Empty response from AI");
+    const data = JSON.parse(response.text) as QuizQuestion[];
+    await saveLocalData(key, data);
+    return data;
+  } catch (err) {
+    console.error("Generation failed:", err);
+    throw err;
+  }
 };
 
 export const generatePYQs = async (subject: Subject, year: string, examType: ExamType, subCategory: GSSubCategory = 'ALL'): Promise<QuizQuestion[]> => {
