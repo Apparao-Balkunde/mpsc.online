@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Subject, VocabWord, VocabCategory, LoadingState } from '../types';
 import { generateVocab, playTextToSpeech } from '../services/gemini';
-import { BookA, Loader2, ArrowLeft, RotateCw, Volume2, GraduationCap, Quote, ArrowRightLeft, Spline, WholeWord, Layers, ArrowRight, ArrowLeft as ArrowLeftIcon, Repeat, Link2, Filter, Info, AlertTriangle } from 'lucide-react';
+import { BookA, Loader2, ArrowLeft, RotateCw, Volume2, GraduationCap, Quote, ArrowRightLeft, Spline, WholeWord, Layers, ArrowRight, ArrowLeft as ArrowLeftIcon, Repeat, Link2, Filter, Info, AlertTriangle, ArrowRightLeft as SwapIcon } from 'lucide-react';
 
 interface VocabModeProps {
   onBack: () => void;
@@ -119,21 +119,38 @@ export const VocabMode: React.FC<VocabModeProps> = ({ onBack }) => {
   const renderRelatedWordTag = (text: string) => {
     let styles = "bg-slate-50 text-slate-600 border-slate-200";
     let icon = null;
+    let label = text;
     
     const lower = text.toLowerCase();
+    
+    // Check for "Tricky Pairs" - marked with "VS:" or "Tricky Pair:"
+    if (lower.startsWith('vs:') || lower.includes('pair:') || lower.includes('गोंधळात') || lower.includes('confused') || lower.includes('युग्म:')) {
+      styles = "bg-amber-50 text-amber-900 border-amber-400 font-black shadow-sm ring-1 ring-amber-200";
+      icon = <AlertTriangle size={12} className="mr-1.5 text-amber-600" />;
+      label = text.replace(/^(vs:|tricky pair:)/i, 'TRAP:').trim();
+      
+      return (
+        <div key={text} className={`w-full mt-2 p-3 rounded-xl border flex flex-col gap-1 transition-all hover:scale-[1.02] ${styles}`}>
+            <div className="flex items-center text-[10px] uppercase tracking-widest font-black text-amber-600 mb-1">
+                <SwapIcon size={14} className="mr-1" /> MPSC TRICKY COMPARISON
+            </div>
+            <div className="text-sm font-bold leading-relaxed">
+                {label}
+            </div>
+        </div>
+      );
+    }
+
     if (lower.includes('syn:') || lower.includes('समानार्थी:')) {
       styles = "bg-green-50 text-green-700 border-green-200";
     } else if (lower.includes('ant:') || lower.includes('विरुद्धार्थी:')) {
       styles = "bg-red-50 text-red-700 border-red-200";
-    } else if (lower.includes('pair:') || lower.includes('गोंधळात') || lower.includes('confused') || lower.includes('युग्म:')) {
-      styles = "bg-amber-100 text-amber-900 border-amber-400 font-black scale-105 shadow-sm";
-      icon = <AlertTriangle size={10} className="mr-1" />;
     }
 
     return (
-      <span key={text} className={`text-[10px] md:text-xs px-2.5 py-1 rounded border flex items-center transition-all hover:scale-105 ${styles}`}>
+      <span key={text} className={`text-[10px] md:text-xs px-2.5 py-1 rounded-full border flex items-center transition-all hover:scale-110 ${styles}`}>
         {icon}
-        {text}
+        {label}
       </span>
     );
   };
@@ -284,8 +301,8 @@ export const VocabMode: React.FC<VocabModeProps> = ({ onBack }) => {
                                  </div>
                                  {filteredWords[currentIndex].relatedWords && filteredWords[currentIndex].relatedWords.length > 0 && (
                                      <div className="w-full text-center">
-                                         <h3 className="text-indigo-300 mb-2 uppercase text-[10px] font-black tracking-widest flex items-center justify-center gap-2"><Link2 size={10} /> Analysis & Tricky Pairs</h3>
-                                         <div className="flex flex-wrap justify-center gap-2">
+                                         <h3 className="text-indigo-300 mb-2 uppercase text-[10px] font-black tracking-widest flex items-center justify-center gap-2"><Link2 size={10} /> Analysis & Comparisons</h3>
+                                         <div className="flex flex-col items-center gap-2">
                                              {filteredWords[currentIndex].relatedWords.map((rw) => renderRelatedWordTag(rw))}
                                          </div>
                                      </div>
@@ -327,7 +344,7 @@ export const VocabMode: React.FC<VocabModeProps> = ({ onBack }) => {
                                 </div>
                                 {item.relatedWords && item.relatedWords.length > 0 && (
                                     <div className="mt-auto pt-4 border-t border-slate-100">
-                                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Analysis & Tricky Pairs</h4>
+                                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Analysis & Comparisons</h4>
                                         <div className="flex flex-wrap gap-2">
                                             {item.relatedWords.map((rw) => renderRelatedWordTag(rw))}
                                         </div>
