@@ -2,16 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import { Subject, LoadingState, QuizQuestion, ExamType, GSSubCategory } from '../types';
 import { generatePYQs } from '../services/gemini';
-import { History, Search, Loader2, ArrowLeft, Eye, CheckCircle2, Bookmark, Info, Calendar, Filter } from 'lucide-react';
+import { History, Search, Loader2, ArrowLeft, Eye, CheckCircle2, Bookmark, Info, Calendar, Filter, BookOpen } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 interface PYQModeProps {
-  initialSubject?: Subject;
   initialExamType?: ExamType;
   onBack: () => void;
 }
 
-// Updated year range from 2010 to 2025
 const YEARS = Array.from({ length: 16 }, (_, i) => (2025 - i).toString());
 
 const GS_SECTIONS: { label: string; value: GSSubCategory }[] = [
@@ -24,9 +22,8 @@ const GS_SECTIONS: { label: string; value: GSSubCategory }[] = [
     { label: 'Environment (पर्यावरण)', value: 'ENVIRONMENT' }
 ];
 
-export const PYQMode: React.FC<PYQModeProps> = ({ initialSubject = Subject.MARATHI, initialExamType = 'ALL', onBack }) => {
+export const PYQMode: React.FC<PYQModeProps> = ({ initialExamType = 'ALL', onBack }) => {
   const [selectedYear, setSelectedYear] = useState<string>('2024');
-  const [subject, setSubject] = useState<Subject>(initialSubject);
   const [examType, setExamType] = useState<ExamType>(initialExamType);
   const [gsCategory, setGsCategory] = useState<GSSubCategory>('ALL');
   const [status, setStatus] = useState<LoadingState>('idle');
@@ -38,6 +35,7 @@ export const PYQMode: React.FC<PYQModeProps> = ({ initialSubject = Subject.MARAT
   useEffect(() => {
     const saved = localStorage.getItem('mpsc_pyq_bookmarks');
     if (saved) setBookmarks(JSON.parse(saved));
+    fetchQuestions();
   }, []);
 
   const fetchQuestions = async () => {
@@ -46,17 +44,14 @@ export const PYQMode: React.FC<PYQModeProps> = ({ initialSubject = Subject.MARAT
     setRevealedAnswers([]);
     setSearchKeyword('');
     try {
-      const data = await generatePYQs(subject, selectedYear, examType, subject === Subject.GS ? gsCategory : undefined);
+      // Subject is now strictly fixed to GS
+      const data = await generatePYQs(Subject.GS, selectedYear, examType, gsCategory);
       setQuestions(data);
       setStatus('success');
     } catch (e) {
       setStatus('error');
     }
   };
-
-  useEffect(() => {
-    fetchQuestions();
-  }, []);
 
   const toggleReveal = (index: number) => {
     setRevealedAnswers(prev => prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]);
@@ -85,64 +80,45 @@ export const PYQMode: React.FC<PYQModeProps> = ({ initialSubject = Subject.MARAT
           <div>
             <h2 className="text-2xl font-bold text-slate-800 mb-1 flex items-center">
                 <History className="mr-2 text-indigo-600" />
-                Previous Year Questions (2010-2025)
+                GS PYQ Archive (2010-2025)
             </h2>
-            <p className="text-slate-600 text-sm">Authentic exam patterns with detailed AI-powered analysis.</p>
+            <p className="text-slate-600 text-sm">Dedicated General Studies Previous Year Questions with Sectional Analysis.</p>
           </div>
-          <span className="text-xs bg-indigo-600 text-white px-3 py-1 rounded-full font-bold uppercase tracking-wider">MPSC PYQ Bank</span>
+          <span className="hidden md:block text-xs bg-indigo-600 text-white px-3 py-1 rounded-full font-bold uppercase tracking-wider">MPSC GS Expert</span>
         </div>
 
-        <div className="p-6 grid grid-cols-1 md:grid-cols-5 gap-4 bg-white items-end">
+        <div className="p-6 grid grid-cols-1 md:grid-cols-4 gap-4 bg-white items-end">
           <div>
-            <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Subject</label>
-            <select 
-              value={subject}
-              onChange={(e) => {
-                const sub = e.target.value as Subject;
-                setSubject(sub);
-                if (sub !== Subject.GS) setGsCategory('ALL');
-              }}
-              className="w-full rounded-lg border-slate-300 border p-2.5 text-sm focus:ring-2 focus:ring-indigo-500"
-            >
-              <option value={Subject.MARATHI}>Marathi (मराठी)</option>
-              <option value={Subject.ENGLISH}>English</option>
-              <option value={Subject.GS}>General Studies (GS)</option>
-            </select>
-          </div>
-
-          <div>
-             <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Exam Type</label>
+             <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Exam Category</label>
              <select 
                 value={examType}
                 onChange={(e) => setExamType(e.target.value as ExamType)}
-                className="w-full rounded-lg border-slate-300 border p-2.5 text-sm focus:ring-2 focus:ring-indigo-500"
+                className="w-full rounded-lg border-slate-300 border p-2.5 text-sm font-semibold focus:ring-2 focus:ring-indigo-500 bg-white"
               >
                 <option value="RAJYASEVA">Rajyaseva (राज्यसेवा)</option>
                 <option value="GROUP_B">Combined B (गट-ब)</option>
                 <option value="GROUP_C">Combined C (गट-क)</option>
-                <option value="ALL">Other Exams</option>
+                <option value="ALL">Other MPSC Exams</option>
               </select>
           </div>
 
-          {subject === Subject.GS && (
-            <div className="md:col-span-1">
-              <label className="block text-xs font-bold text-slate-500 uppercase mb-2">GS Section</label>
+          <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-2">GS Section (विषय)</label>
               <select 
                 value={gsCategory}
                 onChange={(e) => setGsCategory(e.target.value as GSSubCategory)}
-                className="w-full rounded-lg border-slate-300 border p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 bg-amber-50"
+                className="w-full rounded-lg border-slate-300 border p-2.5 text-sm font-semibold focus:ring-2 focus:ring-indigo-500 bg-amber-50"
               >
                 {GS_SECTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
               </select>
-            </div>
-          )}
+          </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Year</label>
+            <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Select Year</label>
             <select 
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(e.target.value)}
-                className="w-full rounded-lg border-slate-300 border p-2.5 text-sm focus:ring-2 focus:ring-indigo-500"
+                className="w-full rounded-lg border-slate-300 border p-2.5 text-sm font-semibold focus:ring-2 focus:ring-indigo-500 bg-white"
             >
                 {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
@@ -154,7 +130,7 @@ export const PYQMode: React.FC<PYQModeProps> = ({ initialSubject = Subject.MARAT
             className="w-full bg-indigo-600 text-white p-2.5 rounded-lg hover:bg-indigo-700 transition-all font-bold shadow-md flex items-center justify-center gap-2"
           >
             {status === 'loading' ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
-            Filter
+            Get Questions
           </button>
         </div>
       </div>
@@ -162,12 +138,12 @@ export const PYQMode: React.FC<PYQModeProps> = ({ initialSubject = Subject.MARAT
       {status === 'loading' && (
         <div className="text-center py-20 bg-white rounded-xl shadow-sm border border-slate-100">
           <Loader2 className="animate-spin h-12 w-12 text-indigo-600 mx-auto mb-4" />
-          <p className="text-slate-600 font-bold">Scanning MPSC Archives (2010-2025)...</p>
-          <p className="text-slate-400 text-sm mt-1">Fetching {examType} {selectedYear} {subject === Subject.GS ? `| ${gsCategory}` : ''}</p>
+          <p className="text-slate-600 font-bold">Accessing GS Archives (2010-2025)...</p>
+          <p className="text-slate-400 text-sm mt-1">Filtering {examType} | {gsCategory} | {selectedYear}</p>
         </div>
       )}
 
-      {status === 'success' && questions.length > 0 && (
+      {status === 'success' && (
         <div className="space-y-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
             <div className="flex items-center text-indigo-800 font-bold text-sm">
@@ -180,13 +156,13 @@ export const PYQMode: React.FC<PYQModeProps> = ({ initialSubject = Subject.MARAT
                     type="text"
                     value={searchKeyword}
                     onChange={(e) => setSearchKeyword(e.target.value)}
-                    placeholder="Search keywords..."
+                    placeholder="Search in questions..."
                     className="block w-full pl-9 pr-8 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-colors"
                 />
             </div>
           </div>
           
-          {filteredQuestions.map((q, idx) => (
+          {filteredQuestions.length > 0 ? filteredQuestions.map((q, idx) => (
             <div key={idx} className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition-shadow">
                 <div className="p-6">
                     <div className="flex justify-between items-start mb-4">
@@ -200,7 +176,7 @@ export const PYQMode: React.FC<PYQModeProps> = ({ initialSubject = Subject.MARAT
                                         {q.examSource || `${examType} ${selectedYear}`}
                                     </span>
                                     <span className="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded">
-                                        {subject === Subject.GS ? gsCategory : subject}
+                                        {gsCategory === 'ALL' ? 'GS Mix' : gsCategory}
                                     </span>
                                 </div>
                                 <p className="text-lg text-slate-900 font-bold leading-relaxed">{q.question}</p>
@@ -214,7 +190,7 @@ export const PYQMode: React.FC<PYQModeProps> = ({ initialSubject = Subject.MARAT
                         </button>
                     </div>
 
-                    <div className="ml-12 grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
+                    <div className="ml-0 md:ml-12 grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
                         {q.options.map((opt, oIdx) => (
                         <div key={oIdx} className="p-3 border border-slate-200 rounded-lg text-slate-700 text-sm bg-slate-50/50 hover:bg-white transition-colors cursor-default border-l-4 hover:border-l-indigo-500">
                             <span className="font-bold mr-2 text-slate-400">({String.fromCharCode(65 + oIdx)})</span>
@@ -223,34 +199,42 @@ export const PYQMode: React.FC<PYQModeProps> = ({ initialSubject = Subject.MARAT
                         ))}
                     </div>
 
-                    <button 
-                        onClick={() => toggleReveal(idx)}
-                        className={`ml-12 flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all ${revealedAnswers.includes(idx) ? 'bg-slate-800 text-white' : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'}`}
-                    >
-                        <Eye size={16} />
-                        {revealedAnswers.includes(idx) ? 'Hide Explanation' : 'Show Answer & Explanation'}
-                    </button>
+                    <div className="ml-0 md:ml-12">
+                        <button 
+                            onClick={() => toggleReveal(idx)}
+                            className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all ${revealedAnswers.includes(idx) ? 'bg-slate-800 text-white' : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'}`}
+                        >
+                            <Eye size={16} />
+                            {revealedAnswers.includes(idx) ? 'Hide Explanation' : 'Show Answer & Explanation'}
+                        </button>
 
-                    {revealedAnswers.includes(idx) && (
-                        <div className="ml-12 mt-4 animate-in slide-in-from-top-2 duration-300">
-                            <div className="bg-green-50 border-l-4 border-green-500 p-4 mb-3 rounded-r-lg shadow-sm">
-                                <p className="text-green-800 font-black mb-1">Correct Answer: {String.fromCharCode(65 + q.correctAnswerIndex)}</p>
-                                <p className="text-green-700 text-sm font-bold">{q.options[q.correctAnswerIndex]}</p>
-                            </div>
-                            <div className="bg-slate-50 p-5 rounded-lg border border-slate-200">
-                                <h5 className="font-black text-slate-800 mb-3 text-xs uppercase tracking-widest flex items-center gap-2">
-                                    <Info size={14} className="text-indigo-500" />
-                                    Analytical Breakdown (Marathi)
-                                </h5>
-                                <div className="text-slate-700 text-sm leading-relaxed prose prose-sm max-w-none">
-                                    <ReactMarkdown>{q.explanation}</ReactMarkdown>
+                        {revealedAnswers.includes(idx) && (
+                            <div className="mt-4 animate-in slide-in-from-top-2 duration-300">
+                                <div className="bg-green-50 border-l-4 border-green-500 p-4 mb-3 rounded-r-lg shadow-sm">
+                                    <p className="text-green-800 font-black mb-1">Correct Answer: {String.fromCharCode(65 + q.correctAnswerIndex)}</p>
+                                    <p className="text-green-700 text-sm font-bold">{q.options[q.correctAnswerIndex]}</p>
+                                </div>
+                                <div className="bg-slate-50 p-5 rounded-lg border border-slate-200">
+                                    <h5 className="font-black text-slate-800 mb-3 text-xs uppercase tracking-widest flex items-center gap-2">
+                                        <Info size={14} className="text-indigo-500" />
+                                        Analytical Breakdown (Marathi)
+                                    </h5>
+                                    <div className="text-slate-700 text-sm leading-relaxed prose prose-sm max-w-none">
+                                        <ReactMarkdown>{q.explanation}</ReactMarkdown>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
             </div>
-          ))}
+          )) : (
+            <div className="text-center py-20 bg-white rounded-xl border border-dashed border-slate-300">
+                <BookOpen size={48} className="mx-auto text-slate-200 mb-4" />
+                <p className="text-slate-500 font-bold">No results found for this selection.</p>
+                <p className="text-slate-400 text-sm">Try changing the year or section filter.</p>
+            </div>
+          )}
         </div>
       )}
     </div>
