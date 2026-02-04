@@ -1,4 +1,5 @@
 
+// Fix: Corrected property access and type assignments for CachedResponse.
 import React, { useState, useEffect, useRef } from 'react';
 import { ExamType, LoadingState, QuizQuestion, SubjectFocus } from '../types';
 import { generateMockTest } from '../services/gemini';
@@ -40,12 +41,12 @@ export const MockTestMode: React.FC<MockTestModeProps> = ({ onBack }) => {
           setStatus('success');
       } else {
           // AI Mode with Batching (Handled in service)
-          const data = await generateMockTest(examType, questionCount, subjectFocus);
-          if (!data || data.length === 0) throw new Error("Generation failed");
+          const result = await generateMockTest(examType, questionCount, subjectFocus);
+          if (!result || result.data.length === 0) throw new Error("Generation failed");
           
-          setQuestions(data);
-          setUserAnswers(new Array(data.length).fill(-1));
-          setTimeLeft(data.length * 90); 
+          setQuestions(result.data);
+          setUserAnswers(new Array(result.data.length).fill(-1));
+          setTimeLeft(result.data.length * 90); 
           setStatus('success');
       }
       
