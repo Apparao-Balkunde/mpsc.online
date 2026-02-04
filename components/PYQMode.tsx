@@ -1,20 +1,34 @@
+
 import React, { useState, useEffect } from 'react';
-import { Subject, LoadingState, QuizQuestion, ExamType } from '../types';
+import { Subject, LoadingState, QuizQuestion, ExamType, GSSubCategory } from '../types';
 import { generatePYQs } from '../services/gemini';
-import { History, Search, Loader2, ArrowLeft, Eye, CheckCircle2, AlertCircle, Filter, Bookmark, X, Calendar, Layers, Info } from 'lucide-react';
+import { History, Search, Loader2, ArrowLeft, Eye, CheckCircle2, Bookmark, Info, Calendar, Filter } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 interface PYQModeProps {
   initialSubject?: Subject;
+  initialExamType?: ExamType;
   onBack: () => void;
 }
 
-const YEARS = Array.from({ length: 15 }, (_, i) => (2024 - i).toString());
+// Updated year range from 2010 to 2025
+const YEARS = Array.from({ length: 16 }, (_, i) => (2025 - i).toString());
 
-export const PYQMode: React.FC<PYQModeProps> = ({ initialSubject = Subject.MARATHI, onBack }) => {
-  const [selectedYear, setSelectedYear] = useState<string>('2023');
+const GS_SECTIONS: { label: string; value: GSSubCategory }[] = [
+    { label: 'All GS (Mix)', value: 'ALL' },
+    { label: 'History (इतिहास)', value: 'HISTORY' },
+    { label: 'Polity (राज्यशास्त्र)', value: 'POLITY' },
+    { label: 'Geography (भूगोल)', value: 'GEOGRAPHY' },
+    { label: 'Economics (अर्थशास्त्र)', value: 'ECONOMICS' },
+    { label: 'Science (विज्ञान)', value: 'SCIENCE' },
+    { label: 'Environment (पर्यावरण)', value: 'ENVIRONMENT' }
+];
+
+export const PYQMode: React.FC<PYQModeProps> = ({ initialSubject = Subject.MARATHI, initialExamType = 'ALL', onBack }) => {
+  const [selectedYear, setSelectedYear] = useState<string>('2024');
   const [subject, setSubject] = useState<Subject>(initialSubject);
-  const [examType, setExamType] = useState<ExamType>('ALL');
+  const [examType, setExamType] = useState<ExamType>(initialExamType);
+  const [gsCategory, setGsCategory] = useState<GSSubCategory>('ALL');
   const [status, setStatus] = useState<LoadingState>('idle');
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [revealedAnswers, setRevealedAnswers] = useState<number[]>([]);
@@ -23,9 +37,7 @@ export const PYQMode: React.FC<PYQModeProps> = ({ initialSubject = Subject.MARAT
 
   useEffect(() => {
     const saved = localStorage.getItem('mpsc_pyq_bookmarks');
-    if (saved) {
-      setBookmarks(JSON.parse(saved));
-    }
+    if (saved) setBookmarks(JSON.parse(saved));
   }, []);
 
   const fetchQuestions = async () => {
@@ -34,7 +46,7 @@ export const PYQMode: React.FC<PYQModeProps> = ({ initialSubject = Subject.MARAT
     setRevealedAnswers([]);
     setSearchKeyword('');
     try {
-      const data = await generatePYQs(subject, selectedYear, examType);
+      const data = await generatePYQs(subject, selectedYear, examType, subject === Subject.GS ? gsCategory : undefined);
       setQuestions(data);
       setStatus('success');
     } catch (e) {
@@ -42,28 +54,17 @@ export const PYQMode: React.FC<PYQModeProps> = ({ initialSubject = Subject.MARAT
     }
   };
 
-  // Automatically fetch questions on initial load
   useEffect(() => {
     fetchQuestions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const toggleReveal = (index: number) => {
-    if (revealedAnswers.includes(index)) {
-      setRevealedAnswers(revealedAnswers.filter(i => i !== index));
-    } else {
-      setRevealedAnswers([...revealedAnswers, index]);
-    }
+    setRevealedAnswers(prev => prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]);
   };
 
   const toggleBookmark = (q: QuizQuestion) => {
     const exists = bookmarks.some(b => b.question === q.question);
-    let newBookmarks;
-    if (exists) {
-        newBookmarks = bookmarks.filter(b => b.question !== q.question);
-    } else {
-        newBookmarks = [...bookmarks, q];
-    }
+    const newBookmarks = exists ? bookmarks.filter(b => b.question !== q.question) : [...bookmarks, q];
     setBookmarks(newBookmarks);
     localStorage.setItem('mpsc_pyq_bookmarks', JSON.stringify(newBookmarks));
   };
@@ -80,21 +81,28 @@ export const PYQMode: React.FC<PYQModeProps> = ({ initialSubject = Subject.MARAT
       </button>
 
       <div className="bg-white rounded-xl shadow-md border border-slate-100 overflow-hidden">
-        <div className="p-6 bg-indigo-50 border-b border-indigo-100">
-          <h2 className="text-2xl font-bold text-slate-800 mb-2 flex items-center">
-            <History className="mr-2 text-indigo-600" />
-            Previous Year Questions (PYQs)
-          </h2>
-          <p className="text-slate-600">Review authentic MPSC questions from 2010 to current exams.</p>
+        <div className="p-6 bg-indigo-50 border-b border-indigo-100 flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-bold text-slate-800 mb-1 flex items-center">
+                <History className="mr-2 text-indigo-600" />
+                Previous Year Questions (2010-2025)
+            </h2>
+            <p className="text-slate-600 text-sm">Authentic exam patterns with detailed AI-powered analysis.</p>
+          </div>
+          <span className="text-xs bg-indigo-600 text-white px-3 py-1 rounded-full font-bold uppercase tracking-wider">MPSC PYQ Bank</span>
         </div>
 
-        <div className="p-6 grid grid-cols-1 md:grid-cols-4 gap-4 bg-white items-end">
+        <div className="p-6 grid grid-cols-1 md:grid-cols-5 gap-4 bg-white items-end">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Subject</label>
+            <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Subject</label>
             <select 
               value={subject}
-              onChange={(e) => setSubject(e.target.value as Subject)}
-              className="w-full rounded-lg border-slate-300 border p-3 focus:ring-2 focus:ring-indigo-500 shadow-sm"
+              onChange={(e) => {
+                const sub = e.target.value as Subject;
+                setSubject(sub);
+                if (sub !== Subject.GS) setGsCategory('ALL');
+              }}
+              className="w-full rounded-lg border-slate-300 border p-2.5 text-sm focus:ring-2 focus:ring-indigo-500"
             >
               <option value={Subject.MARATHI}>Marathi (मराठी)</option>
               <option value={Subject.ENGLISH}>English</option>
@@ -103,143 +111,112 @@ export const PYQMode: React.FC<PYQModeProps> = ({ initialSubject = Subject.MARAT
           </div>
 
           <div>
-             <label className="block text-sm font-medium text-slate-700 mb-2">Exam Type</label>
-             <div className="relative">
-                <Layers size={16} className="absolute left-3 top-3.5 text-slate-400" />
-                <select 
-                  value={examType}
-                  onChange={(e) => setExamType(e.target.value as ExamType)}
-                  className="w-full pl-9 rounded-lg border-slate-300 border p-3 focus:ring-2 focus:ring-indigo-500 shadow-sm disabled:bg-slate-100 disabled:text-slate-400"
-                  disabled={subject === Subject.ENGLISH} // English covers all exams automatically
-                  title={subject === Subject.ENGLISH ? "English covers MPSC, SSC, UPSC & CDS" : "Select MPSC Exam Type"}
-                >
-                  <option value="ALL">All Exams</option>
-                  <option value="RAJYASEVA">Rajyaseva (State Services)</option>
-                  <option value="GROUP_B">Group B (PSI/STI/ASO)</option>
-                  <option value="GROUP_C">Group C (Clerk/Tax Asst)</option>
-                </select>
-             </div>
-             {subject === Subject.ENGLISH && <p className="text-[10px] text-slate-500 mt-1 ml-1">Includes MPSC, SSC, UPSC</p>}
+             <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Exam Type</label>
+             <select 
+                value={examType}
+                onChange={(e) => setExamType(e.target.value as ExamType)}
+                className="w-full rounded-lg border-slate-300 border p-2.5 text-sm focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="RAJYASEVA">Rajyaseva (राज्यसेवा)</option>
+                <option value="GROUP_B">Combined B (गट-ब)</option>
+                <option value="GROUP_C">Combined C (गट-क)</option>
+                <option value="ALL">Other Exams</option>
+              </select>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Year</label>
-            <div className="relative">
-                <Calendar size={16} className="absolute left-3 top-3.5 text-slate-400" />
-                <select 
-                    value={selectedYear}
-                    onChange={(e) => setSelectedYear(e.target.value)}
-                    className="w-full pl-9 rounded-lg border-slate-300 border p-3 focus:ring-2 focus:ring-indigo-500 shadow-sm"
-                >
-                {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
-                </select>
+          {subject === Subject.GS && (
+            <div className="md:col-span-1">
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-2">GS Section</label>
+              <select 
+                value={gsCategory}
+                onChange={(e) => setGsCategory(e.target.value as GSSubCategory)}
+                className="w-full rounded-lg border-slate-300 border p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 bg-amber-50"
+              >
+                {GS_SECTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+              </select>
             </div>
-          </div>
+          )}
 
           <div>
-            <button 
-              onClick={fetchQuestions}
-              disabled={status === 'loading'}
-              className="w-full bg-indigo-600 text-white p-3 rounded-lg hover:bg-indigo-700 transition-all font-semibold shadow-md flex items-center justify-center gap-2"
+            <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Year</label>
+            <select 
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(e.target.value)}
+                className="w-full rounded-lg border-slate-300 border p-2.5 text-sm focus:ring-2 focus:ring-indigo-500"
             >
-              {status === 'loading' ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
-              Fetch Questions
-            </button>
+                {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+            </select>
           </div>
+
+          <button 
+            onClick={fetchQuestions}
+            disabled={status === 'loading'}
+            className="w-full bg-indigo-600 text-white p-2.5 rounded-lg hover:bg-indigo-700 transition-all font-bold shadow-md flex items-center justify-center gap-2"
+          >
+            {status === 'loading' ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
+            Filter
+          </button>
         </div>
       </div>
 
       {status === 'loading' && (
-        <div className="text-center py-20">
+        <div className="text-center py-20 bg-white rounded-xl shadow-sm border border-slate-100">
           <Loader2 className="animate-spin h-12 w-12 text-indigo-600 mx-auto mb-4" />
-          <p className="text-slate-600 font-medium">Scanning archives for {subject} questions...</p>
-          <p className="text-slate-400 text-sm mt-1">Filtering by {examType === 'ALL' ? 'All Exams' : examType} - {selectedYear}</p>
-        </div>
-      )}
-
-      {status === 'error' && (
-        <div className="bg-red-50 border border-red-200 text-red-700 p-6 rounded-xl flex items-center gap-4">
-          <AlertCircle size={32} />
-          <div>
-            <h4 className="font-bold">Retrieval Failed</h4>
-            <p className="text-sm">We couldn't fetch questions for this selection. Please check your connection and try again.</p>
-          </div>
+          <p className="text-slate-600 font-bold">Scanning MPSC Archives (2010-2025)...</p>
+          <p className="text-slate-400 text-sm mt-1">Fetching {examType} {selectedYear} {subject === Subject.GS ? `| ${gsCategory}` : ''}</p>
         </div>
       )}
 
       {status === 'success' && questions.length > 0 && (
         <div className="space-y-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
-            <div className="flex items-center text-indigo-800 font-semibold">
-                <CheckCircle2 size={18} className="mr-2" />
-                <span>Found {questions.length} questions</span>
-                <span className="mx-2 text-slate-300">|</span>
-                <span className="text-sm bg-indigo-50 px-3 py-1 rounded-full text-indigo-700 border border-indigo-100">
-                    {subject} • {selectedYear}
-                </span>
+            <div className="flex items-center text-indigo-800 font-bold text-sm">
+                <CheckCircle2 size={18} className="mr-2 text-green-600" />
+                <span>Found {questions.length} questions for {selectedYear}</span>
             </div>
-            
             <div className="relative w-full md:w-64">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Search className="h-4 w-4 text-slate-400" />
-                </div>
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                 <input
                     type="text"
                     value={searchKeyword}
                     onChange={(e) => setSearchKeyword(e.target.value)}
-                    placeholder="Search in questions..."
-                    className="block w-full pl-9 pr-8 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                    placeholder="Search keywords..."
+                    className="block w-full pl-9 pr-8 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-colors"
                 />
-                {searchKeyword && (
-                    <button 
-                        onClick={() => setSearchKeyword('')}
-                        className="absolute inset-y-0 right-0 pr-2 flex items-center text-slate-400 hover:text-slate-600"
-                    >
-                        <X size={14} />
-                    </button>
-                )}
             </div>
           </div>
           
-          {filteredQuestions.length === 0 ? (
-              <div className="text-center py-16 bg-white rounded-xl border border-dashed border-slate-300">
-                  <Search size={32} className="mx-auto text-slate-300 mb-2" />
-                  <p className="text-slate-500">No questions match your search.</p>
-              </div>
-          ) : (
-            filteredQuestions.map((q, idx) => {
-                const isBookmarked = bookmarks.some(b => b.question === q.question);
-                return (
-                <div key={idx} className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition-shadow">
-                    <div className="p-6">
-                    <div className="flex justify-between items-start mb-2">
-                        <div className="flex items-start gap-3">
-                            <div className="flex flex-col gap-2 shrink-0 items-center">
-                                <span className="bg-slate-100 text-slate-600 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm border border-slate-200">
-                                        {idx + 1}
-                                </span>
-                            </div>
-                            <div className="flex-1">
-                                {q.examSource && (
-                                    <span className="inline-block text-[10px] uppercase font-bold tracking-wider bg-slate-100 text-slate-500 px-2 py-0.5 rounded mb-2">
-                                        {q.examSource}
+          {filteredQuestions.map((q, idx) => (
+            <div key={idx} className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition-shadow">
+                <div className="p-6">
+                    <div className="flex justify-between items-start mb-4">
+                        <div className="flex items-start gap-4">
+                            <span className="bg-slate-100 text-slate-600 w-8 h-8 rounded-full flex items-center justify-center font-black text-sm border border-slate-200 shrink-0">
+                                {idx + 1}
+                            </span>
+                            <div>
+                                <div className="flex items-center gap-2 mb-2">
+                                    <span className="bg-amber-100 text-amber-800 text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-tighter">
+                                        {q.examSource || `${examType} ${selectedYear}`}
                                     </span>
-                                )}
-                                <p className="text-lg text-slate-900 font-medium leading-relaxed">{q.question}</p>
+                                    <span className="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded">
+                                        {subject === Subject.GS ? gsCategory : subject}
+                                    </span>
+                                </div>
+                                <p className="text-lg text-slate-900 font-bold leading-relaxed">{q.question}</p>
                             </div>
                         </div>
                         <button 
                             onClick={() => toggleBookmark(q)}
-                            className={`p-2 rounded-full transition-all duration-200 ${isBookmarked ? 'text-pink-500 bg-pink-50' : 'text-slate-300 hover:text-pink-400 hover:bg-slate-50'}`}
-                            title={isBookmarked ? "Remove Bookmark" : "Bookmark Question"}
+                            className={`p-2 rounded-full transition-colors ${bookmarks.some(b => b.question === q.question) ? 'text-pink-500 bg-pink-50' : 'text-slate-300 hover:text-pink-400'}`}
                         >
-                            <Bookmark size={20} fill={isBookmarked ? "currentColor" : "none"} />
+                            <Bookmark size={20} fill={bookmarks.some(b => b.question === q.question) ? "currentColor" : "none"} />
                         </button>
                     </div>
 
-                    <div className="ml-11 grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
+                    <div className="ml-12 grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
                         {q.options.map((opt, oIdx) => (
-                        <div key={oIdx} className="p-3 border border-slate-200 rounded-lg text-slate-700 text-sm bg-slate-50/50 hover:bg-white hover:border-indigo-200 transition-colors cursor-default">
+                        <div key={oIdx} className="p-3 border border-slate-200 rounded-lg text-slate-700 text-sm bg-slate-50/50 hover:bg-white transition-colors cursor-default border-l-4 hover:border-l-indigo-500">
                             <span className="font-bold mr-2 text-slate-400">({String.fromCharCode(65 + oIdx)})</span>
                             {opt}
                         </div>
@@ -248,45 +225,33 @@ export const PYQMode: React.FC<PYQModeProps> = ({ initialSubject = Subject.MARAT
 
                     <button 
                         onClick={() => toggleReveal(idx)}
-                        className={`ml-11 flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all shadow-sm ${
-                        revealedAnswers.includes(idx)
-                        ? 'bg-slate-800 text-white hover:bg-slate-900'
-                        : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
-                        }`}
+                        className={`ml-12 flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all ${revealedAnswers.includes(idx) ? 'bg-slate-800 text-white' : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'}`}
                     >
                         <Eye size={16} />
-                        {revealedAnswers.includes(idx) ? 'Hide Answer' : 'Show Answer & Explanation'}
+                        {revealedAnswers.includes(idx) ? 'Hide Explanation' : 'Show Answer & Explanation'}
                     </button>
 
                     {revealedAnswers.includes(idx) && (
-                        <div className="ml-11 mt-4 animate-in slide-in-from-top-2 duration-300">
-                        <div className="bg-green-50 border-l-4 border-green-500 p-4 mb-3 rounded-r-lg">
-                            <p className="text-green-800 font-bold mb-1">Correct Answer: {String.fromCharCode(65 + q.correctAnswerIndex)}</p>
-                            <p className="text-green-700 text-sm font-medium">{q.options[q.correctAnswerIndex]}</p>
-                        </div>
-                        <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                            <h5 className="font-bold text-slate-800 mb-2 text-sm uppercase tracking-wide flex items-center gap-1">
-                                <Info size={16} className="text-indigo-500" />
-                                Detailed Analysis
-                            </h5>
-                            <div className="text-slate-600 text-sm leading-relaxed prose prose-sm max-w-none">
-                                <ReactMarkdown>{q.explanation}</ReactMarkdown>
+                        <div className="ml-12 mt-4 animate-in slide-in-from-top-2 duration-300">
+                            <div className="bg-green-50 border-l-4 border-green-500 p-4 mb-3 rounded-r-lg shadow-sm">
+                                <p className="text-green-800 font-black mb-1">Correct Answer: {String.fromCharCode(65 + q.correctAnswerIndex)}</p>
+                                <p className="text-green-700 text-sm font-bold">{q.options[q.correctAnswerIndex]}</p>
+                            </div>
+                            <div className="bg-slate-50 p-5 rounded-lg border border-slate-200">
+                                <h5 className="font-black text-slate-800 mb-3 text-xs uppercase tracking-widest flex items-center gap-2">
+                                    <Info size={14} className="text-indigo-500" />
+                                    Analytical Breakdown (Marathi)
+                                </h5>
+                                <div className="text-slate-700 text-sm leading-relaxed prose prose-sm max-w-none">
+                                    <ReactMarkdown>{q.explanation}</ReactMarkdown>
+                                </div>
                             </div>
                         </div>
-                        </div>
                     )}
-                    </div>
                 </div>
-                );
-            })
-          )}
+            </div>
+          ))}
         </div>
-      )}
-
-      {status === 'success' && questions.length === 0 && (
-         <div className="text-center py-20 bg-white rounded-xl border border-dashed border-slate-300">
-            <p className="text-slate-500">No specific questions found for this selection. Try another year or exam type.</p>
-         </div>
       )}
     </div>
   );
