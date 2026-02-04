@@ -8,18 +8,37 @@ const MODEL_FAST = 'gemini-3-flash-preview';
 const MODEL_PRO = 'gemini-3-pro-preview';
 const MODEL_TTS = 'gemini-2.5-flash-preview-tts';
 
-const CACHE_VERSION = 'MPSC_V21_'; 
-const DB_NAME = 'MPSC_Sarathi_DataStore';
-const STORE_NAME = 'content_cache';
+const CACHE_VERSION = 'MPSC_V23_'; 
+const DB_NAME = 'MPSC_Sarathi_Storage';
+const STORE_NAME = 'question_bank';
 
 export interface CachedResponse<T> {
   data: T;
   fromCache: boolean;
 }
 
+// Reusable Schema Definitions
+const quizQuestionSchema = {
+  type: Type.ARRAY,
+  items: {
+    type: Type.OBJECT,
+    properties: {
+      question: { type: Type.STRING, description: "The MCQ question in Marathi" },
+      options: { 
+        type: Type.ARRAY, 
+        items: { type: Type.STRING },
+        description: "Exactly 4 options in Marathi"
+      },
+      correctAnswerIndex: { type: Type.INTEGER, description: "Index of correct option (0-3)" },
+      explanation: { type: Type.STRING, description: "Detailed explanation in Marathi" }
+    },
+    required: ["question", "options", "correctAnswerIndex", "explanation"]
+  }
+};
+
 const openDB = (): Promise<IDBDatabase> => {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, 1);
+    const request = indexedDB.open(DB_NAME, 3);
     request.onupgradeneeded = (e) => {
       const db = (e.target as IDBOpenDBRequest).result;
       if (!db.objectStoreNames.contains(STORE_NAME)) {
@@ -60,71 +79,68 @@ export const clearAllCache = async () => {
     const store = transaction.objectStore(STORE_NAME);
     store.clear();
     return true;
-  } catch (e) {
-    console.error("Clear cache failed", e);
-    return false;
-  }
+  } catch (e) { return false; }
 };
 
-export const generateMockTest = async (examType: ExamType, totalCount: number = 10, focus: SubjectFocus = 'BALANCED'): Promise<CachedResponse<QuizQuestion[]>> => {
-  const cacheKey = `${CACHE_VERSION}MOCK_${examType}_${totalCount}_${focus}`;
-  const cached = await getFromCache<QuizQuestion[]>(cacheKey);
-  if (cached) return { data: cached, fromCache: true };
+export const getCachedMockKeys = async (): Promise<string[]> => {
+    try {
+        const db = await openDB();
+        const transaction = db.transaction(STORE_NAME, 'readonly');
+        const store = transaction.objectStore(STORE_NAME);
+        const request = store.getAllKeys();
+        return new Promise((resolve) => {
+            request.onsuccess = () => {
+                const keys = (request.result as string[]).filter(k => k.startsWith(`${CACHE_VERSION}MOCK_`));
+                resolve(keys);
+            };
+            request.onerror = () => resolve([]);
+        });
+    } catch { return []; }
+};
 
-  const batchSize = 5;
+export const generateMockTest = async (examType: ExamType, totalCount: number = 10, focus: SubjectFocus = 'BALANCED', forceNew = false): Promise<CachedResponse<QuizQuestion[]>> => {
+  const cacheKey = `${CACHE_VERSION}MOCK_${examType}_${totalCount}_${focus}`;
+  
+  if (!forceNew) {
+    const cached = await getFromCache<QuizQuestion[]>(cacheKey);
+    if (cached) return { data: cached, fromCache: true };
+  }
+
+  const batchSize = 10; 
   let allQuestions: QuizQuestion[] = [];
   const iterations = Math.ceil(totalCount / batchSize);
 
   for (let i = 0; i < iterations; i++) {
     const currentBatchCount = Math.min(batchSize, totalCount - allQuestions.length);
     if (currentBatchCount <= 0) break;
-    const prompt = `Generate ${currentBatchCount} MPSC MCQs for ${examType}. Focus: ${focus}. Marathi. JSON.`;
-    const response = await ai.models.generateContent({
-      model: MODEL_FAST,
-      contents: prompt,
-      config: { responseMimeType: "application/json" }
-    });
-    if (response.text) {
-      const batchQuestions = JSON.parse(response.text) as QuizQuestion[];
-      allQuestions = [...allQuestions, ...batchQuestions];
+
+    try {
+        const response = await ai.models.generateContent({
+            model: MODEL_FAST,
+            contents: `Generate ${currentBatchCount} unique MPSC questions for ${examType}. Focus: ${focus}.`,
+            config: {
+              responseMimeType: "application/json",
+              responseSchema: quizQuestionSchema,
+              systemInstruction: "You are a professional MPSC exam paper setter. Provide high-quality questions in Marathi only."
+            }
+          });
+      
+          if (response.text) {
+            const batch = JSON.parse(response.text) as QuizQuestion[];
+            allQuestions = [...allQuestions, ...batch];
+          }
+    } catch (err) {
+        console.error("Batch generation failed", err);
+        if (allQuestions.length > 0) break; // Return what we have so far
+        throw err;
     }
   }
 
-  if (allQuestions.length > 0) await saveToCache(cacheKey, allQuestions);
-  return { data: allQuestions, fromCache: false };
-};
-
-export const generatePYQs = async (subject: Subject, year: string, examType: ExamType, subCategory: GSSubCategory = 'ALL'): Promise<CachedResponse<QuizQuestion[]>> => {
-  const key = `${CACHE_VERSION}PYQ_${examType}_${year}_${subCategory}`;
-  const cached = await getFromCache<QuizQuestion[]>(key);
-  if (cached) return { data: cached, fromCache: true };
-
-  const prompt = `MPSC ${examType} ${year} GS PYQs for ${subCategory}. 10 questions. Marathi. JSON.`;
-  const response = await ai.models.generateContent({
-    model: MODEL_FAST,
-    contents: prompt,
-    config: { responseMimeType: "application/json" }
-  });
-  const data = JSON.parse(response.text) as QuizQuestion[];
-  await saveToCache(key, data);
-  return { data, fromCache: false };
-};
-
-export const generateVocab = async (subject: Subject, category: VocabCategory, forceRefresh = false): Promise<CachedResponse<VocabWord[]>> => {
-  const key = `${CACHE_VERSION}VOCAB_${subject}_${category}`;
-  if (!forceRefresh) {
-    const cached = await getFromCache<VocabWord[]>(key);
-    if (cached) return { data: cached, fromCache: true };
+  if (allQuestions.length > 0) {
+    await saveToCache(cacheKey, allQuestions);
   }
-  const prompt = `50 MPSC vocab for ${subject} ${category}. Marathi meanings. JSON.`;
-  const response = await ai.models.generateContent({
-    model: MODEL_FAST,
-    contents: prompt,
-    config: { responseMimeType: "application/json" }
-  });
-  const data = JSON.parse(response.text);
-  await saveToCache(key, data);
-  return { data, fromCache: false };
+  
+  return { data: allQuestions, fromCache: false };
 };
 
 export const generateQuiz = async (subject: Subject, topic: string, difficulty: DifficultyLevel, subCategory?: GSSubCategory): Promise<CachedResponse<QuizQuestion[]>> => {
@@ -134,8 +150,65 @@ export const generateQuiz = async (subject: Subject, topic: string, difficulty: 
   
   const response = await ai.models.generateContent({
     model: MODEL_FAST,
-    contents: `20 MPSC MCQs for ${subject}: ${topic} (${difficulty}). Marathi. JSON.`,
-    config: { responseMimeType: "application/json" }
+    contents: `15 MCQs for ${subject}: ${topic} (${difficulty}).`,
+    config: { 
+        responseMimeType: "application/json",
+        responseSchema: quizQuestionSchema,
+        systemInstruction: "Generate high-yield MPSC practice questions in Marathi."
+    }
+  });
+  
+  const data = JSON.parse(response.text);
+  await saveToCache(key, data);
+  return { data, fromCache: false };
+};
+
+export const generatePYQs = async (subject: Subject, year: string, examType: ExamType, subCategory: GSSubCategory = 'ALL'): Promise<CachedResponse<QuizQuestion[]>> => {
+    const key = `${CACHE_VERSION}PYQ_${examType}_${year}_${subCategory}`;
+    const cached = await getFromCache<QuizQuestion[]>(key);
+    if (cached) return { data: cached, fromCache: true };
+  
+    const response = await ai.models.generateContent({
+      model: MODEL_FAST,
+      contents: `MPSC ${examType} ${year} GS PYQs for ${subCategory}. 10 questions.`,
+      config: { 
+          responseMimeType: "application/json",
+          responseSchema: quizQuestionSchema
+      }
+    });
+    
+    const data = JSON.parse(response.text);
+    await saveToCache(key, data);
+    return { data, fromCache: false };
+};
+
+export const generateVocab = async (subject: Subject, category: VocabCategory, forceRefresh = false): Promise<CachedResponse<VocabWord[]>> => {
+  const key = `${CACHE_VERSION}VOCAB_${subject}_${category}`;
+  if (!forceRefresh) {
+    const cached = await getFromCache<VocabWord[]>(key);
+    if (cached) return { data: cached, fromCache: true };
+  }
+  
+  const response = await ai.models.generateContent({
+    model: MODEL_FAST,
+    contents: `50 MPSC vocab for ${subject} ${category}.`,
+    config: { 
+        responseMimeType: "application/json",
+        responseSchema: {
+            type: Type.ARRAY,
+            items: {
+                type: Type.OBJECT,
+                properties: {
+                    word: { type: Type.STRING },
+                    meaning: { type: Type.STRING },
+                    usage: { type: Type.STRING },
+                    type: { type: Type.STRING },
+                    relatedWords: { type: Type.ARRAY, items: { type: Type.STRING } }
+                },
+                required: ["word", "meaning", "usage", "type"]
+            }
+        }
+    }
   });
   const data = JSON.parse(response.text);
   await saveToCache(key, data);
@@ -147,51 +220,92 @@ export const generateStudyNotes = async (subject: Subject, topic: string): Promi
   const cached = await getFromCache<string>(key);
   if (cached) return { data: cached, fromCache: true };
   
-  const response = await ai.models.generateContent({ model: MODEL_FAST, contents: `Detailed MPSC study notes for ${subject}: ${topic} in Marathi.` });
+  const response = await ai.models.generateContent({ model: MODEL_FAST, contents: `Exhaustive MPSC study notes for ${subject}: ${topic} in Marathi.` });
   const data = response.text || "";
   if (data) await saveToCache(key, data);
   return { data, fromCache: false };
 };
 
-export const generateCurrentAffairs = async (category: string, language: string): Promise<CachedResponse<CurrentAffairItem[]>> => {
-  const key = `${CACHE_VERSION}NEWS_${category}_${language}`;
-  const cached = await getFromCache<CurrentAffairItem[]>(key);
-  if (cached) return { data: cached, fromCache: true };
-
-  const response = await ai.models.generateContent({
-    model: MODEL_FAST,
-    contents: `6 MPSC news for ${category} in ${language}. JSON.`,
-    config: { responseMimeType: "application/json" }
-  });
-  const data = JSON.parse(response.text);
-  await saveToCache(key, data);
-  return { data, fromCache: false };
+export const generateConciseExplanation = async (subject: Subject, rule: string): Promise<CachedResponse<RuleExplanation>> => {
+    const key = `${CACHE_VERSION}RULE_${subject}_${rule}`;
+    const cached = await getFromCache<RuleExplanation>(key);
+    if (cached) return { data: cached, fromCache: true };
+  
+    const response = await ai.models.generateContent({
+      model: MODEL_FAST,
+      contents: `Explanation for MPSC ${subject} rule: ${rule}.`,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            definition: { type: Type.STRING },
+            importance: { type: Type.STRING },
+            nuances: { type: Type.STRING },
+            examples: { type: Type.ARRAY, items: { type: Type.STRING } }
+          },
+          required: ["definition", "importance", "nuances", "examples"]
+        }
+      }
+    });
+  
+    const data = JSON.parse(response.text);
+    await saveToCache(key, data);
+    return { data, fromCache: false };
 };
 
 export const generateDescriptiveQA = async (topic: string): Promise<CachedResponse<DescriptiveQA>> => {
-  const key = `${CACHE_VERSION}LIT_QA_${topic}`;
-  const cached = await getFromCache<DescriptiveQA>(key);
-  if (cached) return { data: cached, fromCache: true };
-
-  const response = await ai.models.generateContent({
-    model: MODEL_PRO,
-    contents: `Literature analysis for ${topic}. JSON.`,
-    config: { responseMimeType: "application/json" }
-  });
-  const data = JSON.parse(response.text);
-  await saveToCache(key, data);
-  return { data, fromCache: false };
+    const key = `${CACHE_VERSION}LIT_${topic}`;
+    const cached = await getFromCache<DescriptiveQA>(key);
+    if (cached) return { data: cached, fromCache: true };
+  
+    const response = await ai.models.generateContent({
+      model: MODEL_PRO,
+      contents: `Critically analyze: ${topic}.`,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            question: { type: Type.STRING },
+            modelAnswer: { type: Type.STRING },
+            keyPoints: { type: Type.ARRAY, items: { type: Type.STRING } }
+          },
+          required: ["question", "modelAnswer", "keyPoints"]
+        }
+      }
+    });
+  
+    const data = JSON.parse(response.text);
+    await saveToCache(key, data);
+    return { data, fromCache: false };
 };
 
-export const generateConciseExplanation = async (subject: Subject, topic: string): Promise<CachedResponse<RuleExplanation>> => {
-    const key = `${CACHE_VERSION}CONCISE_${subject}_${topic}`;
-    const cached = await getFromCache<RuleExplanation>(key);
+export const generateCurrentAffairs = async (category: string, language: string): Promise<CachedResponse<CurrentAffairItem[]>> => {
+    const key = `${CACHE_VERSION}NEWS_${category}_${language}`;
+    const cached = await getFromCache<CurrentAffairItem[]>(key);
     if (cached) return { data: cached, fromCache: true };
-
+  
     const response = await ai.models.generateContent({
-        model: MODEL_FAST,
-        contents: `Explain ${subject} ${topic}. JSON.`,
-        config: { responseMimeType: "application/json" }
+      model: MODEL_FAST,
+      contents: `6 news for ${category} in ${language}.`,
+      config: { 
+          responseMimeType: "application/json",
+          responseSchema: {
+              type: Type.ARRAY,
+              items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    headline: { type: Type.STRING },
+                    description: { type: Type.STRING },
+                    date: { type: Type.STRING },
+                    category: { type: Type.STRING },
+                    examRelevance: { type: Type.STRING }
+                  },
+                  required: ["headline", "description", "date", "category", "examRelevance"]
+              }
+          }
+      }
     });
     const data = JSON.parse(response.text);
     await saveToCache(key, data);
