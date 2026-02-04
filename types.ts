@@ -19,6 +19,8 @@ export enum Mode {
 
 export type ExamType = 'ALL' | 'RAJYASEVA' | 'GROUP_B' | 'GROUP_C';
 
+export type SubjectFocus = 'BALANCED' | 'MARATHI_HEAVY' | 'ENGLISH_HEAVY' | 'GS_HEAVY';
+
 export type GSSubCategory = 'ALL' | 'HISTORY' | 'GEOGRAPHY' | 'POLITY' | 'ECONOMICS' | 'SCIENCE' | 'ENVIRONMENT';
 
 export type VocabCategory = 'IDIOMS' | 'SYNONYMS' | 'ANTONYMS' | 'ONE_WORD';
