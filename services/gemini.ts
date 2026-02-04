@@ -10,7 +10,8 @@ const MODEL_PRO = 'gemini-3-pro-preview';
 const MODEL_TTS = 'gemini-2.5-flash-preview-tts';
 
 // --- ROBUST LOCAL DATA CENTER (IndexedDB) ---
-const CACHE_VERSION_PREFIX = 'MPSC_SARATHI_V12_'; // Incremented for schema improvements
+// Bumped to V13 to force clear old 'mixed' category data
+const CACHE_VERSION_PREFIX = 'MPSC_SARATHI_V13_'; 
 const DB_NAME = 'MPSC_Sarathi_Local_DB';
 const STORE_NAME = 'exam_data_cache';
 
@@ -67,25 +68,34 @@ const saveLocalData = async (key: string, data: any) => {
 
 // --- API SERVICES ---
 
+/**
+ * Generates PYQs with strict sectional integrity.
+ */
 export const generatePYQs = async (subject: Subject, year: string, examType: ExamType, subCategory: GSSubCategory = 'ALL'): Promise<QuizQuestion[]> => {
-  const key = getCacheKey('PYQ_100', examType, year, subCategory);
+  const key = getCacheKey('PYQ_STRICT', examType, year, subCategory);
   
+  // 1. Check Local DB First (Fast, Offline-Friendly)
   const cached = await getLocalData<QuizQuestion[]>(key);
   if (cached) return cached;
 
-  console.log(`[API Call] Fetching full set of 100 questions for ${examType} ${year}...`);
+  console.log(`[API Call] Fetching strict ${subCategory} set for ${examType} ${year}...`);
+  
+  const categoryContext = subCategory === 'ALL' 
+    ? "General Studies (Mix of all subjects)" 
+    : `STRICTLY ONLY ${subCategory} (Do not include other subjects like Polity if History is requested).`;
+
   const prompt = `
-    You are an MPSC exam expert. Provide the COMPLETE set of 100 GS questions that appeared in the ${examType} ${year} Prelims.
+    You are an MPSC Subject Expert. Provide a comprehensive set of General Studies questions from the ${examType} ${year} Prelims.
     
-    SUBJECT: ${subject}
-    SECTION: ${subCategory === 'ALL' ? 'Complete GS Archive' : subCategory}
+    REQUIRED CATEGORY: ${categoryContext}
     
-    RULES:
-    1. QUANTITY: Aim for 100 questions. If the source material for the specific section is less, provide all available but try to fill with highly relevant parallel PYQs from that year.
-    2. PURE GS: NO Marathi/English language or grammar.
-    3. LANGUAGE: Pure Marathi (Devanagari) for everything.
-    4. QUALITY: Provide deep 150-word explanations for each question in Marathi.
-    5. FORMAT: Strictly JSON array.
+    STRICT RULES:
+    1. CATEGORY ISOLATION: If the category is ${subCategory}, return ONLY questions belonging to ${subCategory}. 
+    2. TARGET QUANTITY: Provide up to 100 questions. If 100 are not available for this specific category in the specific year, provide at least 40 high-quality authentic ones and fill the rest with very similar pattern questions from that specific era's MPSC papers.
+    3. LANGUAGE: Pure Marathi (Devanagari) for all text.
+    4. ANALYSIS: Provide a deep 150-word explanation for each question in Marathi, explaining WHY the option is correct and why others are wrong.
+    5. DATA INTEGRITY: Ensure the 'subCategory' field in JSON strictly matches "${subCategory}".
+    6. FORMAT: Strictly JSON array.
   `;
 
   const response = await ai.models.generateContent({
@@ -102,21 +112,29 @@ export const generatePYQs = async (subject: Subject, year: string, examType: Exa
             options: { type: Type.ARRAY, items: { type: Type.STRING } },
             correctAnswerIndex: { type: Type.INTEGER },
             explanation: { type: Type.STRING },
-            examSource: { type: Type.STRING }
+            examSource: { type: Type.STRING },
+            subCategory: { type: Type.STRING, description: "Must be " + subCategory }
           },
-          required: ["question", "options", "correctAnswerIndex", "explanation", "examSource"]
+          required: ["question", "options", "correctAnswerIndex", "explanation", "examSource", "subCategory"]
         }
       }
     }
   });
 
   const data = JSON.parse(response.text) as QuizQuestion[];
-  await saveLocalData(key, data);
-  return data;
+  
+  // Extra safeguard: Filter data locally before saving to ensure Gemini didn't hallucinate mixed results
+  // Fixed redundant check: subCategory is narrowed to exclude 'ALL' in this branch, so || subCategory === 'ALL' is unnecessary.
+  const filteredData = subCategory === 'ALL' 
+    ? data 
+    : data.filter(q => (q as any).subCategory === subCategory);
+
+  await saveLocalData(key, filteredData);
+  return filteredData;
 };
 
 export const generateVocab = async (subject: Subject, category: VocabCategory, forceRefresh = false): Promise<VocabWord[]> => {
-  const key = getCacheKey('VOCAB_ENHANCED', subject, category);
+  const key = getCacheKey('VOCAB_V13', subject, category);
   
   if (!forceRefresh) {
     const cached = await getLocalData<VocabWord[]>(key);
@@ -128,19 +146,13 @@ export const generateVocab = async (subject: Subject, category: VocabCategory, f
     
     SPECIAL TASK - TRICKY COMPARISONS:
     For every word, you MUST identify and include a "TRICKY PAIR" or "CONFUSING WORD".
-    MPSC aspirants often confuse these due to spelling or pronunciation.
     
-    EXAMPLES TO MODEL:
-    - English: 'Device' (noun) vs 'Devise' (verb), 'Complement' vs 'Compliment', 'Accept' vs 'Except'.
-    - Marathi: 'पाणी' (Water) vs 'पाणि' (Hand), 'दिन' (Day) vs 'दीन' (Poor), 'सूत' (Thread) vs 'सुत' (Son).
+    EXAMPLES:
+    - English: 'Device' (noun) vs 'Devise' (verb).
+    - Marathi: 'पाणी' (Water) vs 'पाणि' (Hand).
     
-    SCHEMA INSTRUCTIONS:
-    - Include exactly 2 Synonyms and 2 Antonyms.
-    - Add exactly 1 "Tricky Pair" entry.
-    - FORMAT for Tricky Pair: "VS: [word] - [meaning/nuance]"
-    - All meanings for both English and Marathi subjects must be in Marathi.
-    
-    Return as a strict JSON array.
+    FORMAT for Tricky Pair: "VS: [word] - [meaning/nuance]"
+    All meanings must be in Marathi.
   `;
   
   const response = await ai.models.generateContent({
@@ -171,7 +183,7 @@ export const generateVocab = async (subject: Subject, category: VocabCategory, f
 };
 
 export const generateQuiz = async (subject: Subject, topic: string, difficulty: DifficultyLevel, subCategory?: GSSubCategory): Promise<QuizQuestion[]> => {
-  const key = getCacheKey('QUIZ', subject, topic, difficulty, subCategory || 'NONE');
+  const key = getCacheKey('QUIZ_V13', subject, topic, difficulty, subCategory || 'NONE');
   const cached = await getLocalData<QuizQuestion[]>(key);
   if (cached) return cached;
 
@@ -187,7 +199,7 @@ export const generateQuiz = async (subject: Subject, topic: string, difficulty: 
 };
 
 export const generateStudyNotes = async (subject: Subject, topic: string): Promise<string> => {
-  const key = getCacheKey('NOTES', subject, topic);
+  const key = getCacheKey('NOTES_V13', subject, topic);
   const cached = await getLocalData<string>(key);
   if (cached) return cached;
 
@@ -230,7 +242,7 @@ export const playTextToSpeech = async (text: string): Promise<void> => {
 };
 
 export const generateCurrentAffairs = async (category: string, language: string): Promise<CurrentAffairItem[]> => {
-  const key = getCacheKey('NEWS', category, language);
+  const key = getCacheKey('NEWS_V13', category, language);
   const cached = await getLocalData<CurrentAffairItem[]>(key);
   if (cached) return cached;
   const response = await ai.models.generateContent({
@@ -244,7 +256,7 @@ export const generateCurrentAffairs = async (category: string, language: string)
 };
 
 export const generateDescriptiveQA = async (topic: string): Promise<DescriptiveQA> => {
-  const key = getCacheKey('LIT', topic);
+  const key = getCacheKey('LIT_V13', topic);
   const cached = await getLocalData<DescriptiveQA>(key);
   if (cached) return cached;
   const response = await ai.models.generateContent({
@@ -258,7 +270,7 @@ export const generateDescriptiveQA = async (topic: string): Promise<DescriptiveQ
 };
 
 export const generateConciseExplanation = async (subject: Subject, topic: string): Promise<RuleExplanation> => {
-    const key = getCacheKey('EXPLAIN', subject, topic);
+    const key = getCacheKey('EXPLAIN_V13', subject, topic);
     const cached = await getLocalData<RuleExplanation>(key);
     if (cached) return cached;
     const response = await ai.models.generateContent({
