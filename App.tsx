@@ -8,9 +8,10 @@ import { CurrentAffairsMode } from './components/CurrentAffairsMode';
 import { VocabMode } from './components/VocabMode';
 import { BookmarksMode } from './components/BookmarksMode';
 import { LiteratureMode } from './components/LiteratureMode';
+import { MockTestMode } from './components/MockTestMode';
 import { Subject, Mode, UserProgress, ExamType } from './types';
 import { getProgress } from './services/progress';
-import { BookOpen, BrainCircuit, Languages, History, Newspaper, ArrowRight as ArrowIcon, BookA, Bookmark, PenTool, TrendingUp, CheckCircle2, PieChart, Globe } from 'lucide-react';
+import { BookOpen, BrainCircuit, Languages, History, Newspaper, ArrowRight as ArrowIcon, BookA, Bookmark, PenTool, TrendingUp, CheckCircle2, PieChart, Globe, ShieldCheck } from 'lucide-react';
 
 const App: React.FC = () => {
   const [mode, setMode] = useState<Mode>(Mode.HOME);
@@ -87,6 +88,23 @@ const App: React.FC = () => {
       </div>
 
       <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6 mb-12">
+        {/* Mock Test Card - Prominent Feature */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden border-2 border-indigo-600 hover:scale-[1.02] transition-all group xl:col-span-1">
+           <div className="h-24 bg-indigo-700 p-6 flex items-end justify-between">
+             <h2 className="text-xl font-bold text-white">Mock Test Center</h2>
+             <ShieldCheck className="text-yellow-400 w-8 h-8" />
+           </div>
+           <div className="p-6">
+              <p className="text-slate-600 mb-4 text-sm font-bold">Full-length pattern-based papers.</p>
+              <button 
+                onClick={() => setMode(Mode.MOCK_TEST)} 
+                className="w-full bg-indigo-600 text-white py-3 rounded-xl font-black hover:bg-indigo-700 transition shadow-lg flex items-center justify-center gap-2"
+              >
+                Start New Test <ArrowIcon size={18} />
+              </button>
+           </div>
+        </div>
+
         {/* Marathi Card */}
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100 hover:border-orange-200 transition-all group">
            <div className="h-24 bg-gradient-to-r from-orange-400 to-red-500 p-6 flex items-end justify-between">
@@ -121,31 +139,6 @@ const App: React.FC = () => {
                    <button onClick={() => navigate(Mode.QUIZ, Subject.ENGLISH)} className="bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition text-sm flex flex-col items-center gap-1">
                       <BrainCircuit size={16} /> Practice Quiz
                   </button>
-              </div>
-           </div>
-        </div>
-
-        {/* General Studies Card - Revamped focus */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100 hover:border-emerald-200 transition-all group xl:col-span-1">
-           <div className="h-24 bg-gradient-to-r from-emerald-500 to-teal-600 p-6 flex items-end justify-between">
-             <h2 className="text-xl font-bold text-white">GS PYQ Center</h2>
-             <Globe className="text-white/80 w-8 h-8" />
-           </div>
-           <div className="p-6">
-              <p className="text-slate-600 mb-4 text-sm font-bold">Prelims PYQ Analysis (2010-2025)</p>
-               <div className="space-y-2">
-                  <button onClick={() => navigate(Mode.PYQ, Subject.GS, 'RAJYASEVA')} className="w-full flex items-center justify-between bg-emerald-50 text-emerald-800 px-4 py-2.5 rounded-xl font-bold hover:bg-emerald-100 transition text-xs">
-                      <span>Rajyaseva Prelims (राज्यसेवा)</span>
-                      <ArrowIcon size={14} />
-                  </button>
-                  <div className="grid grid-cols-2 gap-2">
-                      <button onClick={() => navigate(Mode.PYQ, Subject.GS, 'GROUP_B')} className="bg-teal-600 text-white py-2.5 rounded-xl font-bold hover:bg-teal-700 transition text-xs flex flex-col items-center gap-1">
-                          Group B (गट-ब)
-                      </button>
-                      <button onClick={() => navigate(Mode.PYQ, Subject.GS, 'GROUP_C')} className="bg-cyan-600 text-white py-2.5 rounded-xl font-bold hover:bg-cyan-700 transition text-xs flex flex-col items-center gap-1">
-                          Group C (गट-क)
-                      </button>
-                  </div>
               </div>
            </div>
         </div>
@@ -241,6 +234,10 @@ const App: React.FC = () => {
 
         {mode === Mode.LITERATURE && (
             <LiteratureMode onBack={() => navigate(Mode.HOME)} />
+        )}
+
+        {mode === Mode.MOCK_TEST && (
+            <MockTestMode onBack={() => navigate(Mode.HOME)} />
         )}
       </main>
 
