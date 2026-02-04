@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ExamType, LoadingState, QuizQuestion, SubjectFocus } from '../types';
 import { generateMockTest } from '../services/gemini';
 import { STANDARD_RAJYASEVA_MOCK, STANDARD_COMBINED_MOCK } from '../services/localData';
-import { ShieldCheck, Timer, ArrowLeft, ArrowRight, CheckCircle2, AlertCircle, Loader2, Save, Send, Eye, Copy, Check, Settings2, SlidersHorizontal, LayoutGrid, RotateCcw, Zap, Database } from 'lucide-react';
+import { ShieldCheck, Timer, ArrowLeft, ArrowRight, CheckCircle2, AlertCircle, Loader2, Save, Send, Eye, Copy, Check, Settings2, SlidersHorizontal, LayoutGrid, RotateCcw, Zap, Database, Cloud } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 interface MockTestModeProps {
@@ -26,35 +26,29 @@ export const MockTestMode: React.FC<MockTestModeProps> = ({ onBack }) => {
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const startTest = async (forceLocal = false, countOverride?: number) => {
+  const startTest = async (forceLocal = false) => {
     setStatus('loading');
     setQuestions([]);
     
-    // If user chose LOCAL or AI failed before, use Local Datastore
-    if (testSource === 'LOCAL' || forceLocal) {
-        // Simple artificial delay for realism
-        await new Promise(r => setTimeout(r, 800));
-        const data = examType === 'RAJYASEVA' ? [...STANDARD_RAJYASEVA_MOCK] : [...STANDARD_COMBINED_MOCK];
-        setQuestions(data);
-        setUserAnswers(new Array(data.length).fill(-1));
-        setTimeLeft(data.length * 90);
-        setStatus('success');
-        setIsFinished(false);
-        setCurrentIdx(0);
-        startTimer();
-        return;
-    }
-
-    // Otherwise try AI generation
-    const finalCount = countOverride || questionCount;
     try {
-      const data = await generateMockTest(examType, finalCount, subjectFocus);
-      if (!data || data.length === 0) throw new Error("Empty AI response");
+      if (testSource === 'LOCAL' || forceLocal) {
+          await new Promise(r => setTimeout(r, 600));
+          const data = examType === 'RAJYASEVA' ? [...STANDARD_RAJYASEVA_MOCK] : [...STANDARD_COMBINED_MOCK];
+          setQuestions(data);
+          setUserAnswers(new Array(data.length).fill(-1));
+          setTimeLeft(data.length * 90);
+          setStatus('success');
+      } else {
+          // AI Mode with Batching (Handled in service)
+          const data = await generateMockTest(examType, questionCount, subjectFocus);
+          if (!data || data.length === 0) throw new Error("Generation failed");
+          
+          setQuestions(data);
+          setUserAnswers(new Array(data.length).fill(-1));
+          setTimeLeft(data.length * 90); 
+          setStatus('success');
+      }
       
-      setQuestions(data);
-      setUserAnswers(new Array(data.length).fill(-1));
-      setTimeLeft(data.length * 90); 
-      setStatus('success');
       setIsFinished(false);
       setCurrentIdx(0);
       startTimer();
@@ -115,20 +109,20 @@ export const MockTestMode: React.FC<MockTestModeProps> = ({ onBack }) => {
     return (
       <div className="max-w-4xl mx-auto p-6">
         <div className="bg-white border-2 border-red-100 rounded-3xl p-10 text-center shadow-2xl">
-            <AlertCircle size={64} className="mx-auto mb-6 text-red-500 animate-bounce" />
-            <h2 className="text-3xl font-black text-slate-900 mb-4">AI Generation Limit Hit</h2>
-            <p className="text-slate-600 mb-8 max-w-lg mx-auto leading-relaxed">
-                मराठीतील मोठे पेपर जनरेट करताना AI ला तांत्रिक मर्यादा येत आहेत. घाबरू नका! तुम्ही आमचा <strong>Local Datastore (Offline Mode)</strong> वापरून त्वरित सराव सुरू करू शकता.
+            <AlertCircle size={64} className="mx-auto mb-6 text-red-500 animate-pulse" />
+            <h2 className="text-3xl font-black text-slate-900 mb-4">AI Connection Issue</h2>
+            <p className="text-slate-600 mb-8 max-w-lg mx-auto leading-relaxed font-medium">
+                AI सर्व्हरला तांत्रिक मर्यादा येत आहेत. घाबरू नका! 
+                पुन्हा प्रयत्न करा किंवा आमचा <strong>Offline Standard Paper</strong> निवडा.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-md mx-auto">
                 <button onClick={() => setStatus('idle')} className="bg-slate-100 text-slate-700 px-6 py-4 rounded-2xl font-black hover:bg-slate-200 transition-all">
-                    Change Settings
+                    Settings
                 </button>
-                <button onClick={() => startTest(true)} className="bg-indigo-600 text-white px-6 py-4 rounded-2xl font-black flex items-center justify-center gap-2 hover:bg-indigo-700 shadow-xl transition-all scale-105">
-                    <Database size={20}/> Use Local Data
+                <button onClick={() => startTest(true)} className="bg-indigo-600 text-white px-6 py-4 rounded-2xl font-black flex items-center justify-center gap-2 hover:bg-indigo-700 shadow-xl transition-all">
+                    <Database size={20}/> Start Offline Paper
                 </button>
             </div>
-            <p className="mt-8 text-xs text-slate-400 font-bold uppercase tracking-widest">Offline mode always works 100%</p>
         </div>
       </div>
     );
@@ -147,8 +141,8 @@ export const MockTestMode: React.FC<MockTestModeProps> = ({ onBack }) => {
                 <Database size={200} />
             </div>
             <ShieldCheck size={56} className="mx-auto mb-4 text-yellow-400 relative z-10" />
-            <h2 className="text-4xl font-black mb-2 relative z-10 tracking-tight">MPSC Exam Portal</h2>
-            <p className="text-indigo-100 relative z-10 font-medium">Standard Papers & AI Custom Tests</p>
+            <h2 className="text-4xl font-black mb-2 relative z-10 tracking-tight">MPSC Exam Center</h2>
+            <p className="text-indigo-100 relative z-10 font-medium">Auto-Saving Papers for Offline Success</p>
           </div>
           
           <div className="p-8 space-y-8">
@@ -157,8 +151,8 @@ export const MockTestMode: React.FC<MockTestModeProps> = ({ onBack }) => {
                 onClick={() => setExamType('RAJYASEVA')}
                 className={`p-6 rounded-2xl border-2 text-left transition-all relative group ${examType === 'RAJYASEVA' ? 'border-indigo-600 bg-indigo-50 shadow-md' : 'border-slate-100 hover:border-slate-200 bg-slate-50'}`}
               >
-                <h3 className="font-black text-xl mb-1 text-indigo-900">Rajyaseva Prelims</h3>
-                <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">GS Paper 1 Pattern</p>
+                <h3 className="font-black text-xl mb-1 text-indigo-900">Rajyaseva (राज्यसेवा)</h3>
+                <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">GS Pattern</p>
                 {examType === 'RAJYASEVA' && <div className="absolute top-4 right-4 text-indigo-600"><CheckCircle2 size={24} /></div>}
               </button>
               
@@ -166,13 +160,12 @@ export const MockTestMode: React.FC<MockTestModeProps> = ({ onBack }) => {
                 onClick={() => setExamType('GROUP_B')}
                 className={`p-6 rounded-2xl border-2 text-left transition-all relative group ${examType === 'GROUP_B' ? 'border-indigo-600 bg-indigo-50 shadow-md' : 'border-slate-100 hover:border-slate-200 bg-slate-50'}`}
               >
-                <h3 className="font-black text-xl mb-1 text-indigo-900">Combined B/C</h3>
-                <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">Grammar & GS Mix</p>
+                <h3 className="font-black text-xl mb-1 text-indigo-900">Combined (गट-ब/क)</h3>
+                <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">Mixed Pattern</p>
                 {examType === 'GROUP_B' && <div className="absolute top-4 right-4 text-indigo-600"><CheckCircle2 size={24} /></div>}
               </button>
             </div>
 
-            {/* Source Selector */}
             <div className="grid grid-cols-2 gap-4">
                 <button 
                     onClick={() => setTestSource('LOCAL')}
@@ -181,25 +174,28 @@ export const MockTestMode: React.FC<MockTestModeProps> = ({ onBack }) => {
                     <Database size={20} />
                     <div className="text-left">
                         <div className="text-sm">Standard Paper</div>
-                        <div className="text-[10px] opacity-80 uppercase tracking-tighter">Instant & Offline</div>
+                        <div className="text-[10px] opacity-80 uppercase tracking-tighter">Fast & Offline</div>
                     </div>
                 </button>
                 <button 
                     onClick={() => setTestSource('AI')}
                     className={`flex items-center justify-center gap-3 p-4 rounded-2xl border-2 font-black transition-all ${testSource === 'AI' ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg' : 'bg-white border-slate-200 text-slate-500 hover:border-indigo-300'}`}
                 >
-                    <Zap size={20} />
+                    <Cloud size={20} />
                     <div className="text-left">
-                        <div className="text-sm">AI Custom Paper</div>
-                        <div className="text-[10px] opacity-80 uppercase tracking-tighter">Fresh & Unique</div>
+                        <div className="text-sm">AI Smart Paper</div>
+                        <div className="text-[10px] opacity-80 uppercase tracking-tighter">Unique Questions</div>
                     </div>
                 </button>
             </div>
 
             {testSource === 'AI' && (
             <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200 space-y-6 animate-in slide-in-from-top-4 duration-300">
-                 <div className="flex items-center gap-2 text-indigo-900 font-black text-sm uppercase tracking-widest mb-2">
-                    <Settings2 size={18} /> Generation Settings
+                 <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center gap-2 text-indigo-900 font-black text-sm uppercase tracking-widest">
+                        <Settings2 size={18} /> Mock Settings
+                    </div>
+                    <div className="bg-indigo-100 text-indigo-700 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">Batch Mode Enabled</div>
                  </div>
                  
                  <div className="space-y-4">
@@ -207,18 +203,15 @@ export const MockTestMode: React.FC<MockTestModeProps> = ({ onBack }) => {
                         <label className="text-sm font-bold text-slate-700">Questions: <span className="text-indigo-600 text-lg font-black">{questionCount}</span></label>
                     </div>
                     <input 
-                        type="range" 
-                        min="5" 
-                        max="40" 
-                        step="5" 
+                        type="range" min="5" max="50" step="5" 
                         value={questionCount} 
                         onChange={(e) => setQuestionCount(parseInt(e.target.value))}
                         className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
                     />
                     <div className="flex justify-between text-[10px] font-bold text-slate-400 px-1">
                         <span>5</span>
-                        <span>20</span>
-                        <span>40</span>
+                        <span>25</span>
+                        <span>50</span>
                     </div>
                  </div>
 
@@ -245,8 +238,8 @@ export const MockTestMode: React.FC<MockTestModeProps> = ({ onBack }) => {
               onClick={() => startTest()}
               className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black text-2xl hover:bg-black shadow-2xl transition-all active:scale-95 flex items-center justify-center gap-3"
             >
-              {testSource === 'LOCAL' ? <Database /> : <Zap />}
-              {testSource === 'LOCAL' ? 'START STANDARD TEST' : 'START AI GENERATION'}
+              {testSource === 'LOCAL' ? <Database /> : <Zap className="animate-pulse" />}
+              {testSource === 'LOCAL' ? 'START OFFLINE TEST' : 'GENERATE AI PAPER'}
             </button>
           </div>
         </div>
@@ -258,15 +251,21 @@ export const MockTestMode: React.FC<MockTestModeProps> = ({ onBack }) => {
     return (
       <div className="max-w-4xl mx-auto p-20 text-center">
         <Loader2 className="animate-spin h-16 w-16 text-indigo-600 mx-auto mb-6" />
-        <h2 className="text-2xl font-black text-slate-800">{testSource === 'AI' ? 'AI is drafting your paper...' : 'Loading Standard Paper...'}</h2>
+        <h2 className="text-2xl font-black text-slate-800">
+            {testSource === 'AI' ? 'Smart Batching in Progress...' : 'Fetching Local Records...'}
+        </h2>
+        <p className="text-slate-500 mt-2 font-medium">Generating questions in small sets for maximum reliability.</p>
         <div className="mt-8 max-w-md mx-auto bg-slate-100 h-2 rounded-full overflow-hidden">
-            <div className="bg-indigo-600 h-full animate-[loading_10s_ease-in-out_infinite]"></div>
+            <div className="bg-indigo-600 h-full animate-[loading_15s_ease-in-out_infinite]"></div>
         </div>
-        <p className="text-slate-400 text-[10px] mt-4 uppercase tracking-widest font-black">Preparing local datastore archives</p>
+        <div className="flex items-center justify-center gap-2 mt-6 text-emerald-600 font-black text-[10px] uppercase tracking-widest">
+            <Database size={12} /> Auto-Saving to browser cache
+        </div>
         <style>{`
             @keyframes loading {
                 0% { width: 0%; }
-                70% { width: 90%; }
+                30% { width: 40%; }
+                60% { width: 75%; }
                 100% { width: 95%; }
             }
         `}</style>
@@ -280,8 +279,8 @@ export const MockTestMode: React.FC<MockTestModeProps> = ({ onBack }) => {
         <div className="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden sticky top-24 z-30">
           <div className="px-6 py-4 bg-slate-900 text-white flex justify-between items-center">
              <div className="flex items-center gap-3">
-               <span className="bg-indigo-600 px-2 py-0.5 rounded text-[10px] font-black uppercase">{testSource}</span>
-               <h3 className="font-bold">{isFinished ? 'Performance Analysis' : 'Test in Progress'}</h3>
+               <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${testSource === 'AI' ? 'bg-indigo-600' : 'bg-emerald-600'}`}>{testSource} Mode</span>
+               <h3 className="font-bold">{isFinished ? 'Analysis' : 'Live Paper'}</h3>
              </div>
              {!isFinished && (
                <div className="flex items-center gap-2 bg-slate-800 px-4 py-2 rounded-xl border border-slate-700">
@@ -295,15 +294,14 @@ export const MockTestMode: React.FC<MockTestModeProps> = ({ onBack }) => {
         {isFinished ? (
           <div className="space-y-6 animate-in fade-in duration-500">
             <div className="bg-white rounded-3xl shadow-2xl p-12 text-center border-4 border-indigo-100 relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-8 opacity-5 -rotate-12"><CheckCircle2 size={120} /></div>
-              <h1 className="text-5xl font-black text-indigo-950 mb-4">Exam Summary</h1>
+              <h1 className="text-5xl font-black text-indigo-950 mb-4">Exam Results</h1>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-10">
                  <div className="bg-indigo-50 p-6 rounded-2xl border border-indigo-100">
-                    <div className="text-[10px] font-black text-indigo-400 uppercase mb-1">Total Items</div>
+                    <div className="text-[10px] font-black text-indigo-400 uppercase mb-1">Total Questions</div>
                     <div className="text-4xl font-black text-indigo-800">{questions.length}</div>
                  </div>
                  <div className="bg-emerald-50 p-6 rounded-2xl border border-emerald-100">
-                    <div className="text-[10px] font-black text-emerald-400 uppercase mb-1">Score</div>
+                    <div className="text-[10px] font-black text-emerald-400 uppercase mb-1">Correct</div>
                     <div className="text-4xl font-black text-emerald-800">{getScore()}</div>
                  </div>
                  <div className="bg-slate-50 p-6 rounded-2xl col-span-2 md:col-span-1 border border-slate-200">
@@ -311,12 +309,12 @@ export const MockTestMode: React.FC<MockTestModeProps> = ({ onBack }) => {
                     <div className="text-4xl font-black text-slate-800">{questions.length > 0 ? Math.round((getScore() / questions.length) * 100) : 0}%</div>
                  </div>
               </div>
-              <button onClick={() => setStatus('idle')} className="bg-indigo-600 text-white px-12 py-4 rounded-2xl font-black text-lg shadow-xl hover:bg-indigo-700 transition-all hover:scale-105">NEW TEST</button>
+              <button onClick={() => setStatus('idle')} className="bg-indigo-600 text-white px-12 py-4 rounded-2xl font-black text-lg shadow-xl hover:bg-indigo-700 transition-all">TAKE ANOTHER TEST</button>
             </div>
 
             <div className="space-y-6">
                <h3 className="text-xl font-black text-slate-800 flex items-center gap-2">
-                 <Eye className="text-indigo-600" /> Answer Review
+                 <Eye className="text-indigo-600" /> Detailed Review
                </h3>
                {questions.map((q, idx) => (
                  <div key={idx} className="bg-white rounded-3xl shadow-xl p-8 border border-slate-200">
@@ -403,7 +401,7 @@ export const MockTestMode: React.FC<MockTestModeProps> = ({ onBack }) => {
       {!isFinished && (
         <div className="w-full md:w-80 shrink-0">
           <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-8 sticky top-24">
-             <h4 className="font-black text-slate-900 text-sm uppercase tracking-widest mb-6 border-b border-slate-100 pb-3">Test Navigation</h4>
+             <h4 className="font-black text-slate-900 text-sm uppercase tracking-widest mb-6 border-b border-slate-100 pb-3">Question Palette</h4>
              <div className="grid grid-cols-5 gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                 {questions.map((_, i) => (
                   <button
@@ -423,6 +421,10 @@ export const MockTestMode: React.FC<MockTestModeProps> = ({ onBack }) => {
                 <div className="flex items-center justify-between text-xs font-bold text-slate-500">
                    <div className="flex items-center gap-2"><div className="w-3 h-3 bg-slate-100 rounded-sm border border-slate-200"></div> Remaining</div>
                    <span>{questions.length - userAnswers.filter(a => a !== -1).length}</span>
+                </div>
+                <div className="mt-4 p-3 bg-amber-50 rounded-xl border border-amber-100 flex gap-2">
+                    <Database size={14} className="text-amber-600 shrink-0" />
+                    <p className="text-[10px] text-amber-700 font-bold leading-tight uppercase tracking-tighter">This paper is automatically cached in your local datastore.</p>
                 </div>
              </div>
           </div>
