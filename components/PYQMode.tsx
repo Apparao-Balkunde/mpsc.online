@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Subject, LoadingState, QuizQuestion, ExamType, GSSubCategory } from '../types';
 import { generatePYQs } from '../services/gemini';
-import { History, Search, Loader2, ArrowLeft, Eye, CheckCircle2, Bookmark, Info, Calendar, Filter, BookOpen } from 'lucide-react';
+import { History, Search, Loader2, ArrowLeft, Eye, CheckCircle2, Bookmark, Info, Calendar, Filter, BookOpen, ShieldCheck } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 interface PYQModeProps {
@@ -79,12 +79,12 @@ export const PYQMode: React.FC<PYQModeProps> = ({ initialExamType = 'ALL', onBac
         <div className="p-6 bg-indigo-50 border-b border-indigo-100 flex justify-between items-center">
           <div>
             <h2 className="text-2xl font-bold text-slate-800 mb-1 flex items-center">
-                <History className="mr-2 text-indigo-600" />
-                GS PYQ Archive (2010-2025)
+                <ShieldCheck className="mr-2 text-indigo-600" />
+                Pure GS PYQ Archive (2010-2025)
             </h2>
-            <p className="text-slate-600 text-sm">Dedicated General Studies Previous Year Questions with Sectional Analysis.</p>
+            <p className="text-slate-600 text-sm font-medium">Authentic General Studies Archive. (Languages & Grammar excluded).</p>
           </div>
-          <span className="hidden md:block text-xs bg-indigo-600 text-white px-3 py-1 rounded-full font-bold uppercase tracking-wider">MPSC GS Expert</span>
+          <span className="hidden md:block text-xs bg-indigo-600 text-white px-3 py-1 rounded-full font-bold uppercase tracking-wider">MPSC GS Focused</span>
         </div>
 
         <div className="p-6 grid grid-cols-1 md:grid-cols-4 gap-4 bg-white items-end">
@@ -98,7 +98,7 @@ export const PYQMode: React.FC<PYQModeProps> = ({ initialExamType = 'ALL', onBac
                 <option value="RAJYASEVA">Rajyaseva (राज्यसेवा)</option>
                 <option value="GROUP_B">Combined B (गट-ब)</option>
                 <option value="GROUP_C">Combined C (गट-क)</option>
-                <option value="ALL">Other MPSC Exams</option>
+                <option value="ALL">Other MPSC GS Exams</option>
               </select>
           </div>
 
@@ -130,7 +130,7 @@ export const PYQMode: React.FC<PYQModeProps> = ({ initialExamType = 'ALL', onBac
             className="w-full bg-indigo-600 text-white p-2.5 rounded-lg hover:bg-indigo-700 transition-all font-bold shadow-md flex items-center justify-center gap-2"
           >
             {status === 'loading' ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
-            Get Questions
+            Get GS Questions
           </button>
         </div>
       </div>
@@ -140,6 +140,7 @@ export const PYQMode: React.FC<PYQModeProps> = ({ initialExamType = 'ALL', onBac
           <Loader2 className="animate-spin h-12 w-12 text-indigo-600 mx-auto mb-4" />
           <p className="text-slate-600 font-bold">Accessing GS Archives (2010-2025)...</p>
           <p className="text-slate-400 text-sm mt-1">Filtering {examType} | {gsCategory} | {selectedYear}</p>
+          <p className="text-slate-400 text-[10px] mt-2 italic font-semibold tracking-wider uppercase">Pure General Studies Environment</p>
         </div>
       )}
 
@@ -148,7 +149,7 @@ export const PYQMode: React.FC<PYQModeProps> = ({ initialExamType = 'ALL', onBac
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
             <div className="flex items-center text-indigo-800 font-bold text-sm">
                 <CheckCircle2 size={18} className="mr-2 text-green-600" />
-                <span>Found {questions.length} questions for {selectedYear}</span>
+                <span>Found {questions.length} GS questions for {selectedYear}</span>
             </div>
             <div className="relative w-full md:w-64">
                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
@@ -156,7 +157,7 @@ export const PYQMode: React.FC<PYQModeProps> = ({ initialExamType = 'ALL', onBac
                     type="text"
                     value={searchKeyword}
                     onChange={(e) => setSearchKeyword(e.target.value)}
-                    placeholder="Search in questions..."
+                    placeholder="Search in GS questions..."
                     className="block w-full pl-9 pr-8 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-colors"
                 />
             </div>
@@ -231,8 +232,8 @@ export const PYQMode: React.FC<PYQModeProps> = ({ initialExamType = 'ALL', onBac
           )) : (
             <div className="text-center py-20 bg-white rounded-xl border border-dashed border-slate-300">
                 <BookOpen size={48} className="mx-auto text-slate-200 mb-4" />
-                <p className="text-slate-500 font-bold">No results found for this selection.</p>
-                <p className="text-slate-400 text-sm">Try changing the year or section filter.</p>
+                <p className="text-slate-500 font-bold">No GS results found for this selection.</p>
+                <p className="text-slate-400 text-sm">Language questions are intentionally excluded from this section.</p>
             </div>
           )}
         </div>
