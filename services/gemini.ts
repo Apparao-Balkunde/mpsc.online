@@ -10,7 +10,7 @@ const MODEL_PRO = 'gemini-3-pro-preview';
 const MODEL_TTS = 'gemini-2.5-flash-preview-tts';
 
 // --- LOCAL DATA CENTER (INDEXED DB CACHING SYSTEM) ---
-const CACHE_PREFIX = 'MPSC_DATA_CENTER_V4_';
+const CACHE_PREFIX = 'MPSC_DATA_CENTER_V5_';
 const DB_NAME = 'MPSC_Sarathi_DB';
 const STORE_NAME = 'ai_responses';
 const DB_VERSION = 1;
@@ -152,25 +152,30 @@ export const generateQuiz = async (subject: Subject, topic: string, difficulty: 
 };
 
 export const generatePYQs = async (subject: Subject, year: string, examType: ExamType = 'ALL', subCategory?: GSSubCategory): Promise<QuizQuestion[]> => {
-  const cacheKey = getCacheKey('PYQ_V6', subject, year, examType, subCategory || 'NONE');
+  const cacheKey = getCacheKey('PYQ_STRICT_V7', subject, year, examType, subCategory || 'NONE');
   const cached = await getFromDataCenter<QuizQuestion[]>(cacheKey);
   if (cached) return cached;
 
+  // Strict prompt to ensure only selected exam type is returned and comprehensive coverage
   const prompt = `
-    You are an expert MPSC trainer. Generate 15 authentic Previous Year Questions (PYQs).
-    Exam: MPSC ${examType} (e.g. Rajyaseva, Combined Group B/C)
-    Year: ${year}
-    Subject: ${subject}
-    GS Section: ${subCategory || 'General Mix'}
+    You are the official MPSC question archivist. I need the AUTHENTIC General Studies (GS) questions from a specific paper.
     
-    STRICT RULES:
-    - Questions must reflect the actual difficulty and pattern of MPSC between 2010 and 2025.
-    - For 2025, include high-probability prelims questions or actual reported ones if available.
-    - LANGUAGE: For GS and Marathi subjects, everything (Q, Options, Explanation) MUST be in Marathi (Devanagari).
-    - EXPLANATION: Provide a detailed "Sectional Analysis" (200+ words). Explain why the answer is correct and why other options are incorrect.
-    - SOURCE: Mention the source like "MPSC Rajyaseva Prelims ${year}" or "Combined Group B ${year}".
+    EXAM: MPSC ${examType} (Only return questions that appeared in ${examType}. Strictly NO Combined/Mix questions if Rajyaseva is selected, and vice versa).
+    YEAR: ${year}
+    SUBJECT: ${subject}
+    SECTION: ${subCategory === 'ALL' ? 'Complete GS Paper' : subCategory}
     
-    Return as a JSON array.
+    STRICT COMPLIANCE RULES:
+    1. SOURCE INTEGRITY: Only provide questions that were actually asked in the ${examType} ${year} Prelims.
+    2. CONTENT: If Exam is RAJYASEVA, do NOT include Group B or Group C questions.
+    3. LANGUAGE: All Questions, Options, and Detailed Explanations MUST be in MARATHI (Devanagari script).
+    4. EXPLANATION: For each question, provide a deep 250-word analysis in Marathi covering:
+       - Why the answer is correct.
+       - Context of the topic in MPSC syllabus.
+       - Analysis of other options to prevent similar traps in future exams.
+    5. QUANTITY: Provide a comprehensive set (up to 25 items per request) that covers the major topics of the ${year} paper for the selected section.
+    
+    Format the output as a clean JSON array.
   `;
 
   const response = await ai.models.generateContent({
