@@ -1,461 +1,161 @@
+
 import React, { useState, useRef } from 'react';
-import { Subject, LoadingState, QuizQuestion, DifficultyLevel } from '../types';
+import { Subject, LoadingState, QuizQuestion, DifficultyLevel, GSSubCategory } from '../types';
 import { generateQuiz } from '../services/gemini';
 import { saveQuizResult } from '../services/progress';
-import { HelpCircle, CheckCircle2, XCircle, Loader2, ArrowLeft, RefreshCcw, Sparkles, Search, Play, Download, PieChart, Info, Eye, EyeOff, Gauge } from 'lucide-react';
+import { HelpCircle, CheckCircle2, XCircle, Loader2, ArrowLeft, RefreshCcw, Sparkles, Search, Play, Download, Info, Eye, EyeOff, Gauge, LayoutGrid, Database } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
+import ReactMarkdown from 'react-markdown';
 
 interface QuizModeProps {
   initialSubject?: Subject;
   onBack: () => void;
 }
 
+const GS_TOPICS: Record<GSSubCategory, string[]> = {
+    ALL: ["Overall GS Review", "Mixed PYQ Patterns"],
+    HISTORY: ["Social Reformers of Maharashtra", "Maratha Empire", "1857 Revolt", "Governor Generals", "Ancient/Medieval Maharashtra"],
+    POLITY: ["Fundamental Rights", "Parliamentary System", "Panchayat Raj", "Constitutional Amendments", "State Judiciary"],
+    GEOGRAPHY: ["Rivers of Maharashtra", "Sahyadri Ranges", "Climatic Zones", "Census 2011 Highlights", "Mineral Wealth"],
+    ECONOMICS: ["RBI & Banking", "National Income Concepts", "Five Year Plans", "Poverty & Unemployment Committees", "GST & Budget"],
+    SCIENCE: ["Human Biology", "Physics (Light/Sound)", "Chemistry in Everyday Life", "Nutrition & Health", "Environment Basics"],
+    ENVIRONMENT: ["Pollution & Control", "Biodiversity Hotspots", "International Treaties", "National Parks of Maharashtra"]
+};
+
 const SUGGESTED_TOPICS: Record<Subject, string[]> = {
-  [Subject.MARATHI]: [
-    "संधी (Sandhi)",
-    "समास (Samas)",
-    "प्रयोग (Prayog)",
-    "अलंकार (Alankar)",
-    "समानार्थी शब्द (Synonyms)",
-    "विरुद्धार्थी शब्द (Antonyms)",
-    "म्हणी व वाक्प्रचार (Idioms)",
-    "विभक्ती (Vibhakti)"
-  ],
-  [Subject.ENGLISH]: [
-    "Articles",
-    "Tenses",
-    "Active & Passive Voice",
-    "Direct & Indirect Speech",
-    "Synonyms & Antonyms",
-    "Idioms & Phrases",
-    "Prepositions",
-    "One Word Substitution"
-  ],
-  [Subject.GS]: [
-    "History of Maharashtra",
-    "Indian Constitution",
-    "Physical Geography",
-    "Indian Economy",
-    "Current Affairs"
-  ]
+  [Subject.MARATHI]: ["संधी", "समास", "प्रयोग", "अलंकार", "वृत्ते", "म्हणी व वाक्प्रचार"],
+  [Subject.ENGLISH]: ["Articles", "Tenses", "Voice", "Direct/Indirect", "Clauses", "Spotting Errors"],
+  [Subject.GS]: []
 };
 
 export const QuizMode: React.FC<QuizModeProps> = ({ initialSubject = Subject.MARATHI, onBack }) => {
   const [subject, setSubject] = useState<Subject>(initialSubject);
   const [topic, setTopic] = useState('');
+  const [gsCategory, setGsCategory] = useState<GSSubCategory>('ALL');
   const [difficulty, setDifficulty] = useState<DifficultyLevel>('MEDIUM');
   const [status, setStatus] = useState<LoadingState>('idle');
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
-  const [userAnswers, setUserAnswers] = useState<number[]>([]); // stores index of selected option
+  const [fromCache, setFromCache] = useState(false);
+  const [userAnswers, setUserAnswers] = useState<number[]>([]);
   const [showResults, setShowResults] = useState(false);
-  const [expandedExplanations, setExpandedExplanations] = useState<number[]>([]);
-  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   
-  const resultsRef = useRef<HTMLDivElement>(null);
-
-  const startQuiz = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const startQuiz = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (!topic.trim()) return;
-
     setStatus('loading');
-    setQuestions([]);
-    setUserAnswers([]);
-    setExpandedExplanations([]);
-    setShowResults(false);
-
     try {
-      const q = await generateQuiz(subject, topic, difficulty);
-      setQuestions(q);
-      setUserAnswers(new Array(q.length).fill(-1));
+      const result = await generateQuiz(subject, topic, difficulty, subject === Subject.GS ? gsCategory : undefined);
+      setQuestions(result.data);
+      setFromCache(result.fromCache);
+      setUserAnswers(new Array(result.data.length).fill(-1));
+      setShowResults(false);
       setStatus('success');
-    } catch (error) {
-      setStatus('error');
-    }
+    } catch (error) { setStatus('error'); }
   };
 
-  const handleOptionSelect = (questionIndex: number, optionIndex: number) => {
-    if (showResults) return; // Prevent changing after submission
+  const handleOptionSelect = (qIdx: number, oIdx: number) => {
+    if (showResults) return;
     const newAnswers = [...userAnswers];
-    newAnswers[questionIndex] = optionIndex;
+    newAnswers[qIdx] = oIdx;
     setUserAnswers(newAnswers);
-  };
-
-  const calculateScore = () => {
-    let score = 0;
-    questions.forEach((q, idx) => {
-      if (userAnswers[idx] === q.correctAnswerIndex) score++;
-    });
-    return score;
   };
 
   const submitQuiz = () => {
     setShowResults(true);
-    // Save progress
-    const score = calculateScore();
-    const total = questions.length;
-    saveQuizResult(topic || subject, score, total);
-  }
-
-  const getStats = () => {
-      const correct = calculateScore();
-      const total = questions.length;
-      const incorrect = total - correct;
-      const percentage = Math.round((correct / total) * 100);
-      return { correct, incorrect, total, percentage };
-  };
-
-  const resetQuiz = () => {
-    setStatus('idle');
-    setQuestions([]);
-    setTopic('');
-    setUserAnswers([]);
-    setExpandedExplanations([]);
-    setShowResults(false);
-  }
-
-  const handleSuggestionClick = (suggestion: string) => {
-    setTopic(suggestion);
-  };
-
-  const toggleExplanation = (index: number) => {
-    setExpandedExplanations(prev => 
-      prev.includes(index) 
-        ? prev.filter(i => i !== index) 
-        : [...prev, index]
-    );
-  };
-
-  const handleDownloadPDF = async () => {
-    if (!resultsRef.current) return;
-    setIsGeneratingPDF(true);
-
-    // Temporarily expand all explanations for PDF generation
-    const currentExpanded = [...expandedExplanations];
-    setExpandedExplanations(questions.map((_, i) => i));
-
-    // Wait for render cycle
-    await new Promise(resolve => setTimeout(resolve, 100));
-
-    try {
-      const element = resultsRef.current;
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        windowWidth: element.scrollWidth,
-        windowHeight: element.scrollHeight
-      });
-
-      const imgData = canvas.toDataURL('image/png');
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      
-      // Standard A4 width in mm (approx 210mm)
-      // We use a custom page height to ensure the long quiz content fits on one scrollable page for digital viewing
-      const pdfWidth = 210; 
-      const margin = 10;
-      const contentWidth = pdfWidth - (2 * margin);
-      const contentHeight = (imgHeight * contentWidth) / imgWidth;
-      
-      const pdf = new jsPDF({
-        orientation: 'p',
-        unit: 'mm',
-        format: [pdfWidth, contentHeight + 40] // Add extra height for header/footer
-      });
-      
-      // Header
-      pdf.setFontSize(16);
-      pdf.setTextColor(79, 70, 229); // Indigo-600
-      pdf.text("MPSC Sarathi - Quiz Result", margin, 15);
-      
-      pdf.setFontSize(10);
-      pdf.setTextColor(100);
-      pdf.text(`Topic: ${topic || subject} | Difficulty: ${difficulty} | Date: ${new Date().toLocaleDateString()}`, margin, 22);
-
-      // Main Content
-      pdf.addImage(imgData, 'PNG', margin, 30, contentWidth, contentHeight);
-      
-      // Footer
-      pdf.setFontSize(8);
-      pdf.setTextColor(150);
-      pdf.text("Generated by MPSC Sarathi AI Companion", margin, contentHeight + 35);
-
-      pdf.save(`MPSC_Sarathi_Result_${topic.replace(/\s+/g, '_')}_${Date.now()}.pdf`);
-
-    } catch (error) {
-      console.error("PDF generation failed", error);
-      alert("Failed to generate PDF. Please try again.");
-    } finally {
-      // Restore previous state
-      setExpandedExplanations(currentExpanded);
-      setIsGeneratingPDF(false);
-    }
+    let score = 0;
+    questions.forEach((q, idx) => { if (userAnswers[idx] === q.correctAnswerIndex) score++; });
+    saveQuizResult(topic || subject, score, questions.length);
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-4 md:p-6">
+    <div className="max-w-4xl mx-auto p-4 md:p-6">
       <button onClick={onBack} className="flex items-center text-slate-500 hover:text-indigo-600 mb-4 transition-colors">
         <ArrowLeft size={16} className="mr-1" /> Back to Dashboard
       </button>
 
       {status === 'idle' && (
-        <div className="bg-white rounded-xl shadow-md p-6 border border-slate-100">
-           <h2 className="text-2xl font-bold text-slate-800 mb-6 flex items-center">
-            <HelpCircle className="mr-2 text-indigo-600" />
-            Topic Quiz Generator
-          </h2>
-          
-             <div className="mb-6">
-              <label className="block text-sm font-medium text-slate-700 mb-2">Select Subject</label>
-              <div className="grid grid-cols-2 gap-4">
-                <button
-                    type="button"
-                    onClick={() => {
-                        setSubject(Subject.MARATHI);
-                        setTopic(''); // Clear topic when switching subject
-                    }}
-                    className={`p-4 rounded-lg border-2 text-center transition-all ${subject === Subject.MARATHI ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-200 hover:border-indigo-300'}`}
-                >
-                    <span className="text-lg font-bold">मराठी</span>
-                </button>
-                 <button
-                    type="button"
-                    onClick={() => {
-                        setSubject(Subject.ENGLISH);
-                        setTopic('');
-                    }}
-                    className={`p-4 rounded-lg border-2 text-center transition-all ${subject === Subject.ENGLISH ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-200 hover:border-indigo-300'}`}
-                >
-                    <span className="text-lg font-bold">English</span>
-                </button>
-              </div>
-            </div>
-
-            <form onSubmit={startQuiz}>
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
-                    <Gauge size={16} /> Difficulty Level
-                </label>
-                <div className="flex bg-slate-100 p-1 rounded-lg">
-                    {(['EASY', 'MEDIUM', 'HARD'] as DifficultyLevel[]).map((level) => (
-                        <button
-                            key={level}
-                            type="button"
-                            onClick={() => setDifficulty(level)}
-                            className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${
-                                difficulty === level 
-                                ? 'bg-white text-indigo-700 shadow-sm' 
-                                : 'text-slate-500 hover:text-slate-700'
-                            }`}
-                        >
-                            {level}
+        <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-100">
+           <h2 className="text-3xl font-black text-slate-800 mb-8 flex items-center">
+               <HelpCircle className="mr-3 text-indigo-600 h-8 w-8" /> Quiz Master
+           </h2>
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <div className="space-y-4">
+                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest">1. Choose Subject</label>
+                    {Object.values(Subject).map(s => (
+                        <button key={s} onClick={() => setSubject(s)} className={`w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all ${subject === s ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-100 text-slate-600'}`}>
+                            <span className="font-bold">{s}</span>
+                            {subject === s && <CheckCircle2 size={18} />}
                         </button>
                     ))}
                 </div>
-              </div>
-
-              <label className="block text-sm font-medium text-slate-700 mb-2">Enter Quiz Topic</label>
-              <div className="flex gap-2 mb-4">
-                  <div className="relative flex-1">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Search className="h-5 w-5 text-slate-400" />
+                <div className="space-y-4">
+                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest">2. Settings</label>
+                    <div className="flex bg-slate-100 p-1 rounded-xl">
+                        {(['EASY', 'MEDIUM', 'HARD'] as DifficultyLevel[]).map(l => (
+                            <button key={l} onClick={() => setDifficulty(l)} className={`flex-1 py-2 text-[10px] font-black rounded-lg ${difficulty === l ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-400'}`}>{l}</button>
+                        ))}
                     </div>
-                    <input
-                        type="text"
-                        value={topic}
-                        onChange={(e) => setTopic(e.target.value)}
-                        placeholder={subject === Subject.MARATHI ? "e.g. प्रयोग, समास..." : "e.g. Tenses, Articles..."}
-                        className="block w-full pl-10 pr-3 py-3 border border-slate-300 rounded-lg leading-5 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={!topic.trim()}
-                    className="bg-indigo-600 text-white px-6 py-2.5 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all shadow-sm hover:shadow font-medium"
-                  >
-                    Generate <Play size={16} fill="currentColor" />
-                  </button>
-              </div>
-              
-              {/* Suggested Topics Chips */}
-              <div className="animate-in fade-in slide-in-from-top-1 duration-300">
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
-                      <Sparkles size={12} className="text-amber-500" /> Popular Topics
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                      {SUGGESTED_TOPICS[subject].map((suggestion, idx) => (
-                          <button
-                              key={idx}
-                              type="button"
-                              onClick={() => handleSuggestionClick(suggestion)}
-                              className={`text-sm px-3 py-1.5 rounded-full border transition-all ${
-                                  topic === suggestion 
-                                  ? 'bg-indigo-100 border-indigo-300 text-indigo-800 font-medium ring-1 ring-indigo-300' 
-                                  : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-indigo-300 hover:text-indigo-600'
-                              }`}
-                          >
-                              {suggestion}
-                          </button>
-                      ))}
-                  </div>
-              </div>
-            </form>
+                </div>
+           </div>
+           <form onSubmit={startQuiz}>
+                <label className="block text-xs font-black text-slate-400 uppercase mb-3">3. Pick Topic</label>
+                <div className="flex gap-2">
+                    <input type="text" value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="e.g. Fundamental Rights, Tenses..." className="flex-1 p-3.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500" />
+                    <button type="submit" disabled={!topic.trim()} className="bg-indigo-600 text-white px-8 rounded-xl font-black hover:bg-indigo-700 shadow-lg flex items-center gap-2">GO <Play size={18}/></button>
+                </div>
+           </form>
         </div>
       )}
 
       {status === 'loading' && (
-        <div className="text-center py-20 bg-white rounded-xl shadow-sm">
-          <Loader2 className="animate-spin h-12 w-12 text-indigo-600 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-slate-800">Preparing your questions...</h3>
-          <p className="text-slate-500">Getting ready to challenge you!</p>
-          <div className="mt-2 text-xs font-semibold px-2 py-1 bg-indigo-50 text-indigo-600 inline-block rounded">
-            Level: {difficulty}
-          </div>
-        </div>
-      )}
-
-      {status === 'error' && (
-        <div className="bg-red-50 text-red-700 p-6 rounded-xl border border-red-200 text-center">
-            <p className="mb-4">Oops! Failed to generate the quiz.</p>
-            <button onClick={() => setStatus('idle')} className="underline">Try Again</button>
+        <div className="text-center py-20 bg-white rounded-2xl shadow-xl">
+          <Loader2 className="animate-spin h-14 w-14 text-indigo-600 mx-auto mb-6" />
+          <h3 className="text-xl font-black text-slate-800">Checking Offline Repository...</h3>
         </div>
       )}
 
       {status === 'success' && questions.length > 0 && (
         <div className="space-y-6">
-          {!showResults && (
-             <div className="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm">
-                <div>
-                    <h2 className="font-bold text-lg text-slate-800">{topic || subject} Quiz</h2>
-                    <span className="text-xs text-slate-500 font-semibold bg-slate-100 px-2 py-0.5 rounded ml-2">{difficulty}</span>
-                </div>
-                <span className="text-sm bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full font-medium">{userAnswers.filter(a => a !== -1).length}/{questions.length} Answered</span>
+          <div className="flex justify-between items-center bg-indigo-900 text-white p-5 rounded-2xl shadow-xl sticky top-24 z-20">
+             <div>
+                 <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black text-indigo-300 uppercase tracking-widest">{subject}</span>
+                    {fromCache && <span className="text-[9px] bg-emerald-500 text-white px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm"><Database size={10}/> LOCAL BANK</span>}
+                 </div>
+                 <h2 className="font-black text-xl leading-tight">{topic}</h2>
              </div>
-          )}
+             <div className="text-right text-xl font-black">{userAnswers.filter(a => a !== -1).length} / {questions.length}</div>
+          </div>
 
-          <div className="space-y-6" ref={resultsRef}>
-            {/* Visual Result Summary - Visible in UI and PDF */}
+          <div className="space-y-6">
             {showResults && (
-                <div className="bg-white border border-indigo-100 rounded-xl p-6 shadow-sm text-center">
-                    <h1 className="text-2xl font-bold text-indigo-900 mb-2">Quiz Results</h1>
-                    <p className="text-slate-500 mb-6">{subject} • {topic} • {difficulty}</p>
-                    
-                    <div className="flex justify-center items-center gap-4 md:gap-12 mb-6">
-                        <div className="text-center">
-                            <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Score</div>
-                            <div className="text-4xl font-black text-indigo-600">{getStats().correct}<span className="text-xl text-slate-300 font-normal">/{getStats().total}</span></div>
-                        </div>
-                        <div className="w-px h-12 bg-slate-200"></div>
-                        <div className="text-center">
-                            <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Accuracy</div>
-                            <div className={`text-4xl font-black ${getStats().percentage >= 70 ? 'text-green-500' : 'text-amber-500'}`}>
-                                {getStats().percentage}%
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div className="flex justify-center gap-3 text-sm font-semibold">
-                         <div className="flex items-center gap-1.5 bg-green-50 text-green-700 px-3 py-1.5 rounded-full border border-green-100">
-                             <CheckCircle2 size={16} /> {getStats().correct} Correct
-                         </div>
-                         <div className="flex items-center gap-1.5 bg-red-50 text-red-700 px-3 py-1.5 rounded-full border border-red-100">
-                             <XCircle size={16} /> {getStats().incorrect} Incorrect
-                         </div>
-                    </div>
+                <div className="bg-white border-2 border-indigo-100 rounded-3xl p-10 shadow-2xl text-center">
+                    <h1 className="text-4xl font-black text-indigo-950 mb-8">Exam Analysis</h1>
+                    <button onClick={() => setStatus('idle')} className="bg-indigo-600 text-white px-10 py-4 rounded-2xl font-black hover:bg-indigo-700 shadow-xl transition-all">TRY NEW TOPIC</button>
                 </div>
             )}
-            
             {questions.map((q, qIdx) => (
-              <div key={qIdx} className="bg-white rounded-xl shadow-md p-6 border border-slate-100 break-inside-avoid">
-                <h3 className="text-lg font-medium text-slate-900 mb-4 flex gap-3">
-                   <span className="text-slate-400 font-bold">{qIdx + 1}.</span> 
-                   {q.question}
-                </h3>
-                <div className="space-y-3">
-                  {q.options.map((opt, oIdx) => {
-                     let optionClass = "border-slate-200 hover:bg-slate-50";
-                     if (showResults) {
-                         if (oIdx === q.correctAnswerIndex) optionClass = "border-green-500 bg-green-50 text-green-900";
-                         else if (userAnswers[qIdx] === oIdx) optionClass = "border-red-500 bg-red-50 text-red-900";
-                         else optionClass = "border-slate-200 opacity-60";
-                     } else {
-                         if (userAnswers[qIdx] === oIdx) optionClass = "border-indigo-500 bg-indigo-50 text-indigo-900 ring-1 ring-indigo-500";
-                     }
-
-                    return (
-                      <button
-                        key={oIdx}
-                        onClick={() => handleOptionSelect(qIdx, oIdx)}
-                        disabled={showResults}
-                        className={`w-full text-left p-3 rounded-lg border-2 transition-all flex items-center justify-between ${optionClass}`}
-                      >
-                        <span>{opt}</span>
-                        {showResults && oIdx === q.correctAnswerIndex && <CheckCircle2 size={20} className="text-green-600"/>}
-                        {showResults && userAnswers[qIdx] === oIdx && userAnswers[qIdx] !== q.correctAnswerIndex && <XCircle size={20} className="text-red-600"/>}
-                      </button>
-                    )
-                  })}
+              <div key={qIdx} className="bg-white rounded-3xl shadow-xl p-8 border border-slate-100">
+                <div className="flex gap-5 mb-6">
+                    <span className="bg-indigo-50 text-indigo-600 w-10 h-10 rounded-2xl flex items-center justify-center font-black text-lg border border-indigo-100 shrink-0">{qIdx + 1}</span>
+                    <h3 className="text-xl font-bold text-slate-900 leading-relaxed">{q.question}</h3>
                 </div>
-                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  {q.options.map((opt, oIdx) => (
+                    <button key={oIdx} onClick={() => handleOptionSelect(qIdx, oIdx)} disabled={showResults} className={`text-left p-4 rounded-2xl border-2 transition-all ${userAnswers[qIdx] === oIdx ? 'border-indigo-600 bg-indigo-50 text-indigo-900 font-bold' : 'border-slate-100 text-slate-700'}`}>{opt}</button>
+                  ))}
+                </div>
                 {showResults && (
-                    <div className="mt-4">
-                        <button
-                            onClick={() => toggleExplanation(qIdx)}
-                            className="text-indigo-600 text-sm font-semibold flex items-center gap-2 hover:text-indigo-800 transition-colors focus:outline-none"
-                        >
-                            {expandedExplanations.includes(qIdx) ? (
-                                <>
-                                    <EyeOff size={16} /> Hide Explanation
-                                </>
-                            ) : (
-                                <>
-                                    <Eye size={16} /> Show Explanation
-                                </>
-                            )}
-                        </button>
-
-                        {expandedExplanations.includes(qIdx) && (
-                            <div className="mt-3 p-4 bg-yellow-50 text-yellow-900 rounded-lg text-sm border border-yellow-200 animate-in fade-in slide-in-from-top-2">
-                                <strong className="block mb-1 font-bold flex items-center gap-2 text-yellow-700">
-                                <Info size={16} /> Explanation:
-                                </strong>
-                                <p className="leading-relaxed text-slate-800">{q.explanation}</p>
-                            </div>
-                        )}
+                    <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200">
+                        <div className="text-slate-700 text-sm leading-relaxed prose prose-sm max-w-none"><ReactMarkdown>{q.explanation}</ReactMarkdown></div>
                     </div>
                 )}
               </div>
             ))}
           </div>
 
-          {!showResults ? (
-              <button
-                onClick={submitQuiz}
-                disabled={userAnswers.includes(-1)}
-                className="w-full bg-green-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all"
-              >
-                  Submit Quiz
-              </button>
-          ) : (
-              <div className="flex flex-col md:flex-row gap-4">
-                  <button
-                    onClick={resetQuiz}
-                    className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 shadow-lg flex items-center justify-center gap-2"
-                  >
-                      <RefreshCcw size={20}/> Take Another Quiz
-                  </button>
-                  <button
-                    onClick={handleDownloadPDF}
-                    disabled={isGeneratingPDF}
-                    className="flex-1 bg-slate-800 text-white py-3 rounded-xl font-bold hover:bg-slate-900 shadow-lg flex items-center justify-center gap-2 disabled:opacity-70"
-                  >
-                      {isGeneratingPDF ? <Loader2 size={20} className="animate-spin" /> : <Download size={20}/>}
-                      {isGeneratingPDF ? 'Generating PDF...' : 'Download Result PDF'}
-                  </button>
-              </div>
-          )}
+          {!showResults && <button onClick={submitQuiz} disabled={userAnswers.includes(-1)} className="w-full bg-emerald-600 text-white py-6 rounded-3xl font-black text-2xl hover:bg-emerald-700 disabled:opacity-50 shadow-2xl">SUBMIT PAPER</button>}
         </div>
       )}
     </div>
