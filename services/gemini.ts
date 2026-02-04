@@ -2,13 +2,14 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { Subject, QuizQuestion, VocabWord, CurrentAffairItem, ExamType, GSSubCategory, VocabCategory, RuleExplanation, DescriptiveQA, DifficultyLevel, SubjectFocus } from '../types';
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Always initialize inside the function to ensure we use the latest key
+const getAIClient = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const MODEL_FAST = 'gemini-3-flash-preview';
 const MODEL_PRO = 'gemini-3-pro-preview';
 const MODEL_TTS = 'gemini-2.5-flash-preview-tts';
 
-const CACHE_VERSION = 'MPSC_V23_'; 
+const CACHE_VERSION = 'MPSC_V24_'; 
 const DB_NAME = 'MPSC_Sarathi_Storage';
 const STORE_NAME = 'question_bank';
 
@@ -16,6 +17,11 @@ export interface CachedResponse<T> {
   data: T;
   fromCache: boolean;
 }
+
+// Cleaning logic to handle potential markdown blocks in response
+const cleanJsonResponse = (text: string): string => {
+  return text.replace(/```json/g, '').replace(/```/g, '').trim();
+};
 
 // Reusable Schema Definitions
 const quizQuestionSchema = {
@@ -38,7 +44,7 @@ const quizQuestionSchema = {
 
 const openDB = (): Promise<IDBDatabase> => {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, 3);
+    const request = indexedDB.open(DB_NAME, 4);
     request.onupgradeneeded = (e) => {
       const db = (e.target as IDBOpenDBRequest).result;
       if (!db.objectStoreNames.contains(STORE_NAME)) {
@@ -106,7 +112,8 @@ export const generateMockTest = async (examType: ExamType, totalCount: number = 
     if (cached) return { data: cached, fromCache: true };
   }
 
-  const batchSize = 10; 
+  const ai = getAIClient();
+  const batchSize = 5; // Smaller batches for better stability
   let allQuestions: QuizQuestion[] = [];
   const iterations = Math.ceil(totalCount / batchSize);
 
@@ -116,22 +123,23 @@ export const generateMockTest = async (examType: ExamType, totalCount: number = 
 
     try {
         const response = await ai.models.generateContent({
-            model: MODEL_FAST,
-            contents: `Generate ${currentBatchCount} unique MPSC questions for ${examType}. Focus: ${focus}.`,
+            model: MODEL_PRO, // Using PRO for better reasoning and schema adherence
+            contents: [{ parts: [{ text: `Generate ${currentBatchCount} unique, high-difficulty MPSC questions for ${examType} exam. Focus on ${focus}. Each question must have 4 options, a correct index, and a deep Marathi explanation.` }] }],
             config: {
               responseMimeType: "application/json",
               responseSchema: quizQuestionSchema,
-              systemInstruction: "You are a professional MPSC exam paper setter. Provide high-quality questions in Marathi only."
+              systemInstruction: "You are a senior MPSC paper setter. Use formal Marathi for GS and Grammar. Return ONLY valid JSON array."
             }
           });
       
           if (response.text) {
-            const batch = JSON.parse(response.text) as QuizQuestion[];
+            const cleaned = cleanJsonResponse(response.text);
+            const batch = JSON.parse(cleaned) as QuizQuestion[];
             allQuestions = [...allQuestions, ...batch];
           }
     } catch (err) {
-        console.error("Batch generation failed", err);
-        if (allQuestions.length > 0) break; // Return what we have so far
+        console.error("Batch generation error:", err);
+        if (allQuestions.length > 0) break; 
         throw err;
     }
   }
@@ -148,17 +156,18 @@ export const generateQuiz = async (subject: Subject, topic: string, difficulty: 
   const cached = await getFromCache<QuizQuestion[]>(key);
   if (cached) return { data: cached, fromCache: true };
   
+  const ai = getAIClient();
   const response = await ai.models.generateContent({
-    model: MODEL_FAST,
-    contents: `15 MCQs for ${subject}: ${topic} (${difficulty}).`,
+    model: MODEL_PRO,
+    contents: [{ parts: [{ text: `Generate 15 high-quality MPSC practice MCQs for ${subject}: ${topic} with ${difficulty} difficulty level in Marathi.` }] }],
     config: { 
         responseMimeType: "application/json",
-        responseSchema: quizQuestionSchema,
-        systemInstruction: "Generate high-yield MPSC practice questions in Marathi."
+        responseSchema: quizQuestionSchema
     }
   });
   
-  const data = JSON.parse(response.text);
+  const cleaned = cleanJsonResponse(response.text);
+  const data = JSON.parse(cleaned);
   await saveToCache(key, data);
   return { data, fromCache: false };
 };
@@ -168,16 +177,18 @@ export const generatePYQs = async (subject: Subject, year: string, examType: Exa
     const cached = await getFromCache<QuizQuestion[]>(key);
     if (cached) return { data: cached, fromCache: true };
   
+    const ai = getAIClient();
     const response = await ai.models.generateContent({
       model: MODEL_FAST,
-      contents: `MPSC ${examType} ${year} GS PYQs for ${subCategory}. 10 questions.`,
+      contents: [{ parts: [{ text: `Provide 10 real MPSC ${examType} General Studies PYQs from the year ${year} for the ${subCategory} section. Include detailed Marathi explanations.` }] }],
       config: { 
           responseMimeType: "application/json",
           responseSchema: quizQuestionSchema
       }
     });
     
-    const data = JSON.parse(response.text);
+    const cleaned = cleanJsonResponse(response.text);
+    const data = JSON.parse(cleaned);
     await saveToCache(key, data);
     return { data, fromCache: false };
 };
@@ -189,9 +200,10 @@ export const generateVocab = async (subject: Subject, category: VocabCategory, f
     if (cached) return { data: cached, fromCache: true };
   }
   
+  const ai = getAIClient();
   const response = await ai.models.generateContent({
     model: MODEL_FAST,
-    contents: `50 MPSC vocab for ${subject} ${category}.`,
+    contents: [{ parts: [{ text: `List 50 high-frequency MPSC vocabulary words for ${subject} under category ${category}. Provide meanings and usage in Marathi.` }] }],
     config: { 
         responseMimeType: "application/json",
         responseSchema: {
@@ -210,7 +222,8 @@ export const generateVocab = async (subject: Subject, category: VocabCategory, f
         }
     }
   });
-  const data = JSON.parse(response.text);
+  const cleaned = cleanJsonResponse(response.text);
+  const data = JSON.parse(cleaned);
   await saveToCache(key, data);
   return { data, fromCache: false };
 };
@@ -220,7 +233,11 @@ export const generateStudyNotes = async (subject: Subject, topic: string): Promi
   const cached = await getFromCache<string>(key);
   if (cached) return { data: cached, fromCache: true };
   
-  const response = await ai.models.generateContent({ model: MODEL_FAST, contents: `Exhaustive MPSC study notes for ${subject}: ${topic} in Marathi.` });
+  const ai = getAIClient();
+  const response = await ai.models.generateContent({ 
+    model: MODEL_FAST, 
+    contents: [{ parts: [{ text: `Create comprehensive MPSC study notes for ${subject} on the topic: ${topic}. Use Marathi, include bullet points and examples.` }] }]
+  });
   const data = response.text || "";
   if (data) await saveToCache(key, data);
   return { data, fromCache: false };
@@ -231,9 +248,10 @@ export const generateConciseExplanation = async (subject: Subject, rule: string)
     const cached = await getFromCache<RuleExplanation>(key);
     if (cached) return { data: cached, fromCache: true };
   
+    const ai = getAIClient();
     const response = await ai.models.generateContent({
       model: MODEL_FAST,
-      contents: `Explanation for MPSC ${subject} rule: ${rule}.`,
+      contents: [{ parts: [{ text: `Explain MPSC ${subject} rule: ${rule} in a concise format with examples.` }] }],
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -249,7 +267,8 @@ export const generateConciseExplanation = async (subject: Subject, rule: string)
       }
     });
   
-    const data = JSON.parse(response.text);
+    const cleaned = cleanJsonResponse(response.text);
+    const data = JSON.parse(cleaned);
     await saveToCache(key, data);
     return { data, fromCache: false };
 };
@@ -259,9 +278,10 @@ export const generateDescriptiveQA = async (topic: string): Promise<CachedRespon
     const cached = await getFromCache<DescriptiveQA>(key);
     if (cached) return { data: cached, fromCache: true };
   
+    const ai = getAIClient();
     const response = await ai.models.generateContent({
       model: MODEL_PRO,
-      contents: `Critically analyze: ${topic}.`,
+      contents: [{ parts: [{ text: `Critically analyze the literature topic: ${topic}. Formulate a descriptive question and a model answer for MPSC Mains.` }] }],
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -276,7 +296,8 @@ export const generateDescriptiveQA = async (topic: string): Promise<CachedRespon
       }
     });
   
-    const data = JSON.parse(response.text);
+    const cleaned = cleanJsonResponse(response.text);
+    const data = JSON.parse(cleaned);
     await saveToCache(key, data);
     return { data, fromCache: false };
 };
@@ -286,9 +307,10 @@ export const generateCurrentAffairs = async (category: string, language: string)
     const cached = await getFromCache<CurrentAffairItem[]>(key);
     if (cached) return { data: cached, fromCache: true };
   
+    const ai = getAIClient();
     const response = await ai.models.generateContent({
       model: MODEL_FAST,
-      contents: `6 news for ${category} in ${language}.`,
+      contents: [{ parts: [{ text: `List 6 most important current events for MPSC in ${language} under category ${category}. Focus on facts relevant to exams.` }] }],
       config: { 
           responseMimeType: "application/json",
           responseSchema: {
@@ -307,12 +329,14 @@ export const generateCurrentAffairs = async (category: string, language: string)
           }
       }
     });
-    const data = JSON.parse(response.text);
+    const cleaned = cleanJsonResponse(response.text);
+    const data = JSON.parse(cleaned);
     await saveToCache(key, data);
     return { data, fromCache: false };
 };
 
 export const playTextToSpeech = async (text: string): Promise<void> => {
+  const ai = getAIClient();
   const response = await ai.models.generateContent({
     model: MODEL_TTS,
     contents: [{ parts: [{ text }] }],
