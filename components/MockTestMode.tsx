@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { ExamType, LoadingState, QuizQuestion } from '../types';
+import { ExamType, LoadingState, QuizQuestion, SubjectFocus } from '../types';
 import { generateMockTest } from '../services/gemini';
-import { ShieldCheck, Timer, ArrowLeft, ArrowRight, CheckCircle2, AlertCircle, Loader2, Save, Send, Eye, Copy, Check } from 'lucide-react';
+import { ShieldCheck, Timer, ArrowLeft, ArrowRight, CheckCircle2, AlertCircle, Loader2, Save, Send, Eye, Copy, Check, Settings2, SlidersHorizontal, LayoutGrid } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 interface MockTestModeProps {
@@ -11,6 +11,8 @@ interface MockTestModeProps {
 
 export const MockTestMode: React.FC<MockTestModeProps> = ({ onBack }) => {
   const [examType, setExamType] = useState<ExamType>('RAJYASEVA');
+  const [questionCount, setQuestionCount] = useState(10);
+  const [subjectFocus, setSubjectFocus] = useState<SubjectFocus>('BALANCED');
   const [status, setStatus] = useState<LoadingState>('idle');
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -24,10 +26,13 @@ export const MockTestMode: React.FC<MockTestModeProps> = ({ onBack }) => {
   const startTest = async () => {
     setStatus('loading');
     try {
-      const data = await generateMockTest(examType);
+      // For Rajyaseva, force 100 questions. For combined, use custom count.
+      const actualCount = examType === 'RAJYASEVA' ? 100 : questionCount;
+      const data = await generateMockTest(examType, actualCount, subjectFocus);
       setQuestions(data);
       setUserAnswers(new Array(data.length).fill(-1));
-      setTimeLeft(examType === 'RAJYASEVA' ? 7200 : 3600); // 2 hours or 1 hour
+      // Base time: 72s per question (2 hours for 100, 12 mins for 10)
+      setTimeLeft(actualCount * 72); 
       setStatus('success');
       startTimer();
     } catch (e) {
@@ -106,14 +111,69 @@ export const MockTestMode: React.FC<MockTestModeProps> = ({ onBack }) => {
                 onClick={() => setExamType('GROUP_B')}
                 className={`p-6 rounded-2xl border-2 text-left transition-all ${examType === 'GROUP_B' ? 'border-indigo-600 bg-indigo-50 shadow-md' : 'border-slate-100 hover:border-slate-200'}`}
               >
-                <h3 className="font-black text-xl mb-2 text-indigo-900">Combined Quick Mock</h3>
+                <h3 className="font-black text-xl mb-2 text-indigo-900">Combined Mock</h3>
                 <ul className="text-sm text-slate-600 space-y-1">
-                  <li>• 10 Mixed Questions</li>
-                  <li>• Time: 15 Minutes (Practice Goal)</li>
+                  <li>• Dynamic Question Count</li>
+                  <li>• Flexible Subject Mix</li>
                   <li>• Marathi, English & GS</li>
                 </ul>
               </button>
             </div>
+
+            {/* Config Panel for Combined */}
+            {examType !== 'RAJYASEVA' && (
+              <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 space-y-6 animate-in slide-in-from-top-2">
+                 <div className="flex items-center gap-2 text-indigo-900 font-black text-sm uppercase tracking-widest mb-2">
+                    <Settings2 size={18} /> Test Configuration
+                 </div>
+                 
+                 <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                        <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                            <SlidersHorizontal size={14} /> Questions: <span className="text-indigo-600 text-lg">{questionCount}</span>
+                        </label>
+                    </div>
+                    <input 
+                        type="range" 
+                        min="10" 
+                        max="50" 
+                        step="10" 
+                        value={questionCount} 
+                        onChange={(e) => setQuestionCount(parseInt(e.target.value))}
+                        className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                    />
+                    <div className="flex justify-between text-[10px] font-bold text-slate-400 px-1">
+                        <span>10</span>
+                        <span>20</span>
+                        <span>30</span>
+                        <span>40</span>
+                        <span>50</span>
+                    </div>
+                 </div>
+
+                 <div className="space-y-3">
+                    <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                        <LayoutGrid size={14} /> Subject Focus
+                    </label>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        {[
+                            { id: 'BALANCED', label: 'Balanced' },
+                            { id: 'MARATHI_HEAVY', label: 'More Marathi' },
+                            { id: 'ENGLISH_HEAVY', label: 'More English' },
+                            { id: 'GS_HEAVY', label: 'More GS' }
+                        ].map(f => (
+                            <button
+                                key={f.id}
+                                onClick={() => setSubjectFocus(f.id as SubjectFocus)}
+                                className={`py-2 px-3 rounded-xl text-[10px] font-black uppercase transition-all border-2 ${subjectFocus === f.id ? 'bg-indigo-600 border-indigo-600 text-white shadow-md' : 'bg-white border-slate-200 text-slate-400 hover:border-indigo-300 hover:text-indigo-600'}`}
+                            >
+                                {f.label}
+                            </button>
+                        ))}
+                    </div>
+                 </div>
+              </div>
+            )}
 
             <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 flex gap-3">
               <AlertCircle className="text-amber-600 shrink-0" size={20} />
@@ -139,7 +199,8 @@ export const MockTestMode: React.FC<MockTestModeProps> = ({ onBack }) => {
       <div className="max-w-4xl mx-auto p-20 text-center">
         <Loader2 className="animate-spin h-16 w-16 text-indigo-600 mx-auto mb-6" />
         <h2 className="text-2xl font-black text-slate-800">Generating Exam Paper...</h2>
-        <p className="text-slate-500 mt-2">Crafting {examType === 'RAJYASEVA' ? '100 authentic' : '10 mixed'} questions for your practice.</p>
+        <p className="text-slate-500 mt-2">Crafting {examType === 'RAJYASEVA' ? '100 authentic' : questionCount} questions for your practice.</p>
+        <p className="text-slate-400 text-xs mt-1 italic">Please wait, AI is assembling the questions based on your config...</p>
       </div>
     );
   }
