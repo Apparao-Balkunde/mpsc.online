@@ -1,3 +1,4 @@
+
 export enum Subject {
   MARATHI = 'Marathi',
   ENGLISH = 'English',
@@ -12,10 +13,13 @@ export enum Mode {
   PYQ = 'PYQ',
   CURRENT_AFFAIRS = 'CURRENT_AFFAIRS',
   BOOKMARKS = 'BOOKMARKS',
-  LITERATURE = 'LITERATURE'
+  LITERATURE = 'LITERATURE',
+  MOCK_TEST = 'MOCK_TEST'
 }
 
 export type ExamType = 'ALL' | 'RAJYASEVA' | 'GROUP_B' | 'GROUP_C';
+
+export type GSSubCategory = 'ALL' | 'HISTORY' | 'GEOGRAPHY' | 'POLITY' | 'ECONOMICS' | 'SCIENCE' | 'ENVIRONMENT';
 
 export type VocabCategory = 'IDIOMS' | 'SYNONYMS' | 'ANTONYMS' | 'ONE_WORD';
 
@@ -26,20 +30,22 @@ export interface QuizQuestion {
   options: string[];
   correctAnswerIndex: number;
   explanation: string;
-  examSource?: string; // e.g. "MPSC Rajyaseva 2018"
+  examSource?: string;
+  subCategory?: string;
 }
 
 export interface QuizResult {
   total: number;
   correct: number;
-  answers: number[]; // Index of selected answers
+  answers: number[]; 
 }
 
 export interface VocabWord {
   word: string;
   meaning: string;
   usage: string;
-  type: string; // Noun, Verb, etc.
+  type: string; 
+  relatedWords?: string[]; 
 }
 
 export interface CurrentAffairItem {
@@ -51,7 +57,9 @@ export interface CurrentAffairItem {
 }
 
 export interface RuleExplanation {
-  rule: string;
+  definition: string;
+  importance: string;
+  nuances: string;
   examples: string[];
 }
 
