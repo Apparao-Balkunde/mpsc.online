@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { Subject, LoadingState, RuleExplanation } from '../types';
 import { generateStudyNotes, generateConciseExplanation, playTextToSpeech } from '../services/gemini';
@@ -18,155 +19,173 @@ interface TopicGroup {
 const GRAMMAR_STRUCTURE: Record<Subject, TopicGroup[]> = {
   [Subject.MARATHI]: [
     {
-      category: "१. वर्णविचार (Phonology & Alphabet)",
+      category: "१. वर्णविचार (Phonology & Alphabet) - Advanced",
       topics: [
-        "मराठी वर्णमाला: स्वर, स्वरादी, व्यंजन (Alphabet Classification)",
-        "वर्णांचे उच्चारस्थान (Places of Articulation)",
-        "जोडाक्षरे व लेखन पद्धती (Conjunct Consonants)",
-        "संधी: स्वरसंधी नियमावली (Vowel Sandhi Rules)",
-        "संधी: व्यंजनसंधी व विसर्गसंधी (Consonant & Visarga Sandhi)"
+        "मराठी वर्णमाला: स्वर, स्वरादी, व्यंजन (Alphabet Classification - Comprehensive)",
+        "वर्णांचे उच्चारस्थान (Places of Articulation - Detailed)",
+        "जोडाक्षरे व लेखन पद्धती (Conjunct Consonants - Advanced Rules)",
+        "संधी: स्वरसंधी नियमावली (Vowel Sandhi - Deep Dive)",
+        "संधी: व्यंजनसंधी व विसर्गसंधी (Consonant & Visarga Sandhi - Exceptions)",
+        "पर-सवर्ण संधी (Para-Savarna Sandhi Rules)"
       ]
     },
     {
       category: "२. नाम व नामाचे विकार (Nouns & Declension)",
       topics: [
-        "नाम: प्रकार (सामान्यनाम, विशेषनाम, भाववाचक नाम)",
-        "लिंग विचार: नियम व अपवाद (Gender Rules)",
-        "वचन विचार: नियम व अपवाद (Number Rules)",
-        "विभक्ती: प्रत्यय व कारकार्थ (Case & Case Relations)",
-        "सामान्यरूप: नियम व उदाहरणे (Normal Form of Nouns)"
+        "नाम: प्रकार (सामान्यनाम, विशेषनाम, भाववाचक नाम - Detailed)",
+        "भाववाचक नामांची विशेष कार्ये (Special Functions of Abstract Nouns)",
+        "लिंग विचार: नियम व महत्त्वाचे अपवाद (Gender Rules - MPSC Traps)",
+        "वचन विचार: नियम व महत्त्वाचे अपवाद (Number Rules - Collective Nouns)",
+        "विभक्ती: प्रत्यय व कारकार्थ (Case & Case Relations - Detailed Chart)",
+        "उपपदविभक्ती (Upapada Vibhakti Rules)",
+        "सामान्यरूप: नियम व महत्त्वाचे अपवाद (Normal Form - Exceptional Cases)"
       ]
     },
     {
       category: "३. सर्वनाम व विशेषण (Pronouns & Adjectives)",
       topics: [
-        "सर्वनाम: प्रकार व उपयोग (Pronoun Types)",
+        "सर्वनाम: प्रकार व उपयोग (Pronoun Types - Practical Context)",
+        "आत्मवाचक सर्वनामे (Reflexive Pronouns - Detailed)",
         "विशेषण: प्रकार (गुणवाचक, संख्यावाचक, सार्वनामिक)",
-        "विशेषणांचे उपयोग व तुलना (Usage of Adjectives)"
+        "साधित विशेषणे (Derived Adjectives: Noun/Verb based)",
+        "विशेषणांचे उपयोग व तुलना (Usage & Comparison nuances)"
       ]
     },
     {
-      category: "४. क्रियापद व काळ (Verbs & Tenses)",
+      category: "४. क्रियापद व काळ (Verbs & Tenses) - Mains Focus",
       topics: [
-        "क्रियापद: सकर्मक, अकर्मक, द्विकर्मक, उभयविध",
-        "सिद्ध व साधित क्रियापदे (Derived Verbs)",
-        "काळ: वर्तमान, भूत, भविष्य (Tenses & Sub-types)",
-        "आख्यात विकार व अर्थ (Moods: Imperative, etc.)"
+        "क्रियापद: सकर्मक, अकर्मक, द्विकर्मक, उभयविध (Deep Analysis)",
+        "सिद्ध व साधित क्रियापदे (Derived Verbs - Detailed)",
+        "संयुक्त क्रियापदे व सहाय्यक क्रियापदे (Compound & Auxiliary Verbs)",
+        "प्रयोजक व शक्य क्रियापदे (Causative & Potential Verbs)",
+        "काळ: वर्तमान, भूत, भविष्य (Tenses - 12 subtypes with examples)",
+        "आख्यात विकार व अर्थ (Moods: स्वार्थ, आज्ञार्थ, विध्यर्थ, संकेतार्थ)",
+        "क्रियापदांचे अर्थ: विध्यर्थाचे विविध उपयोग"
       ]
     },
     {
       category: "५. अव्यय विचार (Indeclinables)",
       topics: [
-        "क्रियाविशेषण अव्यय: प्रकार (Adverbs)",
-        "शब्दयोगी अव्यय: प्रकार व सामान्यरूप (Prepositions)",
-        "उभयान्वयी अव्यय (Conjunctions)",
-        "केवलप्रयोगी अव्यय (Interjections)"
+        "क्रियाविशेषण अव्यय: प्रकार व स्थान (Adverbs - Detailed)",
+        "शब्दयोगी अव्यय: प्रकार व सामान्यरूप (Prepositions - Nuances)",
+        "शुद्ध शब्दयोगी अव्यये (Pure Prepositions)",
+        "उभयान्वयी अव्यय (Conjunctions - Coordinating vs Subordinating)",
+        "केवलप्रयोगी अव्यय व उद्गारचिन्हांचा वापर (Interjections)"
       ]
     },
     {
-      category: "६. वाक्यरचना व प्रयोग (Syntax & Voice)",
+      category: "६. वाक्यरचना व प्रयोग (Syntax & Voice) - Critical",
       topics: [
-        "प्रयोग: कर्तरी, कर्मणी, भावे (Voice Analysis)",
-        "संकर प्रयोग (Hybrid Voice Types)",
-        "वाक्यप्रकार: विधानार्थी, प्रश्नार्थी, उद्गारार्थी",
-        "वाक्यसंश्लेषण (Sentence Synthesis)",
-        "वाक्यपृथक्करण (Sentence Analysis)"
+        "प्रयोग: कर्तरी, कर्मणी, भावे (Voice Analysis - Golden Rules)",
+        "कर्मणी प्रयोगाचे उपप्रकार (Sub-types of Karmani: Pradhan, Shaki, Samapti, etc.)",
+        "संकर प्रयोग: कर्तृ-कर्म संकर, कर्म-भाव संकर, कर्तृ-भाव संकर (Hybrid Voice)",
+        "वाक्यप्रकार: विधानार्थी, प्रश्नार्थी, उद्गारार्थी (Transformations)",
+        "वाक्यसंश्लेषण व वाक्यपृथक्करण (Sentence Synthesis & Analysis)",
+        "केवल, संयुक्त व मिश्र वाक्ये (Simple, Compound, Complex - Identification)"
       ]
     },
     {
-      category: "७. शब्दसिद्धी व समास (Word Formation)",
+      category: "७. शब्दसिद्धी व समास (Word Formation & Compounds)",
       topics: [
-        "समास: अव्ययीभाव, तत्पुरुष (Compounds)",
-        "समास: द्वंद्व, बहुव्रीही (Compounds)",
-        "शब्दसिद्धी: तत्सम, तद्भव, देशी शब्द",
-        "परभाषीय शब्द: कानडी, गुजराती, पोर्तुगीज, फारसी",
-        "उपसर्ग व प्रत्यय घटित शब्द"
+        "समास: अव्ययीभाव, तत्पुरुष (Compounds - Comprehensive)",
+        "तत्पुरुष समासाचे उपप्रकार (Vibhakti, Aluk, Upapada, Nan, Karmadharay, Dwigu)",
+        "समास: द्वंद्व, बहुव्रीही (Detailed Analysis)",
+        "शब्दसिद्धी: तत्सम, तद्भव, देशी शब्द (High-frequency list)",
+        "परभाषीय शब्द: कानडी, गुजराती, पोर्तुगीज, फारसी, अरबी",
+        "उपसर्ग व प्रत्यय घटित शब्द (Advanced rules)"
       ]
     },
     {
-      category: "८. वृत्त, अलंकार व रस (Poetics)",
+      category: "८. वृत्त, अलंकार व रस (Poetics) - Advanced",
       topics: [
-        "अलंकार: शब्दालंकार (यमक, अनुप्रास, श्लेष)",
-        "अलंकार: अर्थालंकार (उपमा, उत्प्रेक्षा, रूपक, इ.)",
-        "वृत्ते: अक्षरगणवृत्ते (भुजंगप्रयात, वसंततिलका)",
-        "वृत्ते: मात्रावृत्ते (दिंडी, आर्या)",
-        "काव्यरस: नवरस (The 9 Rasas)",
-        "शब्दशक्ती: अभिधा, लक्षणा, व्यंजना"
+        "अलंकार: शब्दालंकार (यमक, अनुप्रास, श्लेष - Deep Dive)",
+        "अलंकार: अर्थालंकार (उपमा, उत्प्रेक्षा, रूपक, व्यतिरेक, अनन्वय, इ.)",
+        "अलंकार: भ्रांतिमान, ससंदेह, अतिशयोक्ती, अर्थान्तरन्यास",
+        "वृत्ते: अक्षरगणवृत्ते (भुजंगप्रयात, वसंततिलका, शिखरिणी, इ.)",
+        "वृत्ते: मात्रावृत्ते (दिंडी, आर्या, नववधू)",
+        "काव्यरस: नवरस व स्थायी भाव (The 9 Rasas - Detailed)",
+        "शब्दशक्ती: अभिधा, लक्षणा, व्यंजना (Semantic Powers - Advanced)"
       ]
     },
     {
-      category: "९. लेखन नियम (Writing Rules)",
+      category: "९. लेखन नियम व शुद्धिपत्रक (Writing Rules)",
       topics: [
-        "शुद्धलेखनाचे नियम (Standard Spelling Rules)",
-        "विरामचिन्हे व त्यांचा वापर (Punctuation)"
+        "शुद्धलेखनाचे नवीन सुधारलेले नियम (Standard Orthography Rules)",
+        "विरामचिन्हे: नियम व अचूक वापर (Punctuation)",
+        "वाक्यशुद्धी: सामान्य चुका व सुधारणा (Sentence Correction)"
       ]
     }
   ],
   [Subject.ENGLISH]: [
     {
-      category: "1. Fundamentals & Parts of Speech",
+      category: "1. Fundamentals & Parts of Speech - Advanced",
       topics: [
-        "Articles: A, An, The (Definite & Indefinite Rules)",
-        "Nouns: Countable/Uncountable & Collective Nouns",
-        "Nouns: Number (Singular/Plural Tricks) & Gender",
-        "Pronouns: Personal, Relative, Reflexive Rules",
-        "Adjectives: Order, Position & confusing pairs (Little/Few)",
-        "Verbs: Transitive/Intransitive & State Verbs",
-        "Adverbs: Types, Placement & Inversion Rule"
+        "Articles: A, An, The (Specific Rules & Omission of Articles)",
+        "Nouns: Countable/Uncountable - Common Traps in MPSC",
+        "Nouns: Number (Singular/Plural) - Irregular & Foreign plurals",
+        "Pronouns: Relative Pronouns (Who, Whom, Whose, Which, That rules)",
+        "Pronouns: Antecedent Agreement & Case rules",
+        "Adjectives: Position, Order & Nuances (Little/A Little/The Little)",
+        "Verbs: Transitive/Intransitive & Linking Verbs",
+        "Adverbs: Placement, Inversion & Confusing Adverbs"
       ]
     },
     {
-      category: "2. Tenses & Time Expressions",
+      category: "2. Tenses & Time Expressions - Deep Dive",
       topics: [
-        "Present Tense: Simple, Continuous, Perfect, Perfect Continuous",
-        "Past Tense: Simple, Continuous, Perfect, Perfect Continuous",
-        "Future Tense: Will vs Going to, Future Perfect",
-        "Sequence of Tenses Rules",
-        "Conditional Sentences: Zero, 1st, 2nd, 3rd Conditionals"
+        "Present Tense: Perfect vs Perfect Continuous nuances",
+        "Past Tense: Simple Past vs Past Perfect (Timeline analysis)",
+        "Future Tense: Expressing future through Present Tenses",
+        "Sequence of Tenses: Rules for Indirect Speech & Complex sentences",
+        "Conditional Sentences: Zero, 1st, 2nd, 3rd and Mixed Conditionals"
       ]
     },
     {
-      category: "3. Syntax & Agreement",
+      category: "3. Syntax & Agreement (The 50 Golden Rules)",
       topics: [
-        "Subject-Verb Agreement (Concord): 20 Golden Rules",
-        "Non-Finite Verbs: Gerunds vs Infinitives",
-        "Participles: Present, Past & Dangling Participles",
-        "Modals: Usage of Can, Could, May, Might, Must",
-        "Causative Verbs: Make, Get, Have, Let",
-        "Subjunctive Mood (Wishes & Hypotheses)"
+        "Subject-Verb Agreement (Concord): Advanced Rules & Exceptions",
+        "Non-Finite Verbs: Gerunds vs Infinitives - Deep Dive",
+        "Verbs followed by specific Gerunds/Infinitives",
+        "Participles: Present, Past & Perfect Participles (Dangling errors)",
+        "Modals: Advanced shades of meaning (Could have, Must have, etc.)",
+        "Causative Verbs: Make, Get, Have, Let, Help nuances",
+        "The Subjunctive Mood: Wishes, Commands, Hypotheses"
       ]
     },
     {
-      category: "4. Sentence Transformations",
+      category: "4. Sentence Transformations - Mains Focus",
       topics: [
-        "Active & Passive Voice: All Tenses & Imperatives",
-        "Direct & Indirect Speech: Assertive, Interrogative, Exclamatory",
-        "Degrees of Comparison: Positive, Comparative, Superlative",
-        "Sentence Types: Simple, Compound, Complex Transformation",
-        "Question Tags: Rules & Exceptions",
-        "Remove 'Too' / Use 'So...That'"
+        "Active & Passive Voice: Advanced structures (Prepositional, Infinitives)",
+        "Passive of Intransitive Verbs & Double Object verbs",
+        "Direct & Indirect Speech: Changing Modals, Questions & Imperatives",
+        "Reported Speech in Narrative Contexts",
+        "Degrees of Comparison: Transformation with No other/Very few",
+        "Transformation: Simple, Compound, Complex (Advanced Connectors)",
+        "Question Tags: Negative/Positive & Imperative Tags"
       ]
     },
     {
-      category: "5. Clauses & Structure",
+      category: "5. Clauses, Structure & Style",
       topics: [
-        "Clauses: Noun Clause Identification",
-        "Clauses: Adjective (Relative) Clause Rules",
-        "Clauses: Adverb Clause Types (Time, Place, Reason)",
-        "Parallelism in Sentence Structure",
-        "Superfluous Expressions (Redundancy Errors)"
+        "Noun Clauses: Identification & Function",
+        "Adjective (Relative) Clauses: Defining vs Non-defining",
+        "Adverb Clauses: Reason, Result, Concession, Condition",
+        "Parallelism: Correlative Conjunctions & Listed items",
+        "Inversion: Adverbial Inversion (Hardly, Seldom, Never)",
+        "Cleft Sentences: It-clefts & Wh-clefts for emphasis",
+        "Superfluous Expressions & Redundancy (Common MPSC Errors)"
       ]
     },
     {
       category: "6. Vocabulary & Mechanics",
       topics: [
-        "Prepositions: Fixed Prepositions (Good at, Afraid of)",
-        "Prepositions: Time & Place (In/On/At rules)",
-        "Conjunctions: Coordinating vs Subordinating",
-        "Phrasal Verbs: High Frequency List",
-        "Spotting the Error: Top 50 Common Mistakes",
-        "Punctuation & Capitalization Rules",
-        "One Word Substitution Themes"
+        "Prepositions: Fixed Prepositions (Advanced Level)",
+        "Prepositions: Differences between similar ones (Among/Between, etc.)",
+        "Phrasal Verbs: The Top 200 MPSC Frequency List",
+        "Idioms & Phrases: Thematic Groups",
+        "Spotting the Error: Advanced Mixed Practice",
+        "Punctuation: Semicolon, Colon & Dash usage",
+        "One Word Substitution: Roots, Suffixes & Prefixes"
       ]
     }
   ],
@@ -174,7 +193,7 @@ const GRAMMAR_STRUCTURE: Record<Subject, TopicGroup[]> = {
     {
       category: "History & Culture (इतिहास)",
       topics: [
-        "Maharashtra: Social Reformers (Phule, Shahu, Ambedkar)",
+        "Maharashtra: Social Reformers (Phule, Shahu, Ambedkar - Detailed)",
         "Modern India: 1857 Revolt & Maharashtra's Contribution",
         "Maratha Empire: Administration, Forts, & Governance",
         "Samyukta Maharashtra Movement (संयुक्त महाराष्ट्र चळवळ)",
@@ -603,8 +622,8 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
                                <div className={`p-2 rounded-lg transition-colors ${openCategories[group.category] ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400 group-hover:text-slate-600'}`}>
                                   <Folder size={18} fill={openCategories[group.category] ? "currentColor" : "none"} />
                                </div>
-                               <div className="flex flex-col items-start">
-                                 <span className={openCategories[group.category] ? 'text-indigo-900' : 'text-slate-700'}>{group.category}</span>
+                               <div className="flex flex-col items-start text-left">
+                                 <span className={openCategories[group.category] ? 'text-indigo-900 font-bold' : 'text-slate-700'}>{group.category}</span>
                                  <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">
                                      {group.topics.length} Rules
                                  </span>
@@ -638,7 +657,7 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
                                             >
                                                 <div className="flex items-center gap-3">
                                                     <div className={`w-2 h-2 shrink-0 rounded-full transition-all ${isExpanded ? 'bg-indigo-500 scale-125' : (isViewed ? 'bg-green-500' : 'bg-slate-300 group-hover/item:bg-indigo-300')}`} />
-                                                    <span className={`text-sm font-medium transition-colors ${isExpanded ? 'text-indigo-800 font-bold' : (isViewed ? 'text-slate-800' : 'text-slate-600 group-hover/item:text-indigo-700')}`}>
+                                                    <span className={`text-sm font-medium transition-colors ${isExpanded ? 'text-indigo-800 font-bold' : (isViewed ? 'text-slate-800 font-bold' : 'text-slate-600 group-hover/item:text-indigo-700 font-semibold')}`}>
                                                         {ruleItem}
                                                     </span>
                                                 </div>
@@ -672,7 +691,7 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
                                                             {loadingExplanation && !ruleExplanations[ruleItem] ? (
                                                                 <div className="flex flex-col items-center justify-center py-8">
                                                                     <Loader2 size={24} className="animate-spin text-indigo-500 mb-2"/>
-                                                                    <p className="text-xs text-slate-500">Consulting AI Tutor...</p>
+                                                                    <p className="text-xs text-slate-500 font-bold">Consulting AI Tutor...</p>
                                                                 </div>
                                                             ) : (
                                                                 <div className="space-y-4">
@@ -681,7 +700,7 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
                                                                         <h5 className="text-xs font-bold text-indigo-900 uppercase tracking-wide mb-2 flex items-center gap-2">
                                                                             <Book size={14} className="text-indigo-600"/> Definition & Rule
                                                                         </h5>
-                                                                        <p className="text-slate-800 text-sm leading-relaxed font-medium">
+                                                                        <p className="text-slate-800 text-sm leading-relaxed font-bold">
                                                                             {ruleExplanations[ruleItem]?.definition || "Loading definition..."}
                                                                         </p>
                                                                     </div>
@@ -692,7 +711,7 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
                                                                             <h5 className="text-xs font-bold text-blue-800 uppercase tracking-wide mb-2 flex items-center gap-2">
                                                                                 <Target size={14} className="text-blue-600"/> MPSC Relevance
                                                                             </h5>
-                                                                            <p className="text-sm text-slate-700">
+                                                                            <p className="text-sm text-slate-700 font-semibold">
                                                                                 {ruleExplanations[ruleItem]?.importance}
                                                                             </p>
                                                                         </div>
@@ -702,7 +721,7 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
                                                                             <h5 className="text-xs font-bold text-purple-800 uppercase tracking-wide mb-2 flex items-center gap-2">
                                                                                 <AlertTriangle size={14} className="text-purple-600"/> Nuances & Exceptions
                                                                             </h5>
-                                                                            <p className="text-sm text-slate-700">
+                                                                            <p className="text-sm text-slate-700 font-semibold">
                                                                                 {ruleExplanations[ruleItem]?.nuances}
                                                                             </p>
                                                                         </div>
@@ -720,7 +739,7 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
                                                                                 <div className="bg-white text-amber-600 font-bold text-xs w-6 h-6 flex items-center justify-center rounded-full border border-amber-200 shrink-0 mt-0.5 shadow-sm">
                                                                                     {i + 1}
                                                                                 </div>
-                                                                                <p className="text-slate-800 text-sm leading-relaxed font-serif italic">
+                                                                                <p className="text-slate-800 text-sm leading-relaxed font-serif italic font-bold">
                                                                                     "{ex}"
                                                                                 </p>
                                                                             </div>
@@ -755,13 +774,13 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
       {status === 'loading' && (
         <div className="text-center py-12">
           <Loader2 className="animate-spin h-10 w-10 text-indigo-600 mx-auto mb-4" />
-          <p className="text-slate-600 animate-pulse font-medium">Consulting the expert knowledge base...</p>
-          <p className="text-slate-400 text-sm mt-1">Generating detailed {subject} notes for "{topic}"</p>
+          <p className="text-slate-600 animate-pulse font-bold">Consulting the expert knowledge base...</p>
+          <p className="text-slate-400 text-sm mt-1 font-semibold">Generating detailed {subject} notes for "{topic}"</p>
         </div>
       )}
 
       {status === 'error' && (
-        <div className="bg-red-50 text-red-700 p-4 rounded-lg border border-red-200 flex items-center justify-center">
+        <div className="bg-red-50 text-red-700 p-4 rounded-lg border border-red-200 flex items-center justify-center font-bold">
           <span>Unable to generate notes. Please check your connection and try again.</span>
         </div>
       )}
@@ -800,7 +819,7 @@ export const StudyMode: React.FC<StudyModeProps> = ({ initialSubject = Subject.M
                     {isSaved ? 'Saved!' : 'Save Notes'}
                 </button>
             </div>
-          <div className="p-6 prose prose-slate max-w-none prose-headings:text-indigo-800 prose-a:text-indigo-600 prose-strong:text-indigo-900 prose-code:bg-slate-100 prose-code:px-1 prose-code:rounded prose-code:text-pink-600">
+          <div className="p-6 prose prose-slate max-w-none prose-headings:text-indigo-800 prose-headings:font-bold prose-a:text-indigo-600 prose-strong:text-indigo-900 prose-code:bg-slate-100 prose-code:px-1 prose-code:rounded prose-code:text-pink-600">
             <ReactMarkdown>{notes}</ReactMarkdown>
           </div>
         </div>
