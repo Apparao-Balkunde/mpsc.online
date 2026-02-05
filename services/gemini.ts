@@ -12,7 +12,7 @@ const MODEL_FLASH = 'gemini-3-flash-preview';
 const MODEL_PRO = 'gemini-3-pro-preview';
 const MODEL_TTS = 'gemini-2.5-flash-preview-tts';
 
-const CACHE_VERSION = 'MPSC_V36_'; 
+const CACHE_VERSION = 'MPSC_V37_'; 
 const DB_NAME = 'MPSC_Sarathi_Storage';
 const STORE_NAME = 'question_bank';
 
@@ -44,7 +44,7 @@ const quizQuestionSchema = {
       correctAnswerIndex: { type: Type.INTEGER },
       explanation: { 
         type: Type.STRING, 
-        description: "Must be a single detailed paragraph in Marathi, strictly between 80 to 90 words. Focus on WHY the answer is correct using logic and context. NO grammar rules, definitions, or categories. Just pure explanatory text." 
+        description: "Must be a single detailed paragraph in Marathi, strictly between 80 to 90 words. Focus solely on WHY the answer is correct using logic and reasoning. STRICTLY NO grammar rules, technical definitions, or categories. Pure explanatory reasoning text." 
       },
       mnemonic: { 
         type: Type.STRING, 
@@ -58,7 +58,7 @@ const quizQuestionSchema = {
 
 const openDB = (): Promise<IDBDatabase> => {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, 7);
+    const request = indexedDB.open(DB_NAME, 8);
     request.onupgradeneeded = (e) => {
       const db = (e.target as IDBOpenDBRequest).result;
       if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME);
@@ -161,7 +161,7 @@ export const generateMockTest = async (examType: ExamType, totalCount: number = 
   for (let i = 0; i < iterations; i++) {
     const currentBatchCount = Math.min(batchSize, totalCount - allQuestions.length);
     if (currentBatchCount <= 0) break;
-    const prompt = `Generate ${currentBatchCount} MCQs for ${examType} exam. For EVERY question, write a Marathi explanation paragraph of exactly 80 to 90 words. Explain why the answer is correct based on logic/context. No grammar rules.`;
+    const prompt = `Generate ${currentBatchCount} MCQs for ${examType} exam. For EVERY question, write a Marathi explanation paragraph of exactly 80 to 90 words. Focus solely on reasoning and logic. NO grammar rules or categories. Pure reasoning.`;
     try {
       const batch = await generateWithFallback(prompt, quizQuestionSchema, MODEL_PRO);
       allQuestions = [...allQuestions, ...batch];
@@ -178,7 +178,7 @@ export const generateQuiz = async (subject: Subject, topic: string, difficulty: 
   const key = `${CACHE_VERSION}QUIZ_${subject}_${topic}_${difficulty}`;
   const cached = await getFromCache<QuizQuestion[]>(key);
   if (cached) return { data: cached, fromCache: true };
-  const prompt = `Generate 10 MCQs for ${subject}: ${topic}. Marathi explanations must be 80-90 words, focusing on reasoning, not technical rules.`;
+  const prompt = `Generate 10 MCQs for ${subject}: ${topic}. Marathi explanations must be strictly 80-90 words, focusing on reasoning and why the answer is correct without citing rules.`;
   const data = await generateWithFallback(prompt, quizQuestionSchema, MODEL_FLASH);
   await saveToCache(key, data);
   return { data, fromCache: false };
@@ -190,8 +190,8 @@ export const generatePYQs = async (subject: Subject, year: string, examType: Exa
     if (cached) return { data: cached, fromCache: true };
     
     const prompt = `Retrieve 10 authentic PYQs for ${subject} from MPSC ${examType} ${year}. Topic: ${subCategory}. 
-    STRICT INSTRUCTION: Provide a Marathi explanation of exactly 80 to 90 words per question. 
-    Focus on logic, history, or context. NO grammar rules or definitions. Pure reasoning.
+    STRICT INSTRUCTION: Provide a Marathi explanation paragraph of exactly 80 to 90 words per question. 
+    Focus on logic and context. NO grammar rules, definitions, or categories. Pure reasoning text.
     Include a short mnemonic.`;
     
     const data = await generateWithFallback(prompt, quizQuestionSchema, MODEL_FLASH);
@@ -234,7 +234,7 @@ export const generateStudyNotes = async (subject: Subject, topic: string): Promi
   const ai = getAIClient();
   const response = await ai.models.generateContent({ 
     model: MODEL_FLASH, 
-    contents: [{ parts: [{ text: `Comprehensive MPSC study notes for ${subject}: ${topic} in Marathi. Focus on clarity.` }] }]
+    contents: [{ parts: [{ text: `Detailed MPSC notes for ${subject}: ${topic} in Marathi. Focus on clarity and syllabus relevance.` }] }]
   });
   const data = response.text || "";
   if (data) await saveToCache(key, data);
@@ -245,7 +245,7 @@ export const generateConciseExplanation = async (subject: Subject, rule: string)
     const key = `${CACHE_VERSION}RULE_${subject}_${rule}`;
     const cached = await getFromCache<RuleExplanation>(key);
     if (cached) return { data: cached, fromCache: true };
-    const prompt = `Explain the logic behind ${rule} in Marathi for MPSC candidates.`;
+    const prompt = `Explain the concept logic of ${rule} in Marathi for MPSC candidates. Detailed but jargon-free.`;
     const schema = {
       type: Type.OBJECT,
       properties: {
@@ -265,7 +265,7 @@ export const generateDescriptiveQA = async (topic: string): Promise<CachedRespon
     const key = `${CACHE_VERSION}LIT_${topic}`;
     const cached = await getFromCache<DescriptiveQA>(key);
     if (cached) return { data: cached, fromCache: true };
-    const prompt = `Mains level answer for MPSC: "${topic}". Provide a model response of 500 words in Marathi.`;
+    const prompt = `Mains model response for: "${topic}". Provide a comprehensive response of 500 words in Marathi.`;
     const schema = {
       type: Type.OBJECT,
       properties: {
@@ -284,7 +284,7 @@ export const generateCurrentAffairs = async (category: string, language: string)
     const key = `${CACHE_VERSION}NEWS_${category}_${language}`;
     const cached = await getFromCache<CurrentAffairItem[]>(key);
     if (cached) return { data: cached, fromCache: true };
-    const prompt = `Retrieve latest 6 MPSC news items for ${category} in ${language}.`;
+    const prompt = `Latest 6 MPSC relevant news for ${category} in ${language}.`;
     const schema = {
       type: Type.ARRAY,
       items: {
