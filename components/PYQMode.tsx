@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Subject, LoadingState, QuizQuestion, ExamType } from '../types';
 import { generatePYQs } from '../services/gemini';
 import { getProgress, toggleQuestionBookmark } from '../services/progress';
-import { History, Search, Loader2, ArrowLeft, Eye, Bookmark, Info, Calendar, Filter, BookOpen, ShieldCheck, AlertCircle, Database, GraduationCap, Zap, BrainCircuit, Sparkles, BookA, Languages } from 'lucide-react';
+import { History, Search, Loader2, ArrowLeft, Eye, Bookmark, Info, Calendar, Filter, BookOpen, ShieldCheck, AlertCircle, Database, GraduationCap, Zap, BrainCircuit, Sparkles, BookA, Languages, ChevronDown, ChevronUp } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 interface PYQModeProps {
@@ -106,9 +106,9 @@ export const PYQMode: React.FC<PYQModeProps> = ({ initialExamType = 'ALL', onBac
                     <History className="text-yellow-400" size={40} />
                     PYQ Master Archive
                 </h2>
-                <p className="text-indigo-100 text-lg font-medium">Authentic Previous Year Records with Grammar Analysis</p>
+                <p className="text-indigo-100 text-lg font-medium">Authentic MPSC questions with deep context analysis.</p>
              </div>
-             {fromCache && <div className="bg-emerald-600/30 backdrop-blur-md text-white px-6 py-2 rounded-2xl text-[11px] font-black flex items-center gap-3 border border-emerald-400/30 shadow-2xl"><Database size={16}/> OFFLINE MODE ACTIVE</div>}
+             {fromCache && <div className="bg-emerald-600/30 backdrop-blur-md text-white px-6 py-2 rounded-2xl text-[11px] font-black flex items-center gap-3 border border-emerald-400/30 shadow-2xl"><Database size={16}/> LOCAL CACHE ACTIVE</div>}
           </div>
 
           <div className="flex flex-wrap gap-3 mt-10 relative z-10">
@@ -157,18 +157,7 @@ export const PYQMode: React.FC<PYQModeProps> = ({ initialExamType = 'ALL', onBac
              {status === 'loading' && (
                 <div className="text-center py-32">
                     <Loader2 className="animate-spin h-20 w-20 text-indigo-600 mx-auto mb-6" />
-                    <p className="text-slate-500 font-black uppercase tracking-widest text-xs">Decrypting Digital Records...</p>
-                    <div className="mt-8 bg-slate-200 h-1 rounded-full overflow-hidden max-w-xs mx-auto">
-                        <div className="bg-indigo-600 h-full animate-pulse w-2/3"></div>
-                    </div>
-                </div>
-             )}
-
-             {status === 'success' && questions.length === 0 && (
-                <div className="text-center py-32 opacity-30">
-                    <AlertCircle size={80} className="mx-auto mb-6 text-slate-400" />
-                    <p className="font-black text-2xl text-slate-600 uppercase">Archive Entry Not Found</p>
-                    <p className="text-slate-400 mt-2 font-bold">Try adjusting the filters or changing the year.</p>
+                    <p className="text-slate-500 font-black uppercase tracking-widest text-xs">Accessing Official MPSC Archives...</p>
                 </div>
              )}
 
@@ -178,13 +167,13 @@ export const PYQMode: React.FC<PYQModeProps> = ({ initialExamType = 'ALL', onBac
                         <div className="flex items-center gap-5">
                             <div className="w-14 h-14 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-black text-xl shadow-xl">{questions.length}</div>
                             <div>
-                                <h4 className="font-black text-slate-900 text-lg">Analysis Summary</h4>
+                                <h4 className="font-black text-slate-900 text-lg">Official Records Retrieved</h4>
                                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{subject} • {selectedYear} • {examType}</p>
                             </div>
                         </div>
                         <div className="relative w-full md:w-96 group">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors" size={20} />
-                            <input type="text" value={searchKeyword} onChange={(e) => setSearchKeyword(e.target.value)} placeholder="Search keywords in questions..." className="w-full py-4 pl-12 pr-6 bg-slate-50 border-2 border-transparent focus:border-indigo-500 rounded-2xl text-sm font-bold transition-all outline-none" />
+                            <input type="text" value={searchKeyword} onChange={(e) => setSearchKeyword(e.target.value)} placeholder="Filter keywords..." className="w-full py-4 pl-12 pr-6 bg-slate-50 border-2 border-transparent focus:border-indigo-500 rounded-2xl text-sm font-bold transition-all outline-none" />
                         </div>
                     </div>
                     
@@ -197,8 +186,7 @@ export const PYQMode: React.FC<PYQModeProps> = ({ initialExamType = 'ALL', onBac
                                         <span className="bg-slate-900 text-white w-14 h-14 rounded-[1.25rem] flex items-center justify-center font-black text-2xl shrink-0 shadow-2xl">{idx + 1}</span>
                                         <div>
                                             <div className="flex items-center gap-3 mb-2">
-                                                <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest bg-indigo-50 px-4 py-1.5 rounded-full border border-indigo-100">Official Record</span>
-                                                <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest bg-emerald-50 px-4 py-1.5 rounded-full border border-emerald-100">{q.subCategory || topic}</span>
+                                                <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest bg-indigo-50 px-4 py-1.5 rounded-full border border-indigo-100">Original {selectedYear} Paper</span>
                                             </div>
                                             <p className="text-2xl text-slate-900 font-bold leading-tight">{q.question}</p>
                                         </div>
@@ -210,8 +198,8 @@ export const PYQMode: React.FC<PYQModeProps> = ({ initialExamType = 'ALL', onBac
                                 
                                 <div className="ml-0 md:ml-22 grid grid-cols-1 md:grid-cols-2 gap-5 mb-12">
                                     {q.options.map((opt, oIdx) => (
-                                        <div key={oIdx} className="p-6 border-2 border-slate-50 rounded-3xl text-slate-800 text-lg bg-slate-50/50 font-bold flex items-center gap-4 group/opt hover:border-indigo-200 transition-all">
-                                            <span className="w-10 h-10 rounded-full bg-white border-2 border-slate-100 flex items-center justify-center text-[12px] font-black text-slate-400 shadow-sm shrink-0 group-hover/opt:bg-indigo-600 group-hover/opt:text-white group-hover/opt:border-indigo-600 transition-all">{String.fromCharCode(65 + oIdx)}</span>
+                                        <div key={oIdx} className="p-6 border-2 border-slate-50 rounded-3xl text-slate-800 text-lg bg-slate-50/50 font-bold flex items-center gap-4">
+                                            <span className="w-10 h-10 rounded-full bg-white border-2 border-slate-100 flex items-center justify-center text-[12px] font-black text-slate-400 shadow-sm shrink-0">{String.fromCharCode(65 + oIdx)}</span>
                                             {opt}
                                         </div>
                                     ))}
@@ -219,39 +207,36 @@ export const PYQMode: React.FC<PYQModeProps> = ({ initialExamType = 'ALL', onBac
                                 
                                 <div className="ml-0 md:ml-22 flex flex-col items-start gap-6">
                                     <button onClick={() => toggleReveal(idx)} className={`px-12 py-5 rounded-[1.5rem] text-sm font-black uppercase tracking-widest shadow-2xl transition-all flex items-center gap-3 ${revealedAnswers.includes(idx) ? 'bg-slate-900 text-white' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}>
-                                        {revealedAnswers.includes(idx) ? 'Close Analysis' : 'View Expert Review'}
-                                        {revealedAnswers.includes(idx) ? <ArrowLeft size={18} /> : <Eye size={18} />}
+                                        {revealedAnswers.includes(idx) ? 'Close Review' : 'Detailed MPSC Review (80-90 Words)'}
+                                        {revealedAnswers.includes(idx) ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                                     </button>
                                     
                                     {revealedAnswers.includes(idx) && (
                                         <div className="w-full mt-6 space-y-8 animate-in slide-in-from-top-6 duration-700">
                                             {q.mnemonic && (
-                                                <div className="bg-amber-100 p-10 rounded-[2.5rem] border-2 border-amber-200 flex items-start gap-6 shadow-xl relative overflow-hidden group/m">
-                                                    <div className="absolute -right-4 -bottom-4 opacity-5 group-hover/m:rotate-12 transition-transform">
-                                                        <BrainCircuit size={120} />
-                                                    </div>
-                                                    <div className="bg-amber-500 text-white p-4 rounded-2xl shadow-xl relative z-10"><BrainCircuit size={32} /></div>
-                                                    <div className="relative z-10">
-                                                        <h5 className="text-[11px] font-black text-amber-700 uppercase tracking-widest mb-2">Memory Hack (लक्षात ठेवण्याची क्लृप्ती)</h5>
-                                                        <p className="text-2xl font-black text-amber-950 italic leading-tight">"{q.mnemonic}"</p>
+                                                <div className="bg-amber-100 p-8 rounded-[2.5rem] border-2 border-amber-200 flex items-start gap-6 shadow-sm">
+                                                    <div className="bg-amber-500 text-white p-3 rounded-2xl shadow-xl shrink-0"><BrainCircuit size={28} /></div>
+                                                    <div>
+                                                        <h5 className="text-[10px] font-black text-amber-700 uppercase tracking-widest mb-1">Trick (लक्षात ठेवण्याची क्लृप्ती)</h5>
+                                                        <p className="text-xl font-black text-amber-950 italic">"{q.mnemonic}"</p>
                                                     </div>
                                                 </div>
                                             )}
                                             
-                                            <div className="bg-slate-950 p-14 rounded-[3.5rem] border border-slate-800 text-slate-100 relative shadow-2xl">
-                                                <div className="absolute top-0 right-0 p-14 opacity-5 pointer-events-none"><GraduationCap size={180} /></div>
-                                                <div className="flex items-center gap-4 mb-10 border-b border-slate-800 pb-10">
-                                                    <div className="bg-indigo-600 p-3 rounded-2xl shadow-xl"><Zap className="text-yellow-400" size={28} /></div>
+                                            <div className="bg-slate-950 p-12 rounded-[3.5rem] border border-slate-800 text-slate-100 relative shadow-2xl overflow-hidden">
+                                                <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none"><GraduationCap size={160} /></div>
+                                                <div className="flex items-center gap-4 mb-10 border-b border-slate-800 pb-8">
+                                                    <div className="bg-indigo-600 p-3 rounded-2xl shadow-xl"><Zap className="text-yellow-400" size={24} /></div>
                                                     <div>
-                                                        <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest">Professor's Academic Review</h4>
-                                                        <p className="text-xs text-indigo-400 font-bold uppercase tracking-tighter italic">"Deep Dive into the Rule & Context"</p>
+                                                        <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest">Syllabus-Linked Explanation</h4>
+                                                        <p className="text-xs text-indigo-400 font-bold uppercase tracking-tight italic">Detailed Analytical Summary</p>
                                                     </div>
                                                 </div>
-                                                <div className="prose prose-invert prose-headings:text-indigo-400 prose-headings:font-black prose-p:leading-loose prose-p:text-slate-300 prose-strong:text-indigo-300 max-w-none text-lg font-medium">
-                                                    <ReactMarkdown>{q.explanation}</ReactMarkdown>
+                                                <div className="text-slate-300 text-xl leading-[2.2] font-medium font-serif tracking-tight">
+                                                    {q.explanation}
                                                 </div>
                                                 <div className="mt-12 pt-8 border-t border-slate-900 flex items-center justify-between opacity-30">
-                                                    <span className="text-[10px] font-black uppercase tracking-widest">End of MPSC Master Archive Analysis</span>
+                                                    <span className="text-[10px] font-black uppercase tracking-widest">Archive Logic Analysis • MPSC Sarathi AI</span>
                                                     <ShieldCheck size={24} />
                                                 </div>
                                             </div>
