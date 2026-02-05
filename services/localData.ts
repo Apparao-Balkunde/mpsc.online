@@ -1,5 +1,5 @@
 
-import { QuizQuestion } from '../types';
+import { NoteResource, QuizQuestion } from '../types';
 
 export const STANDARD_RAJYASEVA_MOCK: QuizQuestion[] = [
   {
@@ -76,5 +76,177 @@ export const STANDARD_COMBINED_MOCK: QuizQuestion[] = [
     options: ["Committe", "Committee", "Comittee", "Commitee"],
     correctAnswerIndex: 1,
     explanation: "The correct spelling is 'Committee' (C-O-M-M-I-T-T-E-E)."
+  }
+];
+
+
+export const QUICK_NOTES_LIBRARY: NoteResource[] = [
+  {
+    id: 'gs-polity-1',
+    title: 'Indian Polity: Fundamental Rights Quick Revision',
+    subject: 'General Studies',
+    examType: 'RAJYASEVA',
+    description: 'Articles 12-35, key cases, and memory tricks.',
+    language: 'Bilingual',
+    tags: ['polity', 'rights', 'constitution', 'pyq'],
+    updatedOn: '2026-01-10',
+    notes: `• Article 14: Equality before law + equal protection of law.\n• Article 19: Six freedoms (speech, assembly, movement, residence, profession, association).\n• Article 21: Life and personal liberty (widest interpretation).\n• PYQ Tip: Article 32 = constitutional remedies (Dr. Ambedkar: heart and soul).`
+  },
+  {
+    id: 'marathi-grammar-1',
+    title: 'मराठी व्याकरण: संधी आणि समास झटपट नोट्स',
+    subject: 'Marathi',
+    examType: 'GROUP_B',
+    description: 'संधी, समास, अपवाद आणि PYQ trap points.',
+    language: 'Marathi',
+    tags: ['marathi', 'grammar', 'sandhi', 'samas'],
+    updatedOn: '2026-01-08',
+    notes: `• स्वर संधी: अ + अ = आ, इ + इ = ई (मुख्य नमुने लक्षात ठेवा).\n• व्यंजन संधीमध्ये उच्चार बदल PYQ मध्ये वारंवार विचारतात.\n• समास प्रकार: द्वंद्व, तत्पुरुष, बहुव्रीहि, अव्ययीभाव.\n• 80/20 नियम: मागील 10 वर्षांचे प्रश्न + नियमांचे अपवाद = जास्त गुण.`
+  },
+  {
+    id: 'english-vocab-1',
+    title: 'English Vocab Booster for MPSC (Synonyms/Antonyms)',
+    subject: 'English',
+    examType: 'GROUP_C',
+    description: 'High-frequency word list and sentence usage.',
+    language: 'English',
+    tags: ['vocab', 'synonyms', 'antonyms', 'english'],
+    updatedOn: '2026-01-12',
+    notes: `• Abandon = Forsake | opposite: Retain\n• Candid = Frank | opposite: Evasive\n• Diligent = Hardworking | opposite: Lazy\n• PYQ Pattern: 1 direct synonym + 1 spelling + 1 idiom in many papers.`
+  },
+  {
+    id: 'pyq-strategy-1',
+    title: 'PYQ Attempt Strategy: Rajyaseva + Combined',
+    subject: 'General',
+    examType: 'RAJYASEVA',
+    description: 'Time management and elimination method based on PYQ trend.',
+    language: 'Bilingual',
+    tags: ['strategy', 'pyq', 'time-management'],
+    updatedOn: '2026-01-15',
+    notes: `• Round 1 (35 min): फक्त खात्रीचे प्रश्न सोडवा.\n• Round 2 (40 min): elimination method वापरून 50-50 वाले प्रश्न.\n• Round 3 (10 min): marked questions + OMR re-check.\n• Weekly plan: 2 PYQ mocks + error notebook + revision within 24 hours.`
+  }
+];
+
+
+export const SECTION_WISE_PYQ_BANK: QuizQuestion[] = [
+  {
+    question: 'भारतीय राज्यघटनेतील मूलभूत कर्तव्ये कोणत्या भागात नमूद आहेत?',
+    options: ['भाग III', 'भाग IV', 'भाग IV-A', 'भाग V'],
+    correctAnswerIndex: 2,
+    explanation: 'मूलभूत कर्तव्ये भाग IV-A मध्ये (कलम 51A) आहेत.',
+    examType: 'RAJYASEVA',
+    stage: 'PRELIMS',
+    section: 'POLITY',
+    year: '2024',
+  },
+  {
+    question: '१९३२ च्या पुणे करारात कोणते दोन नेते प्रमुख होते?',
+    options: ['गांधी आणि नेहरू', 'गांधी आणि आंबेडकर', 'तिळक आणि गोखले', 'बोस आणि पटेल'],
+    correctAnswerIndex: 1,
+    explanation: 'पुणे करार महात्मा गांधी आणि डॉ. बाबासाहेब आंबेडकर यांच्यात झाला.',
+    examType: 'RAJYASEVA',
+    stage: 'PRELIMS',
+    section: 'HISTORY',
+    year: '2023',
+  },
+  {
+    question: 'राज्यसभा सदस्याचा कार्यकाळ किती असतो?',
+    options: ['4 वर्षे', '5 वर्षे', '6 वर्षे', '7 वर्षे'],
+    correctAnswerIndex: 2,
+    explanation: 'राज्यसभा सदस्याचा कार्यकाळ 6 वर्षांचा असतो.',
+    examType: 'RAJYASEVA',
+    stage: 'MAINS',
+    section: 'POLITY',
+    year: '2022',
+  },
+  {
+    question: 'मान्सूनपूर्व पावसाचा महाराष्ट्रातील शेतीवर होणारा परिणाम स्पष्ट करा.',
+    options: ['कमी परिणाम', 'फक्त बागायतीवर परिणाम', 'पेरणी नियोजनासाठी महत्त्वाचा', 'हिवाळी पिकांवरच परिणाम'],
+    correctAnswerIndex: 2,
+    explanation: 'मान्सूनपूर्व पाऊस पेरणीचे वेळापत्रक, मृदा आर्द्रता आणि बियाणे निवड यावर परिणाम करतो.',
+    examType: 'RAJYASEVA',
+    stage: 'MAINS',
+    section: 'GEOGRAPHY',
+    year: '2021',
+  },
+  {
+    question: 'महागाई मोजण्यासाठी खालीलपैकी कोणता निर्देशांक सर्वाधिक वापरला जातो?',
+    options: ['HDI', 'CPI', 'IIP', 'GDI'],
+    correctAnswerIndex: 1,
+    explanation: 'ग्राहक किंमत निर्देशांक (CPI) हा महागाई मोजण्यासाठी प्रमुख निर्देशांक आहे.',
+    examType: 'GROUP_B',
+    stage: 'PRELIMS',
+    section: 'ECONOMICS',
+    year: '2024',
+  },
+  {
+    question: 'मराठा साम्राज्यात ‘अष्टप्रधान मंडळा’तील परराष्ट्र विषय पाहणारा पदाधिकारी कोण?',
+    options: ['पेशवा', 'अमात्य', 'सुमंत', 'सेनापती'],
+    correctAnswerIndex: 2,
+    explanation: 'सुमंत हा परराष्ट्र व्यवहार पाहणारा मंत्री होता.',
+    examType: 'GROUP_B',
+    stage: 'PRELIMS',
+    section: 'HISTORY',
+    year: '2023',
+  },
+  {
+    question: 'वित्त आयोग आणि नियोजन प्रक्रियेतील फरक स्पष्ट करा.',
+    options: ['दोन्ही सारखेच', 'फक्त राज्यांसाठी', 'घटनात्मक व गैर-घटनात्मक भूमिकेत फरक', 'फक्त करसंकलनासाठी'],
+    correctAnswerIndex: 2,
+    explanation: 'वित्त आयोग घटनात्मक संस्था आहे; नियोजन प्रक्रिया कार्यकारी/धोरणात्मक स्वरूपाची आहे.',
+    examType: 'GROUP_B',
+    stage: 'MAINS',
+    section: 'ECONOMICS',
+    year: '2022',
+  },
+  {
+    question: 'खालीलपैकी कोणती वाक्यरचना शुद्ध आहे?',
+    options: ['तो शाळेत गेली.', 'ती शाळेत गेला.', 'तो शाळेत गेला.', 'ते शाळेत गेली.'],
+    correctAnswerIndex: 2,
+    explanation: 'कर्ता आणि क्रियापद यांचा लिंग-वचनानुसार सुसंगत वापर “तो शाळेत गेला” हा शुद्ध आहे.',
+    examType: 'GROUP_B',
+    stage: 'MAINS',
+    section: 'MARATHI',
+    year: '2021',
+  },
+  {
+    question: 'पृथ्वीच्या वातावरणातील सर्वाधिक प्रमाणात असलेली वायू कोणती?',
+    options: ['ऑक्सिजन', 'हायड्रोजन', 'नायट्रोजन', 'कार्बन डायऑक्साइड'],
+    correctAnswerIndex: 2,
+    explanation: 'वातावरणात नायट्रोजन सुमारे 78% प्रमाणात असते.',
+    examType: 'GROUP_C',
+    stage: 'PRELIMS',
+    section: 'SCIENCE',
+    year: '2024',
+  },
+  {
+    question: '“Synonym” of the word “Rapid” is:',
+    options: ['Slow', 'Swift', 'Rough', 'Late'],
+    correctAnswerIndex: 1,
+    explanation: 'Rapid means fast; Swift is the correct synonym.',
+    examType: 'GROUP_C',
+    stage: 'PRELIMS',
+    section: 'ENGLISH',
+    year: '2023',
+  },
+  {
+    question: 'महाराष्ट्रातील दुष्काळ व्यवस्थापनात जलसंधारणाचे महत्त्व स्पष्ट करा.',
+    options: ['महत्त्व नाही', 'फक्त शहरी भागासाठी', 'पाणीसाठा व भूजल पुनर्भरणासाठी अत्यावश्यक', 'फक्त औद्योगिक वापरासाठी'],
+    correctAnswerIndex: 2,
+    explanation: 'जलसंधारणामुळे पाणीसाठा वाढतो, भूजल पुनर्भरण होते आणि शेतीला स्थैर्य मिळते.',
+    examType: 'GROUP_C',
+    stage: 'MAINS',
+    section: 'GEOGRAPHY',
+    year: '2022',
+  },
+  {
+    question: 'भारताचे नियंत्रक व महालेखा परीक्षक (CAG) कोण नियुक्त करतो?',
+    options: ['पंतप्रधान', 'राष्ट्रपती', 'लोकसभा अध्यक्ष', 'सर्वोच्च न्यायालय'],
+    correctAnswerIndex: 1,
+    explanation: 'CAG ची नियुक्ती भारताचे राष्ट्रपती करतात.',
+    examType: 'GROUP_C',
+    stage: 'MAINS',
+    section: 'POLITY',
+    year: '2021',
   }
 ];
