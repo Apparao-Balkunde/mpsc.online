@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { BookOpen, GraduationCap, History, Newspaper, BookA, Bookmark, PenTool, Database, Trash2, Check, RefreshCw } from 'lucide-react';
+import { BookOpen, GraduationCap, History, Newspaper, BookA, Bookmark, PenTool, Trash2, Check, RefreshCw, NotebookText } from 'lucide-react';
 import { Mode } from '../types';
 import { clearAllCache } from '../services/gemini';
 
@@ -56,6 +56,12 @@ export const Header: React.FC<HeaderProps> = ({ currentMode, onNavigate }) => {
             className={`hover:text-yellow-300 transition flex items-center gap-1 ${currentMode === Mode.LITERATURE ? 'text-yellow-300 font-bold' : 'text-indigo-100'}`}
           >
             <PenTool size={14} /> Lit. Practice
+          </button>
+          <button 
+             onClick={() => onNavigate(Mode.NOTES)}
+            className={`hover:text-yellow-300 transition flex items-center gap-1 ${currentMode === Mode.NOTES ? 'text-yellow-300 font-bold' : 'text-indigo-100'}`}
+          >
+            <NotebookText size={16} /> Notes
           </button>
           <button 
              onClick={() => onNavigate(Mode.VOCAB)}

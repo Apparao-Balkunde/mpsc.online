@@ -1,5 +1,5 @@
 
-import { QuizQuestion } from '../types';
+import { NoteResource, QuizQuestion } from '../types';
 
 export const STANDARD_RAJYASEVA_MOCK: QuizQuestion[] = [
   {
@@ -76,5 +76,53 @@ export const STANDARD_COMBINED_MOCK: QuizQuestion[] = [
     options: ["Committe", "Committee", "Comittee", "Commitee"],
     correctAnswerIndex: 1,
     explanation: "The correct spelling is 'Committee' (C-O-M-M-I-T-T-E-E)."
+  }
+];
+
+
+export const QUICK_NOTES_LIBRARY: NoteResource[] = [
+  {
+    id: 'gs-polity-1',
+    title: 'Indian Polity: Fundamental Rights Quick Revision',
+    subject: 'General Studies',
+    examType: 'RAJYASEVA',
+    description: 'Articles 12-35, key cases, and memory tricks.',
+    language: 'Bilingual',
+    tags: ['polity', 'rights', 'constitution', 'pyq'],
+    updatedOn: '2026-01-10',
+    notes: `• Article 14: Equality before law + equal protection of law.\n• Article 19: Six freedoms (speech, assembly, movement, residence, profession, association).\n• Article 21: Life and personal liberty (widest interpretation).\n• PYQ Tip: Article 32 = constitutional remedies (Dr. Ambedkar: heart and soul).`
+  },
+  {
+    id: 'marathi-grammar-1',
+    title: 'मराठी व्याकरण: संधी आणि समास झटपट नोट्स',
+    subject: 'Marathi',
+    examType: 'GROUP_B',
+    description: 'संधी, समास, अपवाद आणि PYQ trap points.',
+    language: 'Marathi',
+    tags: ['marathi', 'grammar', 'sandhi', 'samas'],
+    updatedOn: '2026-01-08',
+    notes: `• स्वर संधी: अ + अ = आ, इ + इ = ई (मुख्य नमुने लक्षात ठेवा).\n• व्यंजन संधीमध्ये उच्चार बदल PYQ मध्ये वारंवार विचारतात.\n• समास प्रकार: द्वंद्व, तत्पुरुष, बहुव्रीहि, अव्ययीभाव.\n• 80/20 नियम: मागील 10 वर्षांचे प्रश्न + नियमांचे अपवाद = जास्त गुण.`
+  },
+  {
+    id: 'english-vocab-1',
+    title: 'English Vocab Booster for MPSC (Synonyms/Antonyms)',
+    subject: 'English',
+    examType: 'GROUP_C',
+    description: 'High-frequency word list and sentence usage.',
+    language: 'English',
+    tags: ['vocab', 'synonyms', 'antonyms', 'english'],
+    updatedOn: '2026-01-12',
+    notes: `• Abandon = Forsake | opposite: Retain\n• Candid = Frank | opposite: Evasive\n• Diligent = Hardworking | opposite: Lazy\n• PYQ Pattern: 1 direct synonym + 1 spelling + 1 idiom in many papers.`
+  },
+  {
+    id: 'pyq-strategy-1',
+    title: 'PYQ Attempt Strategy: Rajyaseva + Combined',
+    subject: 'General',
+    examType: 'RAJYASEVA',
+    description: 'Time management and elimination method based on PYQ trend.',
+    language: 'Bilingual',
+    tags: ['strategy', 'pyq', 'time-management'],
+    updatedOn: '2026-01-15',
+    notes: `• Round 1 (35 min): फक्त खात्रीचे प्रश्न सोडवा.\n• Round 2 (40 min): elimination method वापरून 50-50 वाले प्रश्न.\n• Round 3 (10 min): marked questions + OMR re-check.\n• Weekly plan: 2 PYQ mocks + error notebook + revision within 24 hours.`
   }
 ];

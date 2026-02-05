@@ -7,6 +7,7 @@ export enum Subject {
 
 export enum Mode {
   HOME = 'HOME',
+  NOTES = 'NOTES',
   STUDY = 'STUDY',
   QUIZ = 'QUIZ',
   VOCAB = 'VOCAB',
@@ -81,6 +82,18 @@ export interface QuizResultRecord {
 export interface UserProgress {
   studyTopicsViewed: string[];
   quizzesCompleted: QuizResultRecord[];
+}
+
+export interface NoteResource {
+  id: string;
+  title: string;
+  subject: Subject | 'General';
+  examType: ExamType;
+  description: string;
+  language: 'Marathi' | 'English' | 'Bilingual';
+  tags: string[];
+  updatedOn: string;
+  notes: string;
 }
 
 export type LoadingState = 'idle' | 'loading' | 'success' | 'error';

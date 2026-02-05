@@ -9,9 +9,10 @@ import { VocabMode } from './components/VocabMode';
 import { BookmarksMode } from './components/BookmarksMode';
 import { LiteratureMode } from './components/LiteratureMode';
 import { MockTestMode } from './components/MockTestMode';
+import { NotesMode } from './components/NotesMode';
 import { Subject, Mode, UserProgress, ExamType } from './types';
 import { getProgress } from './services/progress';
-import { BookOpen, BrainCircuit, Languages, History, Newspaper, ArrowRight as ArrowIcon, BookA, Bookmark, PenTool, TrendingUp, CheckCircle2, PieChart, Globe, ShieldCheck } from 'lucide-react';
+import { BookOpen, BrainCircuit, Languages, History, Newspaper, ArrowRight as ArrowIcon, BookA, Bookmark, PenTool, TrendingUp, CheckCircle2, PieChart, Globe, ShieldCheck, NotebookText } from 'lucide-react';
 
 const App: React.FC = () => {
   const [mode, setMode] = useState<Mode>(Mode.HOME);
@@ -159,6 +160,19 @@ const App: React.FC = () => {
              </button>
           </div>
 
+          <div className="bg-cyan-900 rounded-2xl p-6 text-white flex flex-col justify-between shadow-xl relative overflow-hidden">
+             <div className="absolute top-0 right-0 opacity-10"><NotebookText size={140} /></div>
+             <div className="relative z-10">
+                <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
+                    <NotebookText className="text-cyan-300" /> Notes
+                </h3>
+                <p className="text-cyan-100 text-sm mb-6">PYQ-linked quick revision notes.</p>
+             </div>
+             <button onClick={() => setMode(Mode.NOTES)} className="relative z-10 bg-cyan-400 text-cyan-950 px-4 py-2 rounded-lg font-bold hover:bg-cyan-300 transition-all shadow-lg flex items-center justify-center gap-2 w-full text-sm">
+                Open Notes Bank <ArrowIcon size={16} />
+             </button>
+          </div>
+
           <div className="bg-purple-900 rounded-2xl p-6 text-white flex flex-col justify-between shadow-xl relative overflow-hidden">
              <div className="absolute top-0 right-0 opacity-10"><BookA size={140} /></div>
              <div className="relative z-10">
@@ -222,6 +236,10 @@ const App: React.FC = () => {
 
         {mode === Mode.CURRENT_AFFAIRS && (
             <CurrentAffairsMode onBack={() => navigate(Mode.HOME)} />
+        )}
+
+        {mode === Mode.NOTES && (
+            <NotesMode onBack={() => navigate(Mode.HOME)} />
         )}
 
         {mode === Mode.VOCAB && (
