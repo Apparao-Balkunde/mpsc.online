@@ -12,7 +12,7 @@ const MODEL_FLASH = 'gemini-3-flash-preview';
 const MODEL_PRO = 'gemini-3-pro-preview';
 const MODEL_TTS = 'gemini-2.5-flash-preview-tts';
 
-const CACHE_VERSION = 'MPSC_V32_'; 
+const CACHE_VERSION = 'MPSC_V34_'; 
 const DB_NAME = 'MPSC_Sarathi_Storage';
 const STORE_NAME = 'question_bank';
 
@@ -44,11 +44,11 @@ const quizQuestionSchema = {
       correctAnswerIndex: { type: Type.INTEGER },
       explanation: { 
         type: Type.STRING, 
-        description: "Must be a long, engaging Marathi teaching note. Break into: ### १. संदर्भासहित विश्लेषण, ### २. व्याकरणाचे नियम (Grammar Rules), ### ३. परीक्षेसाठी टीप." 
+        description: "Strictly Simple! Format: **अर्थ:** [Meaning], **समानार्थी:** [Synonyms], **विरुद्धार्थी:** [Antonyms]. No long rules." 
       },
       mnemonic: { 
         type: Type.STRING, 
-        description: "A short 'Memory Trick' or 'Mnemonic' in Marathi to remember this rule forever."
+        description: "A very short 'Memory Trick' to remember this."
       },
       subCategory: { type: Type.STRING }
     },
@@ -128,7 +128,7 @@ async function generateWithFallback(prompt: string, schema: any, modelPreference
         config: {
           responseMimeType: "application/json",
           responseSchema: schema,
-          temperature: 0.9,
+          temperature: 0.8,
           safetySettings: [
             { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
             { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
@@ -161,7 +161,7 @@ export const generateMockTest = async (examType: ExamType, totalCount: number = 
   for (let i = 0; i < iterations; i++) {
     const currentBatchCount = Math.min(batchSize, totalCount - allQuestions.length);
     if (currentBatchCount <= 0) break;
-    const prompt = `Generate ${currentBatchCount} MCQs for ${examType}. Focus: ${focus}. Language: Marathi. EXPLANATIONS MUST BE VERY LONG AND DETAILED. Always include a clever 'Mnemonic' in Marathi.`;
+    const prompt = `Generate ${currentBatchCount} MCQs for ${examType}. Focus on Marathi/English vocabulary synonyms and antonyms. Simple explanations.`;
     try {
       const batch = await generateWithFallback(prompt, quizQuestionSchema, MODEL_PRO);
       allQuestions = [...allQuestions, ...batch];
@@ -178,7 +178,7 @@ export const generateQuiz = async (subject: Subject, topic: string, difficulty: 
   const key = `${CACHE_VERSION}QUIZ_${subject}_${topic}_${difficulty}`;
   const cached = await getFromCache<QuizQuestion[]>(key);
   if (cached) return { data: cached, fromCache: true };
-  const prompt = `Generate 10 MCQs for ${subject}: ${topic}. Difficulty: ${difficulty}. Language: Marathi. Give very detailed solutions with grammar-focused mnemonic tricks.`;
+  const prompt = `Generate 10 MCQs for ${subject}: ${topic}. Use SIMPLE explanations focusing on meanings and synonyms.`;
   const data = await generateWithFallback(prompt, quizQuestionSchema, MODEL_FLASH);
   await saveToCache(key, data);
   return { data, fromCache: false };
@@ -191,14 +191,14 @@ export const generatePYQs = async (subject: Subject, year: string, examType: Exa
     
     let subjectSpecificInstruction = "";
     if (subject === Subject.MARATHI || subject === Subject.ENGLISH) {
-        subjectSpecificInstruction = "FOR GRAMMAR QUESTIONS: YOU MUST IDENTIFY THE CORE RULE (e.g., Prayog, Tense, Clause). Explain the rule logic, identifying keywords, and common mistakes students make. Use professional Marathi for explanations.";
+        subjectSpecificInstruction = "FOR EXPLANATION: Keep it strictly brief. Only provide: 1. Word Meaning (शब्दाचा अर्थ), 2. Synonyms (समानार्थी), 3. Antonyms (विरुद्धार्थी). Use bullet points. Do not explain grammar rules.";
     } else {
-        subjectSpecificInstruction = "FOR GS QUESTIONS: Provide historical/scientific context, explain the 'Examiner's Mindset' (why this news was relevant that year), and related facts.";
+        subjectSpecificInstruction = "Provide 3 core bullet points about the fact.";
     }
 
-    const prompt = `Retrieve 10 authentic Previous Year Questions (PYQs) for ${subject} from MPSC ${examType} exam ${year}. Topic/Section: ${subCategory}. 
+    const prompt = `Retrieve 10 PYQs for ${subject} from MPSC ${examType} ${year}. Topic: ${subCategory}. 
     ${subjectSpecificInstruction}
-    Always provide a 'Memory Trick' (Mnemonic) in Marathi for every question.`;
+    Include a short memory trick (mnemonic).`;
     
     const data = await generateWithFallback(prompt, quizQuestionSchema, MODEL_FLASH);
     await saveToCache(key, data);
@@ -211,7 +211,7 @@ export const generateVocab = async (subject: Subject, category: VocabCategory, f
     const cached = await getFromCache<VocabWord[]>(key);
     if (cached) return { data: cached, fromCache: true };
   }
-  const prompt = `Create a list of 20 high-frequency vocab words for MPSC ${subject}. Category: ${category}. Include meanings and sentence usage in Marathi.`;
+  const prompt = `20 MPSC words for ${subject} (${category}). Format: word, meaning, usage, synonyms, antonyms. No rules.`;
   const schema = {
     type: Type.ARRAY,
     items: {
@@ -221,9 +221,11 @@ export const generateVocab = async (subject: Subject, category: VocabCategory, f
         meaning: { type: Type.STRING },
         usage: { type: Type.STRING },
         type: { type: Type.STRING },
+        synonyms: { type: Type.ARRAY, items: { type: Type.STRING } },
+        antonyms: { type: Type.ARRAY, items: { type: Type.STRING } },
         relatedWords: { type: Type.ARRAY, items: { type: Type.STRING } }
       },
-      required: ["word", "meaning", "usage", "type"]
+      required: ["word", "meaning", "usage", "type", "synonyms", "antonyms"]
     }
   };
   const data = await generateWithFallback(prompt, schema, MODEL_FLASH);
@@ -238,7 +240,7 @@ export const generateStudyNotes = async (subject: Subject, topic: string): Promi
   const ai = getAIClient();
   const response = await ai.models.generateContent({ 
     model: MODEL_FLASH, 
-    contents: [{ parts: [{ text: `Create a comprehensive study guide for ${subject}: ${topic} in Marathi. Break it into Introduction, Key Concepts, Timeline, and Exam Tips.` }] }]
+    contents: [{ parts: [{ text: `Study guide for ${subject}: ${topic} in Marathi. Concise points only.` }] }]
   });
   const data = response.text || "";
   if (data) await saveToCache(key, data);
@@ -249,7 +251,7 @@ export const generateConciseExplanation = async (subject: Subject, rule: string)
     const key = `${CACHE_VERSION}RULE_${subject}_${rule}`;
     const cached = await getFromCache<RuleExplanation>(key);
     if (cached) return { data: cached, fromCache: true };
-    const prompt = `Explain the MPSC concept: "${rule}". Provide definition, importance, and examples in Marathi.`;
+    const prompt = `Short explanation of ${rule}. Definition and 2 examples.`;
     const schema = {
       type: Type.OBJECT,
       properties: {
@@ -269,7 +271,7 @@ export const generateDescriptiveQA = async (topic: string): Promise<CachedRespon
     const key = `${CACHE_VERSION}LIT_${topic}`;
     const cached = await getFromCache<DescriptiveQA>(key);
     if (cached) return { data: cached, fromCache: true };
-    const prompt = `Write a descriptive Mains answer on: "${topic}". Include model answer and evaluation points.`;
+    const prompt = `Mains answer for: "${topic}". Model points only.`;
     const schema = {
       type: Type.OBJECT,
       properties: {
@@ -288,7 +290,7 @@ export const generateCurrentAffairs = async (category: string, language: string)
     const key = `${CACHE_VERSION}NEWS_${category}_${language}`;
     const cached = await getFromCache<CurrentAffairItem[]>(key);
     if (cached) return { data: cached, fromCache: true };
-    const prompt = `List 6 highly relevant MPSC news items for ${category} in ${language}.`;
+    const prompt = `Latest 6 MPSC news for ${category} in ${language}.`;
     const schema = {
       type: Type.ARRAY,
       items: {
