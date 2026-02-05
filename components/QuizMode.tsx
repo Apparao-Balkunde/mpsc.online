@@ -1,15 +1,14 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Subject, LoadingState, QuizQuestion, DifficultyLevel, GSSubCategory } from '../types';
 import { generateQuiz } from '../services/gemini';
 import { saveQuizResult } from '../services/progress';
 import { HelpCircle, CheckCircle2, XCircle, Loader2, ArrowLeft, RefreshCcw, Sparkles, Search, Play, Download, Info, Eye, EyeOff, Gauge, LayoutGrid, Database, AlertTriangle, Zap, BookOpen } from 'lucide-react';
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
 import ReactMarkdown from 'react-markdown';
 
 interface QuizModeProps {
   initialSubject?: Subject;
+  initialTopic?: string;
   onBack: () => void;
 }
 
@@ -19,9 +18,9 @@ const SUGGESTED_TOPICS: Record<Subject, string[]> = {
   [Subject.GS]: ["Fundamental Rights", "Maharashtra Rivers", "Governor Generals", "GST & Budget"]
 };
 
-export const QuizMode: React.FC<QuizModeProps> = ({ initialSubject = Subject.MARATHI, onBack }) => {
+export const QuizMode: React.FC<QuizModeProps> = ({ initialSubject = Subject.MARATHI, initialTopic = '', onBack }) => {
   const [subject, setSubject] = useState<Subject>(initialSubject);
-  const [topic, setTopic] = useState('');
+  const [topic, setTopic] = useState(initialTopic);
   const [gsCategory, setGsCategory] = useState<GSSubCategory>('ALL');
   const [difficulty, setDifficulty] = useState<DifficultyLevel>('MEDIUM');
   const [status, setStatus] = useState<LoadingState>('idle');
@@ -30,6 +29,12 @@ export const QuizMode: React.FC<QuizModeProps> = ({ initialSubject = Subject.MAR
   const [userAnswers, setUserAnswers] = useState<number[]>([]);
   const [showResults, setShowResults] = useState(false);
   
+  useEffect(() => {
+    if (initialTopic) {
+        startQuiz();
+    }
+  }, []);
+
   const startQuiz = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!topic.trim()) return;
@@ -65,9 +70,10 @@ export const QuizMode: React.FC<QuizModeProps> = ({ initialSubject = Subject.MAR
         <ArrowLeft size={16} className="mr-1" /> Back to Dashboard
       </button>
 
-      {status === 'idle' && (
+      {(status === 'idle' || status === 'error') && (
         <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-100">
            <h2 className="text-3xl font-black text-slate-800 mb-8 flex items-center"><HelpCircle className="mr-3 text-indigo-600 h-8 w-8" /> Quiz Master</h2>
+           {status === 'error' && <div className="mb-6 bg-red-50 text-red-700 p-4 rounded-xl border border-red-100 font-bold">Generation failed. Please try a different topic.</div>}
            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                 <div className="space-y-4">
                     <label className="block text-xs font-black text-slate-400 uppercase tracking-widest">1. Choose Subject</label>
@@ -105,20 +111,24 @@ export const QuizMode: React.FC<QuizModeProps> = ({ initialSubject = Subject.MAR
       {status === 'loading' && (
         <div className="text-center py-20 bg-white rounded-2xl shadow-xl border border-slate-100">
           <Loader2 className="animate-spin h-16 w-16 text-indigo-600 mx-auto mb-6" />
-          <h3 className="text-2xl font-black text-slate-800">Deep-Scanning Topics...</h3>
+          <h3 className="text-2xl font-black text-slate-800">Generating Interactive Paper...</h3>
         </div>
       )}
 
       {status === 'success' && questions.length > 0 && (
         <div className="space-y-6 animate-in fade-in duration-500">
           <div className="flex justify-between items-center bg-indigo-900 text-white p-5 rounded-2xl sticky top-24 z-20 shadow-2xl">
-             <div><h2 className="font-black text-xl">{topic}</h2></div>
+             <div className="flex items-center gap-2">
+                 <Zap className="text-yellow-400" size={20} />
+                 <h2 className="font-black text-xl">{topic}</h2>
+             </div>
              <div className="text-right"><div className="text-2xl font-black">{userAnswers.filter(a => a !== -1).length} / {questions.length}</div></div>
           </div>
           <div className="space-y-12 pb-24">
             {showResults && (
                 <div className="bg-white border-2 border-indigo-100 rounded-3xl p-10 shadow-2xl text-center">
                     <h1 className="text-4xl font-black text-indigo-950 mb-4">Quiz Completed</h1>
+                    <div className="text-lg font-bold text-slate-500 mb-6">You scored {questions.filter((q, i) => userAnswers[i] === q.correctAnswerIndex).length} out of {questions.length}</div>
                     <button onClick={() => setStatus('idle')} className="bg-indigo-600 text-white px-10 py-4 rounded-2xl font-black">NEW TOPIC</button>
                 </div>
             )}
@@ -130,7 +140,7 @@ export const QuizMode: React.FC<QuizModeProps> = ({ initialSubject = Subject.MAR
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                   {q.options.map((opt, oIdx) => (
-                    <button key={oIdx} onClick={() => handleOptionSelect(qIdx, oIdx)} disabled={showResults} className={`text-left p-4 rounded-2xl border-2 transition-all ${userAnswers[qIdx] === oIdx ? 'border-indigo-600 bg-indigo-50 font-bold' : 'border-slate-100 text-slate-700'}`}>
+                    <button key={oIdx} onClick={() => handleOptionSelect(qIdx, oIdx)} disabled={showResults} className={`text-left p-4 rounded-2xl border-2 transition-all ${userAnswers[qIdx] === oIdx ? (showResults ? (oIdx === q.correctAnswerIndex ? 'border-emerald-600 bg-emerald-50 text-emerald-900' : 'border-red-600 bg-red-50 text-red-900') : 'border-indigo-600 bg-indigo-50 font-bold') : (showResults && oIdx === q.correctAnswerIndex ? 'border-emerald-600 bg-emerald-50' : 'border-slate-100 text-slate-700')}`}>
                         <span className="mr-3 opacity-30 font-black">{String.fromCharCode(65 + oIdx)}</span>{opt}
                     </button>
                   ))}
