@@ -49,6 +49,8 @@ export interface VocabWord {
   meaning: string;
   usage: string;
   type: string; 
+  synonyms?: string[];
+  antonyms?: string[];
   relatedWords?: string[]; 
 }
 
@@ -98,10 +100,8 @@ export interface UserProgress {
   };
 }
 
-
 export type LoadingState = 'idle' | 'loading' | 'success' | 'error';
 
-// Added CachedResponse interface to fix the "Cannot find name 'CachedResponse'" errors in gemini service.
 export interface CachedResponse<T> {
   data: T;
   fromCache: boolean;
