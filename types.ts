@@ -98,6 +98,7 @@ export interface UserProgress {
   };
 }
 
+
 export type LoadingState = 'idle' | 'loading' | 'success' | 'error';
 
 // Added CachedResponse interface to fix the "Cannot find name 'CachedResponse'" errors in gemini service.
