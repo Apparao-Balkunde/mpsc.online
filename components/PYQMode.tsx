@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Subject, LoadingState, QuizQuestion, ExamType } from '../types';
 import { generatePYQs } from '../services/gemini';
 import { getProgress, toggleQuestionBookmark } from '../services/progress';
-import { History, Search, Loader2, ArrowLeft, Eye, Bookmark, Info, Calendar, Filter, BookOpen, ShieldCheck, AlertCircle, Database, GraduationCap, Zap, BrainCircuit, Sparkles, BookA, Languages, ChevronDown, ChevronUp } from 'lucide-react';
+import { History, Search, Loader2, ArrowLeft, Eye, Bookmark, Info, Calendar, Filter, BookOpen, ShieldCheck, AlertCircle, Database, GraduationCap, Zap, BrainCircuit, Sparkles, BookA, Languages, ChevronDown, ChevronUp, Copy, Check } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 interface PYQModeProps {
@@ -41,7 +41,7 @@ const TOPICS_CONFIG: Record<Subject, { label: string; value: string }[]> = {
   ]
 };
 
-export const PYQMode: React.FC<PYQModeProps> = ({ initialExamType = 'ALL', onBack }) => {
+export function PYQMode({ initialExamType = 'ALL', onBack }: PYQModeProps) {
   const [subject, setSubject] = useState<Subject>(Subject.GS);
   const [selectedYear, setSelectedYear] = useState<string>('2024');
   const [examType, setExamType] = useState<ExamType>(initialExamType === 'ALL' ? 'RAJYASEVA' : initialExamType);
@@ -53,6 +53,7 @@ export const PYQMode: React.FC<PYQModeProps> = ({ initialExamType = 'ALL', onBac
   const [revealedAnswers, setRevealedAnswers] = useState<number[]>([]);
   const [bookmarks, setBookmarks] = useState<string[]>([]);
   const [searchKeyword, setSearchKeyword] = useState('');
+  const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
 
   useEffect(() => {
     setBookmarks(getProgress().bookmarks.questions.map(q => q.question));
@@ -82,6 +83,12 @@ export const PYQMode: React.FC<PYQModeProps> = ({ initialExamType = 'ALL', onBac
     } else {
       setBookmarks(prev => prev.filter(text => text !== q.question));
     }
+  };
+
+  const handleCopyExplanation = (text: string, idx: number) => {
+    navigator.clipboard.writeText(text);
+    setCopiedIdx(idx);
+    setTimeout(() => setCopiedIdx(null), 2000);
   };
 
   const filteredQuestions = questions.filter(q => 
@@ -225,12 +232,26 @@ export const PYQMode: React.FC<PYQModeProps> = ({ initialExamType = 'ALL', onBac
                                             
                                             <div className="bg-slate-950 p-12 rounded-[3.5rem] border border-slate-800 text-slate-100 relative shadow-2xl overflow-hidden">
                                                 <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none"><GraduationCap size={160} /></div>
-                                                <div className="flex items-center gap-4 mb-10 border-b border-slate-800 pb-8">
-                                                    <div className="bg-indigo-600 p-3 rounded-2xl shadow-xl"><Zap className="text-yellow-400" size={24} /></div>
-                                                    <div>
-                                                        <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest">Syllabus-Linked Explanation</h4>
-                                                        <p className="text-xs text-indigo-400 font-bold uppercase tracking-tight italic">Detailed Analytical Summary</p>
+                                                <div className="flex items-center justify-between mb-10 border-b border-slate-800 pb-8">
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="bg-indigo-600 p-3 rounded-2xl shadow-xl"><Zap className="text-yellow-400" size={24} /></div>
+                                                        <div>
+                                                            <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest">Syllabus-Linked Analysis</h4>
+                                                            <p className="text-xs text-indigo-400 font-bold uppercase tracking-tight italic">Detailed Analytical Summary</p>
+                                                        </div>
                                                     </div>
+                                                    <button 
+                                                        onClick={() => handleCopyExplanation(q.explanation, idx)}
+                                                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-black transition-all"
+                                                    >
+                                                        {copiedIdx === idx ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
+                                                        {copiedIdx === idx ? 'Copied!' : 'Copy Explanation'}
+                                                    </button>
+                                                </div>
+                                                <div className="mb-6">
+                                                    <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 font-black text-sm uppercase tracking-widest">
+                                                        Correct Answer: {String.fromCharCode(65 + q.correctAnswerIndex)}
+                                                    </span>
                                                 </div>
                                                 <div className="text-slate-300 text-xl leading-[2.2] font-medium font-serif tracking-tight">
                                                     {q.explanation}
@@ -252,4 +273,4 @@ export const PYQMode: React.FC<PYQModeProps> = ({ initialExamType = 'ALL', onBac
       </div>
     </div>
   );
-};
+}
