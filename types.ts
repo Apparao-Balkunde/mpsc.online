@@ -1,4 +1,3 @@
-
 export enum Subject {
   MARATHI = 'Marathi',
   ENGLISH = 'English',
@@ -24,6 +23,18 @@ export type SubjectFocus = 'BALANCED' | 'MARATHI_HEAVY' | 'ENGLISH_HEAVY' | 'GS_
 
 export type GSSubCategory = 'ALL' | 'HISTORY' | 'GEOGRAPHY' | 'POLITY' | 'ECONOMICS' | 'SCIENCE' | 'ENVIRONMENT';
 
+export type PYQStage = 'PRELIMS' | 'MAINS';
+
+export type PYQSection =
+  | 'ALL'
+  | 'HISTORY'
+  | 'POLITY'
+  | 'GEOGRAPHY'
+  | 'ECONOMICS'
+  | 'SCIENCE'
+  | 'MARATHI'
+  | 'ENGLISH';
+
 export type VocabCategory = 'IDIOMS' | 'SYNONYMS' | 'ANTONYMS' | 'ONE_WORD';
 
 export type DifficultyLevel = 'EASY' | 'MEDIUM' | 'HARD';
@@ -35,20 +46,24 @@ export interface QuizQuestion {
   explanation: string;
   examSource?: string;
   subCategory?: string;
+  examType?: ExamType;
+  stage?: PYQStage;
+  section?: PYQSection;
+  year?: string;
 }
 
 export interface QuizResult {
   total: number;
   correct: number;
-  answers: number[]; 
+  answers: number[];
 }
 
 export interface VocabWord {
   word: string;
   meaning: string;
   usage: string;
-  type: string; 
-  relatedWords?: string[]; 
+  type: string;
+  relatedWords?: string[];
 }
 
 export interface CurrentAffairItem {
@@ -73,10 +88,10 @@ export interface DescriptiveQA {
 }
 
 export interface QuizResultRecord {
-    topic: string;
-    score: number;
-    total: number;
-    date: string;
+  topic: string;
+  score: number;
+  total: number;
+  date: string;
 }
 
 export interface UserProgress {

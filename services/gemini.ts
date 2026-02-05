@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type, Modality } from "@google/genai";
-import { Subject, QuizQuestion, VocabWord, CurrentAffairItem, ExamType, GSSubCategory, VocabCategory, RuleExplanation, DescriptiveQA, DifficultyLevel, SubjectFocus } from '../types';
+import { Subject, QuizQuestion, VocabWord, CurrentAffairItem, ExamType, GSSubCategory, VocabCategory, RuleExplanation, DescriptiveQA, DifficultyLevel, SubjectFocus, PYQSection, PYQStage } from '../types';
 
 // Always initialize inside the function to ensure we use the latest key
 const getAIClient = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -172,15 +172,22 @@ export const generateQuiz = async (subject: Subject, topic: string, difficulty: 
   return { data, fromCache: false };
 };
 
-export const generatePYQs = async (subject: Subject, year: string, examType: ExamType, subCategory: GSSubCategory = 'ALL'): Promise<CachedResponse<QuizQuestion[]>> => {
-    const key = `${CACHE_VERSION}PYQ_${examType}_${year}_${subCategory}`;
+export const generatePYQs = async (
+  subject: Subject,
+  year: string,
+  examType: ExamType,
+  subCategory: GSSubCategory = 'ALL',
+  stage: PYQStage = 'PRELIMS',
+  section: PYQSection = 'ALL'
+): Promise<CachedResponse<QuizQuestion[]>> => {
+    const key = `${CACHE_VERSION}PYQ_${examType}_${year}_${stage}_${section}_${subCategory}`;
     const cached = await getFromCache<QuizQuestion[]>(key);
     if (cached) return { data: cached, fromCache: true };
   
     const ai = getAIClient();
     const response = await ai.models.generateContent({
       model: MODEL_FAST,
-      contents: [{ parts: [{ text: `Provide 10 real MPSC ${examType} General Studies PYQs from the year ${year} for the ${subCategory} section. Include detailed Marathi explanations.` }] }],
+      contents: [{ parts: [{ text: `Provide 10 MPSC ${examType} ${stage} PYQs from year ${year}. Section focus: ${section}. GS sub-category focus: ${subCategory}. Return MCQs with detailed Marathi explanations.` }] }],
       config: { 
           responseMimeType: "application/json",
           responseSchema: quizQuestionSchema
