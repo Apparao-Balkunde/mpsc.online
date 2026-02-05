@@ -14,7 +14,8 @@ export enum Mode {
   CURRENT_AFFAIRS = 'CURRENT_AFFAIRS',
   BOOKMARKS = 'BOOKMARKS',
   LITERATURE = 'LITERATURE',
-  MOCK_TEST = 'MOCK_TEST'
+  MOCK_TEST = 'MOCK_TEST',
+  GLOBAL_LIBRARY = 'GLOBAL_LIBRARY'
 }
 
 export type ExamType = 'ALL' | 'RAJYASEVA' | 'GROUP_B' | 'GROUP_C';
@@ -32,6 +33,7 @@ export interface QuizQuestion {
   options: string[];
   correctAnswerIndex: number;
   explanation: string;
+  mnemonic?: string; // Memory trick / Shortcut
   examSource?: string;
   subCategory?: string;
 }
@@ -78,9 +80,28 @@ export interface QuizResultRecord {
     date: string;
 }
 
+export interface SavedNote {
+  id: string;
+  subject: Subject;
+  topic: string;
+  content: string;
+  createdAt: string;
+}
+
 export interface UserProgress {
   studyTopicsViewed: string[];
   quizzesCompleted: QuizResultRecord[];
+  bookmarks: {
+    questions: QuizQuestion[];
+    vocab: VocabWord[];
+    notes: SavedNote[];
+  };
 }
 
 export type LoadingState = 'idle' | 'loading' | 'success' | 'error';
+
+// Added CachedResponse interface to fix the "Cannot find name 'CachedResponse'" errors in gemini service.
+export interface CachedResponse<T> {
+  data: T;
+  fromCache: boolean;
+}
