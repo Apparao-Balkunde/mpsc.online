@@ -1,7 +1,7 @@
 
 import { UserProgress, QuizQuestion, VocabWord, SavedNote } from '../types';
 
-const STORAGE_KEY = 'mpsc_user_progress_v3'; // Incremented version to ensure fresh state
+const STORAGE_KEY = 'mpsc_user_progress_v35';
 
 const DEFAULT_PROGRESS: UserProgress = { 
   studyTopicsViewed: [], 
@@ -10,8 +10,11 @@ const DEFAULT_PROGRESS: UserProgress = {
     questions: [],
     vocab: [],
     notes: []
-  }
+  },
+  vocabSRS: {}
 };
+
+const SRS_INTERVALS = [0, 1, 3, 7, 14, 30]; // Days
 
 export const getProgress = (): UserProgress => {
   try {
@@ -19,6 +22,7 @@ export const getProgress = (): UserProgress => {
     if (!data) return DEFAULT_PROGRESS;
     const parsed = JSON.parse(data);
     if (!parsed.bookmarks) parsed.bookmarks = DEFAULT_PROGRESS.bookmarks;
+    if (!parsed.vocabSRS) parsed.vocabSRS = {};
     return parsed;
   } catch {
     return DEFAULT_PROGRESS;
@@ -65,11 +69,33 @@ export const toggleVocabBookmark = (word: VocabWord): boolean => {
   const index = progress.bookmarks.vocab.findIndex(v => v.word === word.word);
   if (index > -1) {
     progress.bookmarks.vocab.splice(index, 1);
+    if (progress.vocabSRS?.[word.word]) delete progress.vocabSRS[word.word];
   } else {
     progress.bookmarks.vocab.push(word);
+    if (!progress.vocabSRS) progress.vocabSRS = {};
+    progress.vocabSRS[word.word] = { level: 0, nextReview: new Date().toISOString() };
   }
   saveProgress(progress);
   return index === -1;
+};
+
+export const updateVocabSRS = (word: string, success: boolean) => {
+    const progress = getProgress();
+    if (!progress.vocabSRS) progress.vocabSRS = {};
+    const current = progress.vocabSRS[word] || { level: 0, nextReview: new Date().toISOString() };
+    
+    if (success) {
+        current.level = Math.min(current.level + 1, SRS_INTERVALS.length - 1);
+    } else {
+        current.level = 0;
+    }
+    
+    const nextDate = new Date();
+    nextDate.setDate(nextDate.getDate() + SRS_INTERVALS[current.level]);
+    current.nextReview = nextDate.toISOString();
+    
+    progress.vocabSRS[word] = current;
+    saveProgress(progress);
 };
 
 export const saveNote = (note: SavedNote) => {
