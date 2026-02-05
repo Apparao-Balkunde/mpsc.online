@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { ExamType, LoadingState, QuizQuestion, SubjectFocus } from '../types';
 import { generateMockTest, getCachedMockKeys } from '../services/gemini';
 import { STANDARD_RAJYASEVA_MOCK, STANDARD_COMBINED_MOCK } from '../services/localData';
-import { ShieldCheck, Timer, ArrowLeft, ArrowRight, CheckCircle2, AlertCircle, Loader2, Save, Send, Eye, Copy, Check, Settings2, SlidersHorizontal, LayoutGrid, RotateCcw, Zap, Database, Cloud, History, Play, Clock, ListFilter, Info, BookOpen } from 'lucide-react';
+import { ShieldCheck, Timer, ArrowLeft, ArrowRight, CheckCircle2, AlertCircle, Loader2, Save, Send, Eye, Copy, Check, Settings2, SlidersHorizontal, LayoutGrid, RotateCcw, Zap, Database, Cloud, History, Play, Clock, ListFilter, Info, BookOpen, GraduationCap } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 interface MockTestModeProps {
@@ -221,24 +221,31 @@ export const MockTestMode: React.FC<MockTestModeProps> = ({ onBack }) => {
               <button onClick={() => setStatus('idle')} className="bg-indigo-600 text-white px-12 py-4 rounded-2xl font-black text-lg shadow-xl hover:bg-indigo-700">TRY ANOTHER</button>
             </div>
 
-            <div className="space-y-8 pb-12">
-               <h3 className="text-2xl font-black text-slate-800 flex items-center gap-2 px-4">
-                 <BookOpen className="text-indigo-600" /> Detailed Solutions Review
-               </h3>
+            <div className="space-y-12 pb-24">
+               <div className="flex items-center gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+                  <div className="bg-indigo-600 text-white p-3 rounded-2xl">
+                    <BookOpen size={28} />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-black text-slate-800">Syllabus-Aligned Analysis</h3>
+                    <p className="text-slate-500 text-sm font-medium">प्रत्येक प्रश्नाचे सखोल विश्लेषण खाली दिले आहे.</p>
+                  </div>
+               </div>
+
                {filteredQuestions.map((q, filteredIdx) => {
                  const originalIdx = questions.indexOf(q);
                  const isCorrect = userAnswers[originalIdx] === q.correctAnswerIndex;
                  return (
-                 <div key={originalIdx} className="bg-white rounded-3xl shadow-xl p-8 border border-slate-200 relative overflow-hidden">
+                 <div key={originalIdx} className="bg-white rounded-3xl shadow-xl p-8 border border-slate-200 relative overflow-hidden group hover:border-indigo-300 transition-all">
                     {isCorrect ? <div className="absolute top-0 right-0 p-4 bg-emerald-100 text-emerald-600 font-black text-[10px] rounded-bl-xl uppercase tracking-widest">Correct Solution</div> : <div className="absolute top-0 right-0 p-4 bg-red-100 text-red-600 font-black text-[10px] rounded-bl-xl uppercase tracking-widest">Wrong Attempt</div>}
                     <div className="flex gap-4 mb-6">
                        <span className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-white shrink-0 shadow-sm ${isCorrect ? 'bg-emerald-500' : 'bg-red-500'}`}>{originalIdx + 1}</span>
                        <div>
                          <span className="text-[9px] font-black text-indigo-500 uppercase tracking-widest mb-1">{q.subCategory}</span>
-                         <h4 className="text-lg font-bold text-slate-900 leading-relaxed">{q.question}</h4>
+                         <h4 className="text-xl font-bold text-slate-900 leading-relaxed">{q.question}</h4>
                        </div>
                     </div>
-                    <div className="grid md:grid-cols-2 gap-3 mb-8 ml-0 md:ml-12">
+                    <div className="grid md:grid-cols-2 gap-3 mb-10 ml-0 md:ml-12">
                        {q.options.map((opt, oIdx) => (
                          <div key={oIdx} className={`p-4 rounded-2xl border-2 text-sm font-medium ${oIdx === q.correctAnswerIndex ? 'border-emerald-500 bg-emerald-50 text-emerald-900' : (userAnswers[originalIdx] === oIdx ? 'border-red-500 bg-red-50 text-red-900' : 'border-slate-100 text-slate-400')}`}>
                             <span className="font-black mr-2 opacity-30">{String.fromCharCode(65 + oIdx)}</span>
@@ -246,20 +253,24 @@ export const MockTestMode: React.FC<MockTestModeProps> = ({ onBack }) => {
                          </div>
                        ))}
                     </div>
-                    <div className="ml-0 md:ml-12 bg-slate-900 p-8 rounded-3xl text-white shadow-2xl animate-in zoom-in-95">
-                       <div className="flex items-center gap-2 mb-4 border-b border-slate-700 pb-4">
-                          <Zap className="text-yellow-400 h-6 w-6" />
+
+                    <div className="ml-0 md:ml-12 bg-slate-900 p-10 rounded-[2.5rem] text-white shadow-2xl relative">
+                       <div className="absolute top-0 right-0 p-10 opacity-5 pointer-events-none">
+                          <GraduationCap size={150} />
+                       </div>
+                       <div className="flex items-center gap-3 mb-6 border-b border-slate-700 pb-6">
+                          <Zap className="text-yellow-400 h-8 w-8" />
                           <div>
-                            <h5 className="text-xs font-black text-slate-400 uppercase tracking-widest">MPSC Sarathi Academic Analysis</h5>
-                            <p className="text-[10px] text-yellow-400/80 font-bold uppercase tracking-tighter italic">"Deep Dive into the Concept"</p>
+                            <h5 className="text-sm font-black text-slate-400 uppercase tracking-widest">Professor's Deep Dive Analysis</h5>
+                            <p className="text-[11px] text-yellow-400/80 font-bold uppercase tracking-tighter italic">"Learn the Logic, Not Just the Answer"</p>
                           </div>
                        </div>
-                       <div className="text-base text-slate-300 leading-loose prose prose-invert prose-p:my-2 max-w-none">
+                       <div className="text-lg text-slate-200 leading-loose prose prose-invert prose-headings:text-indigo-400 prose-headings:font-black prose-p:my-4 prose-ul:my-4 prose-li:my-1 max-w-none font-medium">
                           <ReactMarkdown>{q.explanation}</ReactMarkdown>
                        </div>
-                       <div className="mt-6 pt-4 border-t border-slate-800 flex items-center justify-between opacity-50">
-                          <span className="text-[10px] font-black uppercase tracking-widest">End of Analysis</span>
-                          <Info size={14} />
+                       <div className="mt-10 pt-6 border-t border-slate-800 flex items-center justify-between opacity-40">
+                          <span className="text-[10px] font-black uppercase tracking-widest">MPSC Sarathi Academic Content</span>
+                          <Info size={16} />
                        </div>
                     </div>
                  </div>
