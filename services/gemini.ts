@@ -1,6 +1,5 @@
 
 import { GoogleGenAI, Type, Modality, HarmCategory, HarmBlockThreshold } from "@google/genai";
-// Added CachedResponse to the imported types to fix the errors.
 import { Subject, QuizQuestion, VocabWord, CurrentAffairItem, ExamType, GSSubCategory, VocabCategory, RuleExplanation, DescriptiveQA, DifficultyLevel, SubjectFocus, CachedResponse } from '../types';
 
 const getAIClient = () => {
@@ -13,7 +12,7 @@ const MODEL_FLASH = 'gemini-3-flash-preview';
 const MODEL_PRO = 'gemini-3-pro-preview';
 const MODEL_TTS = 'gemini-2.5-flash-preview-tts';
 
-const CACHE_VERSION = 'MPSC_V30_'; 
+const CACHE_VERSION = 'MPSC_V32_'; 
 const DB_NAME = 'MPSC_Sarathi_Storage';
 const STORE_NAME = 'question_bank';
 
@@ -45,11 +44,11 @@ const quizQuestionSchema = {
       correctAnswerIndex: { type: Type.INTEGER },
       explanation: { 
         type: Type.STRING, 
-        description: "Must be a long, engaging Marathi teaching note with: ### १. संदर्भासहित विश्लेषण, ### २. पर्यायांचे निराकरण, ### ३. संभाव्य प्रश्न प्रकार." 
+        description: "Must be a long, engaging Marathi teaching note. Break into: ### १. संदर्भासहित विश्लेषण, ### २. व्याकरणाचे नियम (Grammar Rules), ### ३. परीक्षेसाठी टीप." 
       },
       mnemonic: { 
         type: Type.STRING, 
-        description: "A short 'Memory Trick' or 'Mnemonic' in Marathi to remember this answer forever."
+        description: "A short 'Memory Trick' or 'Mnemonic' in Marathi to remember this rule forever."
       },
       subCategory: { type: Type.STRING }
     },
@@ -162,7 +161,7 @@ export const generateMockTest = async (examType: ExamType, totalCount: number = 
   for (let i = 0; i < iterations; i++) {
     const currentBatchCount = Math.min(batchSize, totalCount - allQuestions.length);
     if (currentBatchCount <= 0) break;
-    const prompt = `Generate ${currentBatchCount} MCQs for ${examType}. Focus: ${focus}. Language: Marathi. EXPLANATIONS MUST BE VERY LONG AND DETAILED TO KEEP THE STUDENT ENGAGED. Always include a clever 'Mnemonic' in Marathi to remember the fact.`;
+    const prompt = `Generate ${currentBatchCount} MCQs for ${examType}. Focus: ${focus}. Language: Marathi. EXPLANATIONS MUST BE VERY LONG AND DETAILED. Always include a clever 'Mnemonic' in Marathi.`;
     try {
       const batch = await generateWithFallback(prompt, quizQuestionSchema, MODEL_PRO);
       allQuestions = [...allQuestions, ...batch];
@@ -179,17 +178,28 @@ export const generateQuiz = async (subject: Subject, topic: string, difficulty: 
   const key = `${CACHE_VERSION}QUIZ_${subject}_${topic}_${difficulty}`;
   const cached = await getFromCache<QuizQuestion[]>(key);
   if (cached) return { data: cached, fromCache: true };
-  const prompt = `Generate 10 MPSC practice MCQs for ${subject}: ${topic}. Difficulty: ${difficulty}. Language: Marathi. Give very detailed solutions with mnemonic tricks.`;
+  const prompt = `Generate 10 MCQs for ${subject}: ${topic}. Difficulty: ${difficulty}. Language: Marathi. Give very detailed solutions with grammar-focused mnemonic tricks.`;
   const data = await generateWithFallback(prompt, quizQuestionSchema, MODEL_FLASH);
   await saveToCache(key, data);
   return { data, fromCache: false };
 };
 
-export const generatePYQs = async (subject: Subject, year: string, examType: ExamType, subCategory: GSSubCategory = 'ALL'): Promise<CachedResponse<QuizQuestion[]>> => {
-    const key = `${CACHE_VERSION}PYQ_${examType}_${year}_${subCategory}`;
+export const generatePYQs = async (subject: Subject, year: string, examType: ExamType, subCategory: string = 'ALL'): Promise<CachedResponse<QuizQuestion[]>> => {
+    const key = `${CACHE_VERSION}PYQ_${subject}_${examType}_${year}_${subCategory}`;
     const cached = await getFromCache<QuizQuestion[]>(key);
     if (cached) return { data: cached, fromCache: true };
-    const prompt = `Retrieve 10 GS questions from MPSC ${examType} ${year}. Section: ${subCategory}. Provide deep analysis and memory tricks for each.`;
+    
+    let subjectSpecificInstruction = "";
+    if (subject === Subject.MARATHI || subject === Subject.ENGLISH) {
+        subjectSpecificInstruction = "FOR GRAMMAR QUESTIONS: YOU MUST IDENTIFY THE CORE RULE (e.g., Prayog, Tense, Clause). Explain the rule logic, identifying keywords, and common mistakes students make. Use professional Marathi for explanations.";
+    } else {
+        subjectSpecificInstruction = "FOR GS QUESTIONS: Provide historical/scientific context, explain the 'Examiner's Mindset' (why this news was relevant that year), and related facts.";
+    }
+
+    const prompt = `Retrieve 10 authentic Previous Year Questions (PYQs) for ${subject} from MPSC ${examType} exam ${year}. Topic/Section: ${subCategory}. 
+    ${subjectSpecificInstruction}
+    Always provide a 'Memory Trick' (Mnemonic) in Marathi for every question.`;
+    
     const data = await generateWithFallback(prompt, quizQuestionSchema, MODEL_FLASH);
     await saveToCache(key, data);
     return { data, fromCache: false };
