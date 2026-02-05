@@ -1,15 +1,22 @@
 
-import { GoogleGenAI, Type, Modality } from "@google/genai";
+import { GoogleGenAI, Type, Modality, HarmCategory, HarmBlockThreshold } from "@google/genai";
 import { Subject, QuizQuestion, VocabWord, CurrentAffairItem, ExamType, GSSubCategory, VocabCategory, RuleExplanation, DescriptiveQA, DifficultyLevel, SubjectFocus } from '../types';
 
-// Always initialize inside the function to ensure we use the latest key
-const getAIClient = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Robust initialization
+const getAIClient = () => {
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) {
+    throw new Error("API Key is missing. Please check your environment configuration.");
+  }
+  return new GoogleGenAI({ apiKey });
+};
 
-const MODEL_FAST = 'gemini-3-flash-preview';
+// Model definitions as per guidelines
+const MODEL_FLASH = 'gemini-3-flash-preview';
 const MODEL_PRO = 'gemini-3-pro-preview';
 const MODEL_TTS = 'gemini-2.5-flash-preview-tts';
 
-const CACHE_VERSION = 'MPSC_V24_'; 
+const CACHE_VERSION = 'MPSC_V27_'; 
 const DB_NAME = 'MPSC_Sarathi_Storage';
 const STORE_NAME = 'question_bank';
 
@@ -18,33 +25,65 @@ export interface CachedResponse<T> {
   fromCache: boolean;
 }
 
-// Cleaning logic to handle potential markdown blocks in response
+/**
+ * Robustly cleans model output to ensure valid JSON.
+ * Handles thought tags, markdown, and malformed strings.
+ */
 const cleanJsonResponse = (text: string): string => {
-  return text.replace(/```json/g, '').replace(/```/g, '').trim();
+  let cleaned = text.trim();
+  
+  // Remove <thought>...</thought> blocks if model uses reasoning
+  cleaned = cleaned.replace(/<thought>[\s\S]*?<\/thought>/g, '');
+
+  // Remove markdown wrappers if present
+  if (cleaned.includes('```json')) {
+    cleaned = cleaned.split('```json')[1].split('```')[0].trim();
+  } else if (cleaned.includes('```')) {
+    const parts = cleaned.split('```');
+    if (parts.length >= 3) {
+        cleaned = parts[1].trim();
+    }
+  }
+  
+  // Attempt to find the bounds of JSON array or object
+  const startIdx = Math.min(
+    cleaned.indexOf('[') === -1 ? Infinity : cleaned.indexOf('['),
+    cleaned.indexOf('{') === -1 ? Infinity : cleaned.indexOf('{')
+  );
+  const endIdx = Math.max(
+    cleaned.lastIndexOf(']'),
+    cleaned.lastIndexOf('}')
+  );
+
+  if (startIdx !== Infinity && endIdx !== -1) {
+    cleaned = cleaned.substring(startIdx, endIdx + 1);
+  }
+
+  return cleaned;
 };
 
-// Reusable Schema Definitions
 const quizQuestionSchema = {
   type: Type.ARRAY,
   items: {
     type: Type.OBJECT,
     properties: {
-      question: { type: Type.STRING, description: "The MCQ question in Marathi" },
+      question: { type: Type.STRING, description: "MCQ question in Marathi" },
       options: { 
         type: Type.ARRAY, 
         items: { type: Type.STRING },
-        description: "Exactly 4 options in Marathi"
+        description: "List of exactly 4 options"
       },
-      correctAnswerIndex: { type: Type.INTEGER, description: "Index of correct option (0-3)" },
-      explanation: { type: Type.STRING, description: "Detailed explanation in Marathi" }
+      correctAnswerIndex: { type: Type.INTEGER, description: "Index (0-3) of the correct answer" },
+      explanation: { type: Type.STRING, description: "Detailed reasoning in Marathi" },
+      subCategory: { type: Type.STRING, description: "Subject category (e.g., History, Polity, Marathi Grammar, English Grammar, Geography, Economics, Science)" }
     },
-    required: ["question", "options", "correctAnswerIndex", "explanation"]
+    required: ["question", "options", "correctAnswerIndex", "explanation", "subCategory"]
   }
 };
 
 const openDB = (): Promise<IDBDatabase> => {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, 4);
+    const request = indexedDB.open(DB_NAME, 6);
     request.onupgradeneeded = (e) => {
       const db = (e.target as IDBOpenDBRequest).result;
       if (!db.objectStoreNames.contains(STORE_NAME)) {
@@ -104,6 +143,50 @@ export const getCachedMockKeys = async (): Promise<string[]> => {
     } catch { return []; }
 };
 
+/**
+ * Attempts generation with fallback between FLASH and PRO models
+ * Also applies broad safety settings to avoid false positive blocks in educational topics.
+ */
+async function generateWithFallback(prompt: string, schema: any, modelPreference: string = MODEL_FLASH) {
+  const ai = getAIClient();
+  const modelsToTry = modelPreference === MODEL_PRO ? [MODEL_PRO, MODEL_FLASH] : [MODEL_FLASH, MODEL_PRO];
+  
+  let lastError: any = null;
+
+  for (const model of modelsToTry) {
+    try {
+      const response = await ai.models.generateContent({
+        model,
+        contents: [{ parts: [{ text: prompt }] }],
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: schema,
+          temperature: 0.8,
+          // Apply minimal safety blocking for history/polity topics
+          safetySettings: [
+            { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+            { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+            { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+            { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE }
+          ]
+        }
+      });
+      
+      if (response.text) {
+        const cleaned = cleanJsonResponse(response.text);
+        return JSON.parse(cleaned);
+      }
+    } catch (err: any) {
+      console.warn(`Generation attempt with ${model} failed:`, err.message);
+      lastError = err;
+      // If it's a 429, don't immediately try the next model, might be same quota
+      if (err.message?.includes('429')) break;
+    }
+  }
+  
+  throw lastError || new Error("Connection failed. Try again in 1 minute.");
+}
+
 export const generateMockTest = async (examType: ExamType, totalCount: number = 10, focus: SubjectFocus = 'BALANCED', forceNew = false): Promise<CachedResponse<QuizQuestion[]>> => {
   const cacheKey = `${CACHE_VERSION}MOCK_${examType}_${totalCount}_${focus}`;
   
@@ -112,8 +195,7 @@ export const generateMockTest = async (examType: ExamType, totalCount: number = 
     if (cached) return { data: cached, fromCache: true };
   }
 
-  const ai = getAIClient();
-  const batchSize = 5; // Smaller batches for better stability
+  const batchSize = 5; 
   let allQuestions: QuizQuestion[] = [];
   const iterations = Math.ceil(totalCount / batchSize);
 
@@ -121,26 +203,17 @@ export const generateMockTest = async (examType: ExamType, totalCount: number = 
     const currentBatchCount = Math.min(batchSize, totalCount - allQuestions.length);
     if (currentBatchCount <= 0) break;
 
+    const prompt = `Act as an MPSC examiner. Generate ${currentBatchCount} distinct MCQs for the ${examType} exam. 
+    Focus: ${focus}. Language: Marathi. Output ONLY the raw JSON array. 
+    Each question MUST include a "subCategory" field indicating the subject (e.g. History, Polity, Geography, Marathi Grammar, English Grammar).
+    Include complex reasoning in explanations. Ensure historical/political accuracy.`;
+    
     try {
-        const response = await ai.models.generateContent({
-            model: MODEL_PRO, // Using PRO for better reasoning and schema adherence
-            contents: [{ parts: [{ text: `Generate ${currentBatchCount} unique, high-difficulty MPSC questions for ${examType} exam. Focus on ${focus}. Each question must have 4 options, a correct index, and a deep Marathi explanation.` }] }],
-            config: {
-              responseMimeType: "application/json",
-              responseSchema: quizQuestionSchema,
-              systemInstruction: "You are a senior MPSC paper setter. Use formal Marathi for GS and Grammar. Return ONLY valid JSON array."
-            }
-          });
-      
-          if (response.text) {
-            const cleaned = cleanJsonResponse(response.text);
-            const batch = JSON.parse(cleaned) as QuizQuestion[];
-            allQuestions = [...allQuestions, ...batch];
-          }
+      const batch = await generateWithFallback(prompt, quizQuestionSchema, MODEL_PRO);
+      allQuestions = [...allQuestions, ...batch];
     } catch (err) {
-        console.error("Batch generation error:", err);
-        if (allQuestions.length > 0) break; 
-        throw err;
+      if (allQuestions.length > 0) break; 
+      throw err;
     }
   }
 
@@ -156,18 +229,9 @@ export const generateQuiz = async (subject: Subject, topic: string, difficulty: 
   const cached = await getFromCache<QuizQuestion[]>(key);
   if (cached) return { data: cached, fromCache: true };
   
-  const ai = getAIClient();
-  const response = await ai.models.generateContent({
-    model: MODEL_PRO,
-    contents: [{ parts: [{ text: `Generate 15 high-quality MPSC practice MCQs for ${subject}: ${topic} with ${difficulty} difficulty level in Marathi.` }] }],
-    config: { 
-        responseMimeType: "application/json",
-        responseSchema: quizQuestionSchema
-    }
-  });
+  const prompt = `Generate exactly 15 MPSC practice MCQs for ${subject}: ${topic}. Difficulty: ${difficulty}. Language: Formal Marathi. Focus on key exam concepts. Ensure "subCategory" is set to "${subject}".`;
   
-  const cleaned = cleanJsonResponse(response.text);
-  const data = JSON.parse(cleaned);
+  const data = await generateWithFallback(prompt, quizQuestionSchema, MODEL_FLASH);
   await saveToCache(key, data);
   return { data, fromCache: false };
 };
@@ -177,18 +241,9 @@ export const generatePYQs = async (subject: Subject, year: string, examType: Exa
     const cached = await getFromCache<QuizQuestion[]>(key);
     if (cached) return { data: cached, fromCache: true };
   
-    const ai = getAIClient();
-    const response = await ai.models.generateContent({
-      model: MODEL_FAST,
-      contents: [{ parts: [{ text: `Provide 10 real MPSC ${examType} General Studies PYQs from the year ${year} for the ${subCategory} section. Include detailed Marathi explanations.` }] }],
-      config: { 
-          responseMimeType: "application/json",
-          responseSchema: quizQuestionSchema
-      }
-    });
+    const prompt = `Retrieve 10 authentic General Studies questions from the MPSC ${examType} exam conducted in ${year}. Section: ${subCategory}. Provide detailed Marathi analysis. Set "subCategory" to the appropriate GS subject.`;
     
-    const cleaned = cleanJsonResponse(response.text);
-    const data = JSON.parse(cleaned);
+    const data = await generateWithFallback(prompt, quizQuestionSchema, MODEL_FLASH);
     await saveToCache(key, data);
     return { data, fromCache: false };
 };
@@ -200,30 +255,24 @@ export const generateVocab = async (subject: Subject, category: VocabCategory, f
     if (cached) return { data: cached, fromCache: true };
   }
   
-  const ai = getAIClient();
-  const response = await ai.models.generateContent({
-    model: MODEL_FAST,
-    contents: [{ parts: [{ text: `List 50 high-frequency MPSC vocabulary words for ${subject} under category ${category}. Provide meanings and usage in Marathi.` }] }],
-    config: { 
-        responseMimeType: "application/json",
-        responseSchema: {
-            type: Type.ARRAY,
-            items: {
-                type: Type.OBJECT,
-                properties: {
-                    word: { type: Type.STRING },
-                    meaning: { type: Type.STRING },
-                    usage: { type: Type.STRING },
-                    type: { type: Type.STRING },
-                    relatedWords: { type: Type.ARRAY, items: { type: Type.STRING } }
-                },
-                required: ["word", "meaning", "usage", "type"]
-            }
-        }
+  const prompt = `Create a list of 20 high-frequency vocab words for MPSC ${subject}. Category: ${category}. Include meanings and sentence usage in Marathi.`;
+  
+  const schema = {
+    type: Type.ARRAY,
+    items: {
+      type: Type.OBJECT,
+      properties: {
+        word: { type: Type.STRING },
+        meaning: { type: Type.STRING },
+        usage: { type: Type.STRING },
+        type: { type: Type.STRING },
+        relatedWords: { type: Type.ARRAY, items: { type: Type.STRING } }
+      },
+      required: ["word", "meaning", "usage", "type"]
     }
-  });
-  const cleaned = cleanJsonResponse(response.text);
-  const data = JSON.parse(cleaned);
+  };
+
+  const data = await generateWithFallback(prompt, schema, MODEL_FLASH);
   await saveToCache(key, data);
   return { data, fromCache: false };
 };
@@ -235,8 +284,8 @@ export const generateStudyNotes = async (subject: Subject, topic: string): Promi
   
   const ai = getAIClient();
   const response = await ai.models.generateContent({ 
-    model: MODEL_FAST, 
-    contents: [{ parts: [{ text: `Create comprehensive MPSC study notes for ${subject} on the topic: ${topic}. Use Marathi, include bullet points and examples.` }] }]
+    model: MODEL_FLASH, 
+    contents: [{ parts: [{ text: `Create detailed, bulleted MPSC study notes for ${subject} on: ${topic}. Use formal Marathi and highlight important terms for exams.` }] }]
   });
   const data = response.text || "";
   if (data) await saveToCache(key, data);
@@ -248,27 +297,20 @@ export const generateConciseExplanation = async (subject: Subject, rule: string)
     const cached = await getFromCache<RuleExplanation>(key);
     if (cached) return { data: cached, fromCache: true };
   
-    const ai = getAIClient();
-    const response = await ai.models.generateContent({
-      model: MODEL_FAST,
-      contents: [{ parts: [{ text: `Explain MPSC ${subject} rule: ${rule} in a concise format with examples.` }] }],
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            definition: { type: Type.STRING },
-            importance: { type: Type.STRING },
-            nuances: { type: Type.STRING },
-            examples: { type: Type.ARRAY, items: { type: Type.STRING } }
-          },
-          required: ["definition", "importance", "nuances", "examples"]
-        }
-      }
-    });
-  
-    const cleaned = cleanJsonResponse(response.text);
-    const data = JSON.parse(cleaned);
+    const prompt = `Analyze and explain the MPSC ${subject} concept: "${rule}". Provide definition, nuances, and exam-style examples in Marathi.`;
+    
+    const schema = {
+      type: Type.OBJECT,
+      properties: {
+        definition: { type: Type.STRING },
+        importance: { type: Type.STRING },
+        nuances: { type: Type.STRING },
+        examples: { type: Type.ARRAY, items: { type: Type.STRING } }
+      },
+      required: ["definition", "importance", "nuances", "examples"]
+    };
+
+    const data = await generateWithFallback(prompt, schema, MODEL_FLASH);
     await saveToCache(key, data);
     return { data, fromCache: false };
 };
@@ -278,26 +320,19 @@ export const generateDescriptiveQA = async (topic: string): Promise<CachedRespon
     const cached = await getFromCache<DescriptiveQA>(key);
     if (cached) return { data: cached, fromCache: true };
   
-    const ai = getAIClient();
-    const response = await ai.models.generateContent({
-      model: MODEL_PRO,
-      contents: [{ parts: [{ text: `Critically analyze the literature topic: ${topic}. Formulate a descriptive question and a model answer for MPSC Mains.` }] }],
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            question: { type: Type.STRING },
-            modelAnswer: { type: Type.STRING },
-            keyPoints: { type: Type.ARRAY, items: { type: Type.STRING } }
-          },
-          required: ["question", "modelAnswer", "keyPoints"]
-        }
-      }
-    });
-  
-    const cleaned = cleanJsonResponse(response.text);
-    const data = JSON.parse(cleaned);
+    const prompt = `Write a descriptive analytical answer for MPSC Mains on the topic: "${topic}". Include a sample question and points for evaluation.`;
+    
+    const schema = {
+      type: Type.OBJECT,
+      properties: {
+        question: { type: Type.STRING },
+        modelAnswer: { type: Type.STRING },
+        keyPoints: { type: Type.ARRAY, items: { type: Type.STRING } }
+      },
+      required: ["question", "modelAnswer", "keyPoints"]
+    };
+
+    const data = await generateWithFallback(prompt, schema, MODEL_PRO);
     await saveToCache(key, data);
     return { data, fromCache: false };
 };
@@ -307,30 +342,24 @@ export const generateCurrentAffairs = async (category: string, language: string)
     const cached = await getFromCache<CurrentAffairItem[]>(key);
     if (cached) return { data: cached, fromCache: true };
   
-    const ai = getAIClient();
-    const response = await ai.models.generateContent({
-      model: MODEL_FAST,
-      contents: [{ parts: [{ text: `List 6 most important current events for MPSC in ${language} under category ${category}. Focus on facts relevant to exams.` }] }],
-      config: { 
-          responseMimeType: "application/json",
-          responseSchema: {
-              type: Type.ARRAY,
-              items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    headline: { type: Type.STRING },
-                    description: { type: Type.STRING },
-                    date: { type: Type.STRING },
-                    category: { type: Type.STRING },
-                    examRelevance: { type: Type.STRING }
-                  },
-                  required: ["headline", "description", "date", "category", "examRelevance"]
-              }
-          }
+    const prompt = `List 6 highly relevant current news items for MPSC in ${language}. Category: ${category}. Explain why they are important for the exam.`;
+    
+    const schema = {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          headline: { type: Type.STRING },
+          description: { type: Type.STRING },
+          date: { type: Type.STRING },
+          category: { type: Type.STRING },
+          examRelevance: { type: Type.STRING }
+        },
+        required: ["headline", "description", "date", "category", "examRelevance"]
       }
-    });
-    const cleaned = cleanJsonResponse(response.text);
-    const data = JSON.parse(cleaned);
+    };
+
+    const data = await generateWithFallback(prompt, schema, MODEL_FLASH);
     await saveToCache(key, data);
     return { data, fromCache: false };
 };
