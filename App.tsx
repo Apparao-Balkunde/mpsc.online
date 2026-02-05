@@ -11,7 +11,7 @@ import { LiteratureMode } from './components/LiteratureMode';
 import { MockTestMode } from './components/MockTestMode';
 import { Subject, Mode, UserProgress, ExamType } from './types';
 import { getProgress } from './services/progress';
-import { BookOpen, BrainCircuit, Languages, History, Newspaper, ArrowRight as ArrowIcon, BookA, Bookmark, PenTool, TrendingUp, CheckCircle2, PieChart, Globe, ShieldCheck } from 'lucide-react';
+import { BookOpen, BrainCircuit, Languages, History, Newspaper, ArrowRight as ArrowIcon, BookA, Bookmark, PenTool, TrendingUp, CheckCircle2, PieChart, Globe, ShieldCheck, Target } from 'lucide-react';
 
 const App: React.FC = () => {
   const [mode, setMode] = useState<Mode>(Mode.HOME);
@@ -35,7 +35,31 @@ const App: React.FC = () => {
     if (progress.quizzesCompleted.length === 0) return 0;
     const sum = progress.quizzesCompleted.reduce((acc, curr) => acc + (curr.score / curr.total) * 100, 0);
     return Math.round(sum / progress.quizzesCompleted.length);
-  }
+  };
+
+  const getFocusAreas = () => {
+    const topicMap = new Map<string, { totalScore: number; totalQuestions: number; attempts: number }>();
+
+    progress.quizzesCompleted.forEach(({ topic, score, total }) => {
+      const existing = topicMap.get(topic) || { totalScore: 0, totalQuestions: 0, attempts: 0 };
+      topicMap.set(topic, {
+        totalScore: existing.totalScore + score,
+        totalQuestions: existing.totalQuestions + total,
+        attempts: existing.attempts + 1,
+      });
+    });
+
+    return [...topicMap.entries()]
+      .map(([topic, stats]) => ({
+        topic,
+        attempts: stats.attempts,
+        accuracy: Math.round((stats.totalScore / stats.totalQuestions) * 100),
+      }))
+      .sort((a, b) => a.accuracy - b.accuracy)
+      .slice(0, 3);
+  };
+
+  const focusAreas = getFocusAreas();
 
   const renderHome = () => (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
@@ -85,6 +109,27 @@ const App: React.FC = () => {
                  </button>
             </div>
         </div>
+      </div>
+
+      <div className="mb-12 bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+        <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+          <Target className="text-amber-600" /> Recommended Focus Areas
+        </h3>
+        {focusAreas.length === 0 ? (
+          <p className="text-sm text-slate-500">Take a few quizzes to unlock personalized topic recommendations.</p>
+        ) : (
+          <div className="space-y-3">
+            {focusAreas.map((area) => (
+              <div key={area.topic} className="flex items-center justify-between bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">
+                <div>
+                  <p className="font-bold text-slate-900">{area.topic}</p>
+                  <p className="text-xs text-slate-600">{area.attempts} quiz attempt{area.attempts > 1 ? 's' : ''}</p>
+                </div>
+                <span className="text-sm font-black text-amber-700">{area.accuracy}% accuracy</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6 mb-12">
