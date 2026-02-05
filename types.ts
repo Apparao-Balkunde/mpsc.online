@@ -51,7 +51,9 @@ export interface VocabWord {
   type: string; 
   synonyms?: string[];
   antonyms?: string[];
-  relatedWords?: string[]; 
+  relatedWords?: string[];
+  srsLevel?: number; // 0-5 for Spaced Repetition
+  nextReviewDate?: string; // ISO string
 }
 
 export interface CurrentAffairItem {
@@ -98,6 +100,7 @@ export interface UserProgress {
     vocab: VocabWord[];
     notes: SavedNote[];
   };
+  vocabSRS?: Record<string, { level: number, nextReview: string }>;
 }
 
 export type LoadingState = 'idle' | 'loading' | 'success' | 'error';
