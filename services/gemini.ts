@@ -12,7 +12,7 @@ const MODEL_FLASH = 'gemini-3-flash-preview';
 const MODEL_PRO = 'gemini-3-pro-preview';
 const MODEL_TTS = 'gemini-2.5-flash-preview-tts';
 
-const CACHE_VERSION = 'MPSC_V35_'; 
+const CACHE_VERSION = 'MPSC_V36_'; 
 const DB_NAME = 'MPSC_Sarathi_Storage';
 const STORE_NAME = 'question_bank';
 
@@ -44,7 +44,7 @@ const quizQuestionSchema = {
       correctAnswerIndex: { type: Type.INTEGER },
       explanation: { 
         type: Type.STRING, 
-        description: "Must be a single detailed paragraph in Marathi, strictly between 80 to 90 words. Explain the reasoning and context behind the answer. Do NOT mention grammar rules, definitions, or categories like 'Synonyms/Antonyms'. Just direct logical explanation." 
+        description: "Must be a single detailed paragraph in Marathi, strictly between 80 to 90 words. Focus on WHY the answer is correct using logic and context. NO grammar rules, definitions, or categories. Just pure explanatory text." 
       },
       mnemonic: { 
         type: Type.STRING, 
@@ -58,7 +58,7 @@ const quizQuestionSchema = {
 
 const openDB = (): Promise<IDBDatabase> => {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, 6);
+    const request = indexedDB.open(DB_NAME, 7);
     request.onupgradeneeded = (e) => {
       const db = (e.target as IDBOpenDBRequest).result;
       if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME);
@@ -161,7 +161,7 @@ export const generateMockTest = async (examType: ExamType, totalCount: number = 
   for (let i = 0; i < iterations; i++) {
     const currentBatchCount = Math.min(batchSize, totalCount - allQuestions.length);
     if (currentBatchCount <= 0) break;
-    const prompt = `Generate ${currentBatchCount} MCQs for ${examType}. Detailed Marathi explanations of 80-90 words each. No grammar labels.`;
+    const prompt = `Generate ${currentBatchCount} MCQs for ${examType} exam. For EVERY question, write a Marathi explanation paragraph of exactly 80 to 90 words. Explain why the answer is correct based on logic/context. No grammar rules.`;
     try {
       const batch = await generateWithFallback(prompt, quizQuestionSchema, MODEL_PRO);
       allQuestions = [...allQuestions, ...batch];
@@ -178,7 +178,7 @@ export const generateQuiz = async (subject: Subject, topic: string, difficulty: 
   const key = `${CACHE_VERSION}QUIZ_${subject}_${topic}_${difficulty}`;
   const cached = await getFromCache<QuizQuestion[]>(key);
   if (cached) return { data: cached, fromCache: true };
-  const prompt = `Generate 10 MCQs for ${subject}: ${topic}. Explanation must be 80-90 words in Marathi, focusing on logic, not rules.`;
+  const prompt = `Generate 10 MCQs for ${subject}: ${topic}. Marathi explanations must be 80-90 words, focusing on reasoning, not technical rules.`;
   const data = await generateWithFallback(prompt, quizQuestionSchema, MODEL_FLASH);
   await saveToCache(key, data);
   return { data, fromCache: false };
@@ -190,10 +190,8 @@ export const generatePYQs = async (subject: Subject, year: string, examType: Exa
     if (cached) return { data: cached, fromCache: true };
     
     const prompt = `Retrieve 10 authentic PYQs for ${subject} from MPSC ${examType} ${year}. Topic: ${subCategory}. 
-    STRICT INSTRUCTION FOR EXPLANATION: Write a single detailed paragraph in Marathi of exactly 80 to 90 words. 
-    Explain 'why' the answer is correct by discussing the context, meaning, or history. 
-    Do NOT mention grammar rules, 'samanarthi/viruddhanarthi' headings, or 'rule' labels. 
-    Just pure logical explanation text.
+    STRICT INSTRUCTION: Provide a Marathi explanation of exactly 80 to 90 words per question. 
+    Focus on logic, history, or context. NO grammar rules or definitions. Pure reasoning.
     Include a short mnemonic.`;
     
     const data = await generateWithFallback(prompt, quizQuestionSchema, MODEL_FLASH);
@@ -207,7 +205,7 @@ export const generateVocab = async (subject: Subject, category: VocabCategory, f
     const cached = await getFromCache<VocabWord[]>(key);
     if (cached) return { data: cached, fromCache: true };
   }
-  const prompt = `20 MPSC words for ${subject} (${category}). word, meaning, usage, synonyms, antonyms. No rules.`;
+  const prompt = `20 MPSC high-frequency words for ${subject} (${category}). Include meaning, usage, synonyms, antonyms. No rules.`;
   const schema = {
     type: Type.ARRAY,
     items: {
@@ -236,7 +234,7 @@ export const generateStudyNotes = async (subject: Subject, topic: string): Promi
   const ai = getAIClient();
   const response = await ai.models.generateContent({ 
     model: MODEL_FLASH, 
-    contents: [{ parts: [{ text: `Detailed MPSC notes for ${subject}: ${topic} in Marathi. Avoid jargon.` }] }]
+    contents: [{ parts: [{ text: `Comprehensive MPSC study notes for ${subject}: ${topic} in Marathi. Focus on clarity.` }] }]
   });
   const data = response.text || "";
   if (data) await saveToCache(key, data);
@@ -247,7 +245,7 @@ export const generateConciseExplanation = async (subject: Subject, rule: string)
     const key = `${CACHE_VERSION}RULE_${subject}_${rule}`;
     const cached = await getFromCache<RuleExplanation>(key);
     if (cached) return { data: cached, fromCache: true };
-    const prompt = `Explain ${rule} in Marathi logic. Detailed but rule-free.`;
+    const prompt = `Explain the logic behind ${rule} in Marathi for MPSC candidates.`;
     const schema = {
       type: Type.OBJECT,
       properties: {
@@ -267,7 +265,7 @@ export const generateDescriptiveQA = async (topic: string): Promise<CachedRespon
     const key = `${CACHE_VERSION}LIT_${topic}`;
     const cached = await getFromCache<DescriptiveQA>(key);
     if (cached) return { data: cached, fromCache: true };
-    const prompt = `Mains model answer for: "${topic}". 500 words.`;
+    const prompt = `Mains level answer for MPSC: "${topic}". Provide a model response of 500 words in Marathi.`;
     const schema = {
       type: Type.OBJECT,
       properties: {
@@ -286,7 +284,7 @@ export const generateCurrentAffairs = async (category: string, language: string)
     const key = `${CACHE_VERSION}NEWS_${category}_${language}`;
     const cached = await getFromCache<CurrentAffairItem[]>(key);
     if (cached) return { data: cached, fromCache: true };
-    const prompt = `Latest 6 MPSC news for ${category} in ${language}.`;
+    const prompt = `Retrieve latest 6 MPSC news items for ${category} in ${language}.`;
     const schema = {
       type: Type.ARRAY,
       items: {
