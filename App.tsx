@@ -9,15 +9,21 @@ import { VocabMode } from './components/VocabMode';
 import { BookmarksMode } from './components/BookmarksMode';
 import { LiteratureMode } from './components/LiteratureMode';
 import { MockTestMode } from './components/MockTestMode';
+import { GlobalLibrary } from './components/GlobalLibrary';
 import { Subject, Mode, UserProgress, ExamType } from './types';
 import { getProgress } from './services/progress';
-import { BookOpen, BrainCircuit, Languages, History, Newspaper, ArrowRight as ArrowIcon, BookA, Bookmark, PenTool, TrendingUp, CheckCircle2, PieChart, Globe, ShieldCheck } from 'lucide-react';
+import { BookOpen, BrainCircuit, Languages, History, Newspaper, ArrowRight as ArrowIcon, BookA, Bookmark, PenTool, TrendingUp, CheckCircle2, PieChart, Globe, ShieldCheck, Database, Zap } from 'lucide-react';
 
 const App: React.FC = () => {
   const [mode, setMode] = useState<Mode>(Mode.HOME);
   const [selectedSubject, setSelectedSubject] = useState<Subject>(Subject.MARATHI);
+  const [selectedTopic, setSelectedTopic] = useState<string>('');
   const [selectedExamType, setSelectedExamType] = useState<ExamType>('ALL');
-  const [progress, setProgress] = useState<UserProgress>({ studyTopicsViewed: [], quizzesCompleted: [] });
+  const [progress, setProgress] = useState<UserProgress>({ 
+    studyTopicsViewed: [], 
+    quizzesCompleted: [],
+    bookmarks: { questions: [], vocab: [], notes: [] }
+  });
 
   useEffect(() => {
     if (mode === Mode.HOME) {
@@ -29,6 +35,12 @@ const App: React.FC = () => {
     if (subject) setSelectedSubject(subject);
     setSelectedExamType(examType);
     setMode(newMode);
+  };
+
+  const navigateToQuiz = (subject: Subject, topic: string) => {
+      setSelectedSubject(subject);
+      setSelectedTopic(topic);
+      setMode(Mode.QUIZ);
   };
 
   const getQuizAvg = () => {
@@ -45,51 +57,67 @@ const App: React.FC = () => {
         </h1>
         <p className="text-lg text-slate-600 max-w-2xl mx-auto">
           AI-powered study companion for Marathi, English, and General Studies. 
-          Analyze GS PYQs from 2010 to 2025 with expert explanations.
         </p>
       </div>
 
-      <div className="mb-10 bg-gradient-to-r from-indigo-50 to-slate-50 rounded-2xl p-6 border border-indigo-100 shadow-sm">
-        <h3 className="text-lg font-bold text-indigo-900 mb-4 flex items-center gap-2">
-            <TrendingUp className="text-indigo-600" /> Your Prep Progress
-        </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-col items-center text-center">
-                 <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 mb-2">
-                    <CheckCircle2 size={20} />
-                 </div>
-                 <div className="text-2xl font-black text-slate-800">{progress.studyTopicsViewed.length}</div>
-                 <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Topics Studied</div>
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 mb-10">
+        <div className="xl:col-span-3 bg-gradient-to-r from-indigo-50 to-slate-50 rounded-2xl p-6 border border-indigo-100 shadow-sm">
+            <h3 className="text-lg font-bold text-indigo-900 mb-4 flex items-center gap-2">
+                <TrendingUp className="text-indigo-600" /> Your Prep Progress
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-col items-center text-center">
+                    <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 mb-2">
+                        <CheckCircle2 size={20} />
+                    </div>
+                    <div className="text-2xl font-black text-slate-800">{progress.studyTopicsViewed.length}</div>
+                    <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Topics</div>
+                </div>
+                <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-col items-center text-center">
+                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mb-2">
+                        <BrainCircuit size={20} />
+                    </div>
+                    <div className="text-2xl font-black text-slate-800">{progress.quizzesCompleted.length}</div>
+                    <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Quizzes</div>
+                </div>
+                <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-col items-center text-center">
+                    <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600 mb-2">
+                        <PieChart size={20} />
+                    </div>
+                    <div className="text-2xl font-black text-slate-800">{getQuizAvg()}%</div>
+                    <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Avg Accuracy</div>
+                </div>
+                <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-col items-center text-center">
+                    <div className="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center text-pink-600 mb-2">
+                        <Bookmark size={20} />
+                    </div>
+                    <div className="text-2xl font-black text-slate-800">{progress.bookmarks.notes.length + progress.bookmarks.questions.length}</div>
+                    <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Bookmarks</div>
+                </div>
             </div>
-            <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-col items-center text-center">
-                 <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mb-2">
-                    <BrainCircuit size={20} />
-                 </div>
-                 <div className="text-2xl font-black text-slate-800">{progress.quizzesCompleted.length}</div>
-                 <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Quizzes Taken</div>
+        </div>
+        
+        <div className="bg-emerald-900 rounded-2xl p-6 text-white flex flex-col justify-between shadow-xl overflow-hidden relative group">
+            <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:scale-110 transition-transform">
+                <Database size={80} />
             </div>
-            <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-col items-center text-center">
-                 <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600 mb-2">
-                    <PieChart size={20} />
-                 </div>
-                 <div className="text-2xl font-black text-slate-800">{getQuizAvg()}%</div>
-                 <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Avg Accuracy</div>
+            <div>
+                <h3 className="font-black text-emerald-400 text-xs uppercase tracking-widest mb-1">Standard Material</h3>
+                <h2 className="text-xl font-bold leading-tight mb-2">Global Library</h2>
+                <p className="text-emerald-100 text-xs font-medium">Verified notes and questions available permanently for everyone.</p>
             </div>
-             <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-col items-center text-center justify-center">
-                 <button 
-                    onClick={() => navigate(Mode.STUDY, Subject.MARATHI)}
-                    className="w-full h-full flex flex-col items-center justify-center text-indigo-600 hover:text-indigo-800 transition-colors"
-                 >
-                    <span className="text-sm font-bold">Continue Study</span>
-                    <ArrowIcon size={16} className="mt-1" />
-                 </button>
-            </div>
+            <button 
+                onClick={() => setMode(Mode.GLOBAL_LIBRARY)}
+                className="mt-4 bg-emerald-500 text-emerald-950 py-2 px-4 rounded-xl font-black text-xs hover:bg-emerald-400 transition-colors flex items-center justify-center gap-2"
+            >
+                OPEN LIBRARY <ArrowIcon size={14} />
+            </button>
         </div>
       </div>
 
       <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6 mb-12">
-        {/* Mock Test Card - Prominent Feature */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden border-2 border-indigo-600 hover:scale-[1.02] transition-all group xl:col-span-1">
+        {/* Mock Test Card */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden border-2 border-indigo-600 hover:scale-[1.02] transition-all group">
            <div className="h-24 bg-indigo-700 p-6 flex items-end justify-between">
              <h2 className="text-xl font-bold text-white">Mock Test Center</h2>
              <ShieldCheck className="text-yellow-400 w-8 h-8" />
@@ -209,11 +237,11 @@ const App: React.FC = () => {
         {mode === Mode.HOME && renderHome()}
         
         {mode === Mode.STUDY && (
-           <StudyMode initialSubject={selectedSubject} onBack={() => navigate(Mode.HOME)} />
+           <StudyMode initialSubject={selectedSubject} onBack={() => navigate(Mode.HOME)} onNavigateToQuiz={navigateToQuiz} />
         )}
         
         {mode === Mode.QUIZ && (
-           <QuizMode initialSubject={selectedSubject} onBack={() => navigate(Mode.HOME)} />
+           <QuizMode initialSubject={selectedSubject} initialTopic={selectedTopic} onBack={() => navigate(Mode.HOME)} />
         )}
         
         {mode === Mode.PYQ && (
@@ -238,6 +266,10 @@ const App: React.FC = () => {
 
         {mode === Mode.MOCK_TEST && (
             <MockTestMode onBack={() => navigate(Mode.HOME)} />
+        )}
+
+        {mode === Mode.GLOBAL_LIBRARY && (
+            <GlobalLibrary onBack={() => navigate(Mode.HOME)} />
         )}
       </main>
 
