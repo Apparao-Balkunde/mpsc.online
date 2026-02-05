@@ -16,7 +16,7 @@ const MODEL_FLASH = 'gemini-3-flash-preview';
 const MODEL_PRO = 'gemini-3-pro-preview';
 const MODEL_TTS = 'gemini-2.5-flash-preview-tts';
 
-const CACHE_VERSION = 'MPSC_V28_'; 
+const CACHE_VERSION = 'MPSC_V29_'; 
 const DB_NAME = 'MPSC_Sarathi_Storage';
 const STORE_NAME = 'question_bank';
 
@@ -53,7 +53,7 @@ const quizQuestionSchema = {
       correctAnswerIndex: { type: Type.INTEGER },
       explanation: { 
         type: Type.STRING, 
-        description: "Markdown format. MUST include: 1. Concept Background, 2. Logical Analysis, 3. Why other options are wrong, 4. Exam Tips/Traps." 
+        description: "Markdown format. MUST be extremely detailed (minimum 150 words). Include sections: ### १. मूळ संकल्पना (The Core Concept), ### २. उत्तराचे तर्कशास्त्र (Logic of Answer), ### ३. इतर पर्याय का चुकीचे आहेत? (Why others are wrong), ### ४. परीक्षा 'ट्रॅप' (Common Mistakes to avoid), ### ५. अधिक माहिती (Bonus related facts)." 
       },
       subCategory: { type: Type.STRING }
     },
@@ -133,7 +133,7 @@ async function generateWithFallback(prompt: string, schema: any, modelPreference
         config: {
           responseMimeType: "application/json",
           responseSchema: schema,
-          temperature: 0.8,
+          temperature: 0.9, // Higher for more detailed creative teaching
           safetySettings: [
             { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
             { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
@@ -166,8 +166,10 @@ export const generateMockTest = async (examType: ExamType, totalCount: number = 
   for (let i = 0; i < iterations; i++) {
     const currentBatchCount = Math.min(batchSize, totalCount - allQuestions.length);
     if (currentBatchCount <= 0) break;
-    const prompt = `Act as an MPSC Professor. Generate ${currentBatchCount} advanced MCQs for ${examType}. Focus: ${focus}. 
-    Language: Marathi. EXPLANATIONS MUST BE DEEP AND STRUCTURED (Background -> Analysis -> Why options are wrong -> Exam Tip).`;
+    const prompt = `Act as an MPSC Expert Professor. Generate ${currentBatchCount} advanced MCQs for ${examType}. Focus: ${focus}. 
+    Language: Marathi. YOU MUST PROVIDE AN ACADEMIC ESSAY AS EXPLANATION. 
+    Break it down into: 1. Historical/Legal Context, 2. The Logic, 3. Options Analysis, 4. Exam Strategy Tip. 
+    Make the student feel they are attending a live class.`;
     try {
       const batch = await generateWithFallback(prompt, quizQuestionSchema, MODEL_PRO);
       allQuestions = [...allQuestions, ...batch];
@@ -185,7 +187,7 @@ export const generateQuiz = async (subject: Subject, topic: string, difficulty: 
   const cached = await getFromCache<QuizQuestion[]>(key);
   if (cached) return { data: cached, fromCache: true };
   const prompt = `Generate 10 MPSC practice MCQs for ${subject}: ${topic}. Difficulty: ${difficulty}. Language: Marathi. 
-  Provide highly educational, deep explanations in Markdown. Explain the 'Core Concept' behind the question.`;
+  Explanations must be structured as 'Academic Deep Dives'. Use headings, bullet points, and explain the 'WHY' behind every answer.`;
   const data = await generateWithFallback(prompt, quizQuestionSchema, MODEL_FLASH);
   await saveToCache(key, data);
   return { data, fromCache: false };
@@ -196,7 +198,7 @@ export const generatePYQs = async (subject: Subject, year: string, examType: Exa
     const cached = await getFromCache<QuizQuestion[]>(key);
     if (cached) return { data: cached, fromCache: true };
     const prompt = `Retrieve 10 General Studies questions from MPSC ${examType} ${year}. Section: ${subCategory}. 
-    Explain exactly why MPSC chose this question and provide the 'Syllabus Context' in the explanation.`;
+    Explain the 'Examiner's Mindset' - why was this specific question asked in that year? Give deep context.`;
     const data = await generateWithFallback(prompt, quizQuestionSchema, MODEL_FLASH);
     await saveToCache(key, data);
     return { data, fromCache: false };
@@ -208,7 +210,7 @@ export const generateVocab = async (subject: Subject, category: VocabCategory, f
     const cached = await getFromCache<VocabWord[]>(key);
     if (cached) return { data: cached, fromCache: true };
   }
-  const prompt = `Create a list of 20 high-frequency vocab words for MPSC ${subject}. Category: ${category}. Include meanings and sentence usage in Marathi.`;
+  const prompt = `Create a list of 20 high-frequency vocab words for MPSC ${subject}. Category: ${category}. Include meanings and sentence usage in Marathi. For Idioms, explain the origin story if relevant.`;
   const schema = {
     type: Type.ARRAY,
     items: {
@@ -235,7 +237,7 @@ export const generateStudyNotes = async (subject: Subject, topic: string): Promi
   const ai = getAIClient();
   const response = await ai.models.generateContent({ 
     model: MODEL_FLASH, 
-    contents: [{ parts: [{ text: `Create highly detailed MPSC study notes for ${subject} on: ${topic}. Use formal Marathi and follow the 'Point-wise Analysis' format used by top coaching institutes.` }] }]
+    contents: [{ parts: [{ text: `Create extremely detailed, PhD-level MPSC study notes for ${subject} on: ${topic}. Structure: Introduction -> Timeline -> Key Articles/Rules -> Critical Analysis -> Expected Questions. Use professional Marathi.` }] }]
   });
   const data = response.text || "";
   if (data) await saveToCache(key, data);
@@ -246,7 +248,7 @@ export const generateConciseExplanation = async (subject: Subject, rule: string)
     const key = `${CACHE_VERSION}RULE_${subject}_${rule}`;
     const cached = await getFromCache<RuleExplanation>(key);
     if (cached) return { data: cached, fromCache: true };
-    const prompt = `Explain the MPSC concept: "${rule}". Provide definition, importance, nuances, and exam-style examples in Marathi.`;
+    const prompt = `Explain the MPSC concept: "${rule}" in 300 words. Provide definition, historical importance, subtle nuances, and 5 exam-style examples in Marathi.`;
     const schema = {
       type: Type.OBJECT,
       properties: {
@@ -266,7 +268,7 @@ export const generateDescriptiveQA = async (topic: string): Promise<CachedRespon
     const key = `${CACHE_VERSION}LIT_${topic}`;
     const cached = await getFromCache<DescriptiveQA>(key);
     if (cached) return { data: cached, fromCache: true };
-    const prompt = `Write a descriptive Mains answer on: "${topic}". Include model answer and evaluation points.`;
+    const prompt = `Write a descriptive Mains answer on: "${topic}". Answer should be at least 1000 words. Include evaluation criteria used by MPSC moderators.`;
     const schema = {
       type: Type.OBJECT,
       properties: {
@@ -285,7 +287,7 @@ export const generateCurrentAffairs = async (category: string, language: string)
     const key = `${CACHE_VERSION}NEWS_${category}_${language}`;
     const cached = await getFromCache<CurrentAffairItem[]>(key);
     if (cached) return { data: cached, fromCache: true };
-    const prompt = `List 6 highly relevant MPSC news items for ${category} in ${language}. Explain the 'Syllabus Relevance'.`;
+    const prompt = `List 6 highly relevant news items for MPSC. Category: ${category}. Language: ${language}. For each news, explain 'Expected Question Type' for Prelims and Mains.`;
     const schema = {
       type: Type.ARRAY,
       items: {
