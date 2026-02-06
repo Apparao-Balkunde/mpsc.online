@@ -1,4 +1,3 @@
-
 export enum Subject {
   MARATHI = 'Marathi',
   ENGLISH = 'English',
@@ -20,92 +19,85 @@ export enum Mode {
 
 export type ExamType = 'ALL' | 'RAJYASEVA' | 'GROUP_B' | 'GROUP_C';
 
-export type SubjectFocus = 'BALANCED' | 'MARATHI_HEAVY' | 'ENGLISH_HEAVY' | 'GS_HEAVY';
-
 export type GSSubCategory = 'ALL' | 'HISTORY' | 'GEOGRAPHY' | 'POLITY' | 'ECONOMICS' | 'SCIENCE' | 'ENVIRONMENT';
 
 export type VocabCategory = 'IDIOMS' | 'SYNONYMS' | 'ANTONYMS' | 'ONE_WORD';
 
 export type DifficultyLevel = 'EASY' | 'MEDIUM' | 'HARD';
 
+// १. Quiz Question - Supabase Table Structure नुसार
 export interface QuizQuestion {
+  id?: string | number; // Database Primary Key
   question: string;
   options: string[];
-  correctAnswerIndex: number;
+  correct_answer_index: number; // Snake case for DB compatibility
   explanation: string;
-  mnemonic?: string; // Memory trick / Shortcut
-  examSource?: string;
-  subCategory?: string;
+  subject: Subject;
+  topic?: string;
+  exam_source?: string; // उदा. MPSC Pre 2023
+  is_pyq: boolean;
+  year?: number;
 }
 
-export interface QuizResult {
+// २. प्रगती ट्रॅक करण्यासाठी (User Stats)
+export interface QuizResultRecord {
+  id?: string;
+  topic: string;
+  score: number;
   total: number;
-  correct: number;
-  answers: number[]; 
+  date: string;
+  subject: Subject;
 }
 
+// ३. शब्दसंग्रह - Database Focus
 export interface VocabWord {
+  id?: string;
   word: string;
   meaning: string;
   usage: string;
-  type: string; 
-  synonyms?: string[];
-  antonyms?: string[];
-  relatedWords?: string[];
-  srsLevel?: number; // 0-5 for Spaced Repetition
-  nextReviewDate?: string; // ISO string
+  type: string; // उदा. नाम, सर्वनाम, Verb, Adjective
+  synonyms: string[];
+  antonyms: string[];
+  subject: Subject;
+  category: VocabCategory;
 }
 
+// ४. चालू घडामोडी
 export interface CurrentAffairItem {
+  id?: string;
   headline: string;
   description: string;
   date: string;
   category: string;
-  examRelevance: string;
+  relevance_score: string; // परीक्षेसाठी महत्त्व
 }
 
-export interface RuleExplanation {
-  definition: string;
-  importance: string;
-  nuances: string;
-  examples: string[];
-}
-
-export interface DescriptiveQA {
-  question: string;
-  modelAnswer: string;
-  keyPoints: string[];
-}
-
-export interface QuizResultRecord {
-    topic: string;
-    score: number;
-    total: number;
-    date: string;
-}
-
+// ५. अभ्यास साहित्य (Notes)
 export interface SavedNote {
   id: string;
   subject: Subject;
   topic: string;
-  content: string;
-  createdAt: string;
+  content: string; // Markdown Content
+  is_official: boolean; // आयोगाचे की युजरचे
+  created_at: string;
 }
 
+// ६. युजरचा संपूर्ण डेटाबेस प्रोग्रेस
 export interface UserProgress {
   studyTopicsViewed: string[];
   quizzesCompleted: QuizResultRecord[];
   bookmarks: {
-    questions: QuizQuestion[];
-    vocab: VocabWord[];
-    notes: SavedNote[];
+    questions: string[]; // फक्त ID स्टोअर करा (Best Practice)
+    vocab: string[];      // फक्त ID स्टोअर करा
+    notes: string[];      // फक्त ID स्टोअर करा
   };
-  vocabSRS?: Record<string, { level: number, nextReview: string }>;
 }
 
 export type LoadingState = 'idle' | 'loading' | 'success' | 'error';
 
-export interface CachedResponse<T> {
-  data: T;
-  fromCache: boolean;
+// ७. डेटाबेस रिस्पॉन्स फॉरमॅट
+export interface DBResponse<T> {
+  data: T | null;
+  error: string | null;
+  count?: number;
 }
