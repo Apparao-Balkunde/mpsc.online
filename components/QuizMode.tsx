@@ -1,221 +1,190 @@
 import React, { useState, useEffect } from 'react';
-import { Subject, LoadingState, QuizQuestion } from '../types';
-import { HelpCircle, CheckCircle2, XCircle, Loader2, ArrowLeft, Database, BookOpen, AlertCircle, RefreshCcw } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
+import { supabase } from '../lib/supabase'; // तुमची सुपाबेस फाईल
+import { QuizQuestion, Subject } from '../types';
+import { 
+  CheckCircle2, XCircle, ChevronRight, 
+  RotateCcw, ArrowLeft, Loader2, BookOpen 
+} from 'lucide-react';
 
 interface QuizModeProps {
-  initialSubject?: Subject;
-  initialTopic?: string;
+  questions?: QuizQuestion[]; // सुरुवातीचे प्रश्न (Optional)
   onBack: () => void;
-  // App.tsx कडून येणारा लाईव्ह डेटा (Supabase मधून)
-  questionsFromDB?: any[]; 
 }
 
-export const QuizMode: React.FC<QuizModeProps> = ({ 
-  initialSubject = Subject.MARATHI, 
-  initialTopic = '', 
-  onBack,
-  questionsFromDB = [] 
-}) => {
-  const [subject, setSubject] = useState<Subject>(initialSubject);
-  const [topic, setTopic] = useState(initialTopic);
-  const [status, setStatus] = useState<LoadingState>('idle');
+export const QuizMode: React.FC<QuizModeProps> = ({ onBack }) => {
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
-  const [userAnswers, setUserAnswers] = useState<number[]>([]);
-  const [showResults, setShowResults] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [showExplanation, setShowExplanation] = useState(false);
+  const [score, setScore] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [quizComplete, setQuizComplete] = useState(false);
 
-  // १. डेटा फिल्टर करण्याचे लॉजिक
-  const startQuizFromDB = (e?: React.FormEvent) => {
-    e?.preventDefault();
-    setStatus('loading');
+  // १. Supabase मधून प्रश्न लोड करणे
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('mpsc_questions')
+          .select('*')
+          .order('id', { ascending: false })
+          .limit(10); // १० प्रश्नांचा संच
 
-    // फिल्टरिंग: विषय किंवा उप-वर्गाशी जुळणारे प्रश्न निवडा
-    const filtered = questionsFromDB.filter(q => 
-      q.subject === subject && 
-      (topic === '' || q.subCategory?.toLowerCase().includes(topic.toLowerCase()))
-    );
+        if (error) throw error;
+        if (data) setQuestions(data as QuizQuestion[]);
+      } catch (err) {
+        console.error("Error fetching quiz:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    // जर प्रश्न मिळाले नाहीत तर एरर स्टेट दाखवा
-    if (filtered.length === 0) {
-      setTimeout(() => setStatus('error'), 800);
-      return;
+    fetchQuestions();
+  }, []);
+
+  const handleAnswerSelect = (index: number) => {
+    if (selectedAnswer !== null) return;
+    setSelectedAnswer(index);
+    setShowExplanation(true);
+    
+    if (index === questions[currentIndex].correct_answer_index) {
+      setScore(prev => prev + 1);
     }
-
-    // प्रश्नांचा क्रम दरवेळी बदलण्यासाठी (Shuffle)
-    const shuffled = [...filtered].sort(() => Math.random() - 0.5).slice(0, 10);
-
-    setQuestions(shuffled);
-    setUserAnswers(new Array(shuffled.length).fill(-1));
-    setShowResults(false);
-    setStatus('success');
   };
 
-  const handleOptionSelect = (qIdx: number, oIdx: number) => {
-    if (showResults) return;
-    const newAnswers = [...userAnswers];
-    newAnswers[qIdx] = oIdx;
-    setUserAnswers(newAnswers);
+  const nextQuestion = () => {
+    if (currentIndex < questions.length - 1) {
+      setCurrentIndex(prev => prev + 1);
+      setSelectedAnswer(null);
+      setShowExplanation(false);
+    } else {
+      setQuizComplete(true);
+    }
   };
 
-  const calculateScore = () => {
-    return userAnswers.reduce((score, ans, idx) => {
-      return ans === questions[idx].correctAnswerIndex ? score + 1 : score;
-    }, 0);
+  const resetQuiz = () => {
+    setCurrentIndex(0);
+    setSelectedAnswer(null);
+    setShowExplanation(false);
+    setScore(0);
+    setQuizComplete(false);
   };
 
-  return (
-    <div className="max-w-4xl mx-auto p-4 md:p-6 min-h-screen">
-      <button onClick={onBack} className="flex items-center text-slate-500 hover:text-indigo-600 mb-6 font-bold transition-colors">
-        <ArrowLeft size={20} className="mr-2" /> Back to Dashboard
-      </button>
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <Loader2 className="w-12 h-12 text-indigo-600 animate-spin mb-4" />
+        <p className="text-slate-500 font-bold">डेटाबेसमधून प्रश्न लोड होत आहेत...</p>
+      </div>
+    );
+  }
 
-      {/* IDLE STATE: विषय निवडणे */}
-      {status === 'idle' && (
-        <div className="bg-white rounded-[2rem] shadow-2xl p-8 md:p-12 border border-slate-100 animate-in fade-in zoom-in duration-500">
-          <div className="flex items-center gap-4 mb-8">
-            <div className="bg-emerald-100 p-3 rounded-2xl">
-              <Database className="text-emerald-600 h-8 w-8" />
-            </div>
-            <div>
-              <h2 className="text-3xl font-black text-slate-800">Live Question Bank</h2>
-              <p className="text-slate-500 font-medium">Practicing from Supabase Verified Database</p>
-            </div>
-          </div>
-           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
-            {Object.values(Subject).map(s => (
-              <button 
-                key={s} 
-                onClick={() => setSubject(s)} 
-                className={`p-6 rounded-2xl border-2 font-black transition-all ${
-                  subject === s 
-                  ? 'border-indigo-600 bg-indigo-50 text-indigo-600 shadow-lg scale-105' 
-                  : 'border-slate-100 text-slate-400 hover:border-slate-200'
-                }`}
-              >
-                {s}
-              </button>
-            ))}
-          </div>
+  if (questions.length === 0) {
+    return (
+      <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-300 mx-4">
+        <p className="text-slate-500 mb-6">डेटाबेसमध्ये सध्या प्रश्न उपलब्ध नाहीत.</p>
+        <button onClick={onBack} className="text-indigo-600 font-bold flex items-center gap-2 mx-auto">
+          <ArrowLeft size={20} /> मागे जा
+        </button>
+      </div>
+    );
+  }
 
-          <form onSubmit={startQuizFromDB} className="space-y-6">
-            <div>
-              <label className="block text-xs font-black text-slate-400 uppercase mb-3 tracking-widest">Search Sub-Topic (Optional)</label>
-              <input 
-                type="text" 
-                value={topic} 
-                onChange={(e) => setTopic(e.target.value)} 
-                placeholder="e.g. संधी, राज्यपाल, Fundamental Rights..." 
-                className="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 focus:ring-0 transition-all font-bold" 
-              />
-            </div>
-            <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-5 rounded-2xl font-black text-lg shadow-xl shadow-indigo-200 transition-all active:scale-95">
-              GENERATE QUIZ FROM DB
-            </button>
-          </form>
+  if (quizComplete) {
+    return (
+      <div className="max-w-2xl mx-auto bg-white p-10 rounded-[2.5rem] shadow-xl border border-slate-100 text-center">
+        <div className="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-3xl flex items-center justify-center mx-auto mb-6">
+          <CheckCircle2 size={40} />
         </div>
-      )}
-
-      {/* LOADING STATE */}
-      {status === 'loading' && (
-        <div className="text-center py-20">
-          <Loader2 className="animate-spin h-16 w-16 text-indigo-600 mx-auto mb-4" />
-          <p className="text-slate-500 font-black uppercase tracking-widest">Fetching Questions from Supabase...</p>
+        <h2 className="text-3xl font-black text-slate-900 mb-2">निकाल</h2>
+        <p className="text-slate-500 mb-8 font-medium">तुमचा सराव पूर्ण झाला आहे!</p>
+        
+        <div className="bg-slate-50 p-8 rounded-3xl mb-8">
+          <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-1">Total Score</p>
+          <p className="text-6xl font-black text-indigo-600">{score} / {questions.length}</p>
         </div>
-      )}
 
-      {/* ERROR STATE: प्रश्न न सापडल्यास */}
-      {status === 'error' && (
-        <div className="bg-white rounded-[2rem] p-12 text-center border-2 border-dashed border-slate-200">
-          <AlertCircle className="h-16 w-16 text-rose-500 mx-auto mb-4" />
-          <h3 className="text-2xl font-black text-slate-800 mb-2">No Questions Found!</h3>
-          <p className="text-slate-500 mb-8 font-medium">डेटाबेसमध्ये या विषयाचे प्रश्न सध्या उपलब्ध नाहीत. कृपया दुसरा विषय निवडा.</p>
-          <button onClick={() => setStatus('idle')} className="bg-slate-900 text-white px-8 py-4 rounded-xl font-bold flex items-center gap-2 mx-auto">
-            <RefreshCcw size={18} /> Try Another Subject
+        <div className="flex gap-4">
+          <button onClick={resetQuiz} className="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2">
+            <RotateCcw size={20} /> पुन्हा प्रयत्न करा
+          </button>
+          <button onClick={onBack} className="flex-1 border border-slate-200 py-4 rounded-2xl font-bold hover:bg-slate-50">
+            होम स्क्रीन
           </button>
         </div>
-      )}
+      </div>
+    );
+  }
 
-      {/* SUCCESS STATE: क्विझ सुरू */}
-      {status === 'success' && (
-        <div className="space-y-8 pb-20 animate-in slide-in-from-bottom-10 duration-700">
-          {/* Progress Header */}
-          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex justify-between items-center sticky top-4 z-10">
-            <span className="font-black text-indigo-600 uppercase tracking-tighter">Live Exam: {subject}</span>
-            {showResults && (
-              <div className="px-6 py-2 bg-emerald-100 text-emerald-700 rounded-full font-black">
-                SCORE: {calculateScore()} / {questions.length}
-              </div>
-            )}
+  const currentQ = questions[currentIndex];
+
+  return (
+    <div className="max-w-3xl mx-auto px-4 py-8">
+      {/* Top Navigation */}
+      <div className="flex justify-between items-center mb-8">
+        <button onClick={onBack} className="p-3 hover:bg-white rounded-2xl transition-all text-slate-400">
+          <ArrowLeft size={24} />
+        </button>
+        <div className="px-5 py-2 bg-white rounded-full border border-slate-200 text-sm font-bold text-slate-600">
+          प्रश्न {currentIndex + 1} / {questions.length}
+        </div>
+        <div className="w-10"></div>
+      </div>
+
+      {/* Question Card */}
+      <div className="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-sm border border-slate-100 mb-6">
+        <div className="flex items-center gap-3 mb-6">
+           <span className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-black uppercase tracking-wider">
+             {currentQ.subject}
+           </span>
+        </div>
+        
+        <h3 className="text-xl md:text-2xl font-bold text-slate-900 leading-relaxed mb-10">
+          {currentQ.question}
+        </h3>
+
+        <div className="grid gap-4">
+          {currentQ.options.map((option, idx) => {
+            const isCorrect = idx === currentQ.correct_answer_index;
+            const isSelected = idx === selectedAnswer;
+            
+            let btnClass = "w-full p-5 rounded-2xl border-2 text-left font-bold transition-all flex justify-between items-center ";
+            
+            if (selectedAnswer === null) {
+              btnClass += "border-slate-100 hover:border-indigo-200 hover:bg-indigo-50/30 text-slate-700";
+            } else if (isCorrect) {
+              btnClass += "border-emerald-500 bg-emerald-50 text-emerald-700";
+            } else if (isSelected && !isCorrect) {
+              btnClass += "border-red-500 bg-red-50 text-red-700";
+            } else {
+              btnClass += "border-slate-50 text-slate-400 opacity-50";
+            }
+
+            return (
+              <button key={idx} onClick={() => handleAnswerSelect(idx)} disabled={selectedAnswer !== null} className={btnClass}>
+                <span>{option}</span>
+                {selectedAnswer !== null && isCorrect && <CheckCircle2 size={20} />}
+                {selectedAnswer !== null && isSelected && !isCorrect && <XCircle size={20} />}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Explanation Box */}
+      {showExplanation && (
+        <div className="bg-white rounded-[2rem] p-8 border-l-8 border-indigo-500 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="flex items-center gap-3 mb-4 text-indigo-600">
+            <BookOpen size={20} />
+            <h4 className="font-black uppercase text-xs tracking-widest">स्पष्टीकरण</h4>
           </div>
-
-          {questions.map((q, qIdx) => (
-            <div key={qIdx} className="bg-white rounded-[2.5rem] shadow-xl p-8 md:p-10 border border-slate-100 overflow-hidden relative">
-              <div className="flex items-start gap-4 mb-8">
-                <span className="bg-slate-900 text-white w-10 h-10 rounded-xl flex items-center justify-center font-black shrink-0">{qIdx + 1}</span>
-                <h3 className="text-xl md:text-2xl font-bold text-slate-800 leading-snug">{q.question}</h3>
-              </div>
-              
-              <div className="grid grid-cols-1 gap-4 mb-8">
-                {q.options.map((opt, oIdx) => {
-                  const isSelected = userAnswers[qIdx] === oIdx;
-                  const isCorrect = q.correctAnswerIndex === oIdx;
-                  let cardStyle = "border-slate-100 hover:border-indigo-200";
-                  
-                  if (showResults) {
-                    if (isCorrect) cardStyle = "border-emerald-500 bg-emerald-50 ring-2 ring-emerald-500";
-                    else if (isSelected && !isCorrect) cardStyle = "border-rose-500 bg-rose-50";
-                    else cardStyle = "opacity-50 border-slate-100";
-                  } else if (isSelected) {
-                    cardStyle = "border-indigo-600 bg-indigo-50 shadow-md scale-[1.02]";
-                  }
-
-                  return (
-                    <button 
-                      key={oIdx} 
-                      disabled={showResults}
-                      onClick={() => handleOptionSelect(qIdx, oIdx)}
-                      className={`group flex items-center justify-between p-6 rounded-2xl border-2 transition-all text-left font-bold text-lg ${cardStyle}`}
-                    >
-                      <span>{opt}</span>
-                      {showResults && isCorrect && <CheckCircle2 className="text-emerald-500 shrink-0" />}
-                      {showResults && isSelected && !isCorrect && <XCircle className="text-rose-500 shrink-0" />}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Explanations with Markdown */}
-              {showResults && (
-                <div className="mt-8 animate-in slide-in-from-top-4 duration-500">
-                  <div className="bg-slate-950 p-8 md:p-10 rounded-[2rem] text-slate-200 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-8 opacity-10">
-                      <BookOpen size={80} />
-                    </div>
-                    <div className="flex items-center gap-3 mb-6">
-                      <div className="h-8 w-1 bg-yellow-500 rounded-full"></div>
-                      <span className="text-sm font-black uppercase tracking-widest text-yellow-500">Detailed Analysis</span>
-                    </div>
-                    <div className="prose prose-invert max-w-none text-slate-300 leading-relaxed font-medium">
-                      <ReactMarkdown>{q.explanation}</ReactMarkdown>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
-
-          {!showResults && (
-            <button 
-              onClick={() => {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                setShowResults(true);
-              }} 
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-6 rounded-[2rem] font-black text-xl shadow-2xl shadow-emerald-200 transition-all active:scale-95 mb-20"
-            >
-              FINISH & VIEW SOLUTIONS
-            </button>
-          )}
+          <p className="text-slate-700 leading-relaxed font-medium">
+            {currentQ.explanation || "या प्रश्नाचे स्पष्टीकरण उपलब्ध नाही."}
+          </p>
+          <button onClick={nextQuestion} className="mt-8 w-full bg-indigo-600 text-white py-4 rounded-2xl font-black flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all">
+            पुढील प्रश्न <ChevronRight size={20} />
+          </button>
         </div>
       )}
     </div>
