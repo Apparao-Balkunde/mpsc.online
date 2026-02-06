@@ -1,9 +1,9 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { Subject, VocabWord, VocabCategory, LoadingState } from '../types';
 import { generateVocab, playTextToSpeech } from '../services/gemini';
-import { getProgress, toggleVocabBookmark, updateVocabSRS } from '../services/progress';
-import { BookA, Loader2, ArrowLeft, RotateCw, Volume2, Bookmark, Database, Sparkles, CheckCircle2, XCircle, BrainCircuit, Calendar, Play } from 'lucide-react';
+// Fix: Path set to storageService for Render compatibility
+import { getProgress, toggleVocabBookmark, updateVocabSRS } from '../services/storageService';
+import { BookA, Loader2, ArrowLeft, RotateCw, Volume2, Bookmark, Database, CheckCircle2, XCircle, BrainCircuit, Calendar, Play, GraduationCap } from 'lucide-react';
 
 interface VocabModeProps {
   onBack: () => void;
@@ -116,7 +116,7 @@ export const VocabMode: React.FC<VocabModeProps> = ({ onBack }) => {
 
   return (
     <div className="max-w-6xl mx-auto p-4 md:p-6 space-y-6">
-      <button onClick={onBack} className="flex items-center text-slate-500 hover:text-indigo-600 mb-4 transition-colors">
+      <button onClick={onBack} className="flex items-center text-slate-500 hover:text-indigo-600 mb-4 font-bold">
         <ArrowLeft size={16} className="mr-1" /> Back to Dashboard
       </button>
 
@@ -124,7 +124,7 @@ export const VocabMode: React.FC<VocabModeProps> = ({ onBack }) => {
         <div className="w-full md:w-80 space-y-6 shrink-0 sticky top-24">
             <div className="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
                 <div className="p-6 bg-indigo-900 text-white">
-                    <h2 className="text-xl font-black flex items-center gap-3"><BookA size={24} className="text-yellow-400" /> Vocabulary Archive</h2>
+                    <h2 className="text-xl font-black flex items-center gap-3"><BookA size={24} className="text-yellow-400" /> Syllabus Archive</h2>
                 </div>
                 <div className="p-6 space-y-6">
                     <div>
@@ -135,7 +135,7 @@ export const VocabMode: React.FC<VocabModeProps> = ({ onBack }) => {
                         </div>
                     </div>
                     <div>
-                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Study Focus</label>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Vocabulary Focus</label>
                         <select value={category} onChange={(e) => setCategory(e.target.value as VocabCategory)} className="w-full p-3.5 border-2 border-slate-100 rounded-xl text-sm font-bold outline-none focus:border-indigo-500 transition-all">
                           <option value="SYNONYMS">Synonyms (समानार्थी)</option>
                           <option value="ANTONYMS">Antonyms (विरुद्धार्थी)</option>
@@ -144,14 +144,14 @@ export const VocabMode: React.FC<VocabModeProps> = ({ onBack }) => {
                         </select>
                     </div>
                     <button onClick={() => fetchVocab(true)} disabled={status === 'loading'} className="w-full flex items-center justify-center gap-2 bg-slate-900 text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-black transition-colors shadow-2xl">
-                        {status === 'loading' ? <Loader2 className="animate-spin" size={18}/> : <RotateCw size={18} />} Refresh List
+                        {status === 'loading' ? <Loader2 className="animate-spin" size={18}/> : <RotateCw size={18} />} Update List
                     </button>
                 </div>
             </div>
 
             <div className="bg-indigo-600 rounded-[2rem] p-8 text-white shadow-2xl relative overflow-hidden group">
                 <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:rotate-12 transition-transform"><BrainCircuit size={100} /></div>
-                <h3 className="font-black text-xs uppercase tracking-widest mb-2 text-indigo-200">Spaced Repetition</h3>
+                <h3 className="font-black text-xs uppercase tracking-widest mb-2 text-indigo-200">Memory Engine</h3>
                 <h2 className="text-2xl font-black mb-4">SRS Review</h2>
                 <div className="flex items-center justify-between mb-6 bg-indigo-700/50 p-4 rounded-2xl">
                     <span className="text-xs font-bold text-indigo-100 flex items-center gap-2"><Calendar size={14}/> Due for review</span>
@@ -172,17 +172,17 @@ export const VocabMode: React.FC<VocabModeProps> = ({ onBack }) => {
                  <div>
                     <h1 className="text-3xl font-black text-slate-900">{category} Master List</h1>
                     <div className="flex items-center gap-2 mt-1">
-                        <p className="text-slate-500 text-sm font-medium">Lexical relations for high-speed revision.</p>
+                        <p className="text-slate-500 text-sm font-medium">Standard lexical relations for MPSC exams.</p>
                         {fromCache && <span className="text-[10px] bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full border border-emerald-200 flex items-center gap-1 font-black"><Database size={10}/> LOCAL BANK</span>}
                     </div>
                  </div>
-                 <Sparkles className="text-yellow-400 h-10 w-10 opacity-30" />
+                 <GraduationCap className="text-indigo-600 h-10 w-10 opacity-30" />
              </div>
 
              {status === 'loading' && (
                <div className="text-center py-32 bg-white rounded-3xl shadow-xl border border-slate-100">
                   <Loader2 className="animate-spin h-16 w-16 text-indigo-600 mx-auto mb-6" />
-                  <p className="text-slate-500 font-black uppercase tracking-widest text-xs">Assembling Lexical Data...</p>
+                  <p className="text-slate-500 font-black uppercase tracking-widest text-xs">Loading Vocabulary Data...</p>
                </div>
              )}
 
@@ -193,8 +193,8 @@ export const VocabMode: React.FC<VocabModeProps> = ({ onBack }) => {
                             <div className="flex justify-between items-start mb-6">
                                 <div>
                                     <div className="flex items-center gap-3 mb-2">
-                                       <span className="text-[10px] font-black text-indigo-500 bg-indigo-50 px-3 py-1 rounded-full uppercase tracking-widest">{item.type}</span>
-                                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Entry #{idx + 1}</span>
+                                        <span className="text-[10px] font-black text-indigo-500 bg-indigo-50 px-3 py-1 rounded-full uppercase tracking-widest">{item.type}</span>
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Entry #{idx + 1}</span>
                                     </div>
                                     <h3 className="text-4xl font-black text-slate-900 group-hover:text-indigo-700 transition-colors tracking-tight">{item.word}</h3>
                                 </div>
@@ -209,7 +209,7 @@ export const VocabMode: React.FC<VocabModeProps> = ({ onBack }) => {
                             </div>
                             
                             <div className="mb-10">
-                                <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3">Exact Meaning</h4>
+                                <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3">Contextual Meaning</h4>
                                 <p className="text-2xl text-slate-800 font-bold leading-tight">{item.meaning}</p>
                             </div>
 
@@ -230,7 +230,7 @@ export const VocabMode: React.FC<VocabModeProps> = ({ onBack }) => {
 
                             <div className="bg-slate-900 p-8 rounded-[2rem] border border-slate-800 relative group/usage">
                                 <div className="absolute top-4 right-4 text-slate-700 font-black italic text-4xl opacity-20">"</div>
-                                <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Practical Usage</h4>
+                                <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Usage Example</h4>
                                 <p className="text-lg text-slate-100 italic font-serif leading-relaxed">"{item.usage}"</p>
                             </div>
                         </div>
