@@ -8,10 +8,10 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Serve static files from the dist directory (Vite build output)
+// 'dist' फोल्डर सर्व्ह करणे (हा फोल्डर npm run build नंतर तयार होतो)
 app.use(express.static(path.join(__dirname, 'dist')));
 
-// Handle React routing, return all requests to React app
+// सर्व विनंत्या index.html कडे वळवणे (React Routing साठी)
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
