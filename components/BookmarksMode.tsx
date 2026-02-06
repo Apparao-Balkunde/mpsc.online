@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { QuizQuestion, VocabWord, SavedNote, Subject } from '../types';
+import { QuizQuestion, VocabWord, SavedNote } from '../types';
 import { getProgress, toggleQuestionBookmark, toggleVocabBookmark, removeNote, exportLibrary, importLibrary } from '../services/progress';
-import { Bookmark, ArrowLeft, Trash2, Eye, BookA, FileText, GraduationCap, Volume2, Database, Clock, Download, Upload, Check, AlertCircle } from 'lucide-react';
+import { Bookmark, ArrowLeft, Trash2, Eye, BookA, FileText, GraduationCap, Clock, Download, Upload, Check } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 interface BookmarksModeProps {
@@ -42,13 +42,9 @@ export const BookmarksMode: React.FC<BookmarksModeProps> = ({ onBack }) => {
     setRevealedAnswers(prev => prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]);
   };
 
-  const handleExport = () => {
-    exportLibrary();
-  };
+  const handleExport = () => exportLibrary();
 
-  const handleImportClick = () => {
-    fileInputRef.current?.click();
-  };
+  const handleImportClick = () => fileInputRef.current?.click();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -67,33 +63,22 @@ export const BookmarksMode: React.FC<BookmarksModeProps> = ({ onBack }) => {
       }
     };
     reader.readAsText(file);
-    e.target.value = ''; // Reset input
+    e.target.value = ''; 
   };
 
   return (
     <div className="max-w-5xl mx-auto p-4 md:p-6 space-y-6">
+      {/* Navigation Header */}
       <div className="flex justify-between items-center">
-        <button onClick={onBack} className="flex items-center text-slate-500 hover:text-indigo-600 transition-colors">
-          <ArrowLeft size={16} className="mr-1" /> Back to Dashboard
+        <button onClick={onBack} className="flex items-center text-slate-500 hover:text-indigo-600 transition-colors font-semibold">
+          <ArrowLeft size={16} className="mr-2" /> Back to Dashboard
         </button>
         <div className="flex gap-2">
-            <input 
-                type="file" 
-                ref={fileInputRef} 
-                onChange={handleFileChange} 
-                accept=".json" 
-                className="hidden" 
-            />
-            <button 
-                onClick={handleImportClick}
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-50 transition-all shadow-sm"
-            >
+            <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".json" className="hidden" />
+            <button onClick={handleImportClick} className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-50 transition-all shadow-sm">
                 <Upload size={14} /> Restore Backup
             </button>
-            <button 
-                onClick={handleExport}
-                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition-all shadow-sm"
-            >
+            <button onClick={handleExport} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition-all shadow-sm">
                 <Download size={14} /> Download Backup
             </button>
         </div>
@@ -106,6 +91,7 @@ export const BookmarksMode: React.FC<BookmarksModeProps> = ({ onBack }) => {
           </div>
       )}
 
+      {/* Main Branding Header */}
       <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden mb-6">
         <div className="p-8 bg-indigo-700 text-white relative">
           <div className="absolute top-0 right-0 p-8 opacity-10">
@@ -113,11 +99,12 @@ export const BookmarksMode: React.FC<BookmarksModeProps> = ({ onBack }) => {
           </div>
           <h2 className="text-3xl font-black mb-2 flex items-center gap-3">
             <Bookmark fill="currentColor" className="text-yellow-400" />
-            My Offline Library
+            Study Library
           </h2>
-          <p className="text-indigo-100 font-medium">Items saved here are stored in your browser. Use 'Download Backup' to keep them forever.</p>
+          <p className="text-indigo-100 font-medium opacity-90">Access your saved questions, vocabulary, and hand-crafted study notes offline.</p>
         </div>
         
+        {/* Tab Navigation */}
         <div className="flex border-b border-slate-100 bg-slate-50/50">
           {(['QUESTIONS', 'VOCAB', 'NOTES'] as BookmarkTab[]).map(tab => (
             <button
@@ -133,14 +120,11 @@ export const BookmarksMode: React.FC<BookmarksModeProps> = ({ onBack }) => {
         </div>
       </div>
 
+      {/* Content Area */}
       <div className="space-y-6 animate-in fade-in duration-500">
         {activeTab === 'QUESTIONS' && (
           bookmarks.questions.length === 0 ? (
-            <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200">
-                <Bookmark size={48} className="mx-auto text-slate-200 mb-4" />
-                <p className="text-slate-500 font-bold">No saved questions yet.</p>
-                <p className="text-slate-400 text-sm mt-1">Bookmark questions from the PYQ or Mock Test section.</p>
-            </div>
+            <EmptyState icon={<Bookmark size={48} />} title="No saved questions" desc="Bookmark important PYQs to see them here." />
           ) : (
             bookmarks.questions.map((q, idx) => (
               <div key={idx} className="bg-white rounded-3xl shadow-lg border border-slate-100 p-8 group relative hover:border-indigo-200 transition-colors">
@@ -165,7 +149,6 @@ export const BookmarksMode: React.FC<BookmarksModeProps> = ({ onBack }) => {
                     </button>
                     {revealedAnswers.includes(idx) && (
                       <div className="mt-4 p-6 bg-slate-50 rounded-2xl border border-slate-200 animate-in slide-in-from-top-2">
-                        {/* Fixed: Wrapped ReactMarkdown in a div as it doesn't support className directly in some versions */}
                         <div className="prose prose-sm font-medium text-slate-700">
                           <ReactMarkdown>{q.explanation}</ReactMarkdown>
                         </div>
@@ -177,38 +160,33 @@ export const BookmarksMode: React.FC<BookmarksModeProps> = ({ onBack }) => {
           )
         )}
 
+        {/* ... Similar clean-up for VOCAB and NOTES sections ... */}
         {activeTab === 'VOCAB' && (
-          bookmarks.vocab.length === 0 ? (
-            <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200">
-                <BookA size={48} className="mx-auto text-slate-200 mb-4" />
-                <p className="text-slate-500 font-bold">No saved words yet.</p>
-            </div>
-          ) : (
+           bookmarks.vocab.length === 0 ? (
+            <EmptyState icon={<BookA size={48} />} title="No saved words" desc="Keep track of difficult Marathi or English terms." />
+           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {bookmarks.vocab.map((v, idx) => (
-                <div key={idx} className="bg-white rounded-3xl shadow-lg border border-slate-100 p-8 relative hover:border-indigo-200 transition-colors">
-                  <button onClick={() => handleRemoveVocab(v)} className="absolute top-6 right-6 text-slate-300 hover:text-red-500"><Trash2 size={18}/></button>
-                  <h3 className="text-2xl font-black text-indigo-900 mb-2">{v.word}</h3>
-                  <span className="inline-block px-2 py-0.5 rounded text-[10px] font-black uppercase bg-slate-100 text-slate-500 mb-4">{v.type}</span>
-                  <p className="text-slate-800 font-bold text-lg mb-4">{v.meaning}</p>
-                  <div className="p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100">
-                    <p className="text-sm italic text-slate-600 font-serif leading-relaxed">"{v.usage}"</p>
-                  </div>
-                </div>
-              ))}
+               {bookmarks.vocab.map((v, idx) => (
+                 <div key={idx} className="bg-white rounded-3xl shadow-lg border border-slate-100 p-8 relative hover:border-indigo-200 transition-colors">
+                   <button onClick={() => handleRemoveVocab(v)} className="absolute top-6 right-6 text-slate-300 hover:text-red-500"><Trash2 size={18}/></button>
+                   <h3 className="text-2xl font-black text-indigo-900 mb-2">{v.word}</h3>
+                   <span className="inline-block px-2 py-0.5 rounded text-[10px] font-black uppercase bg-slate-100 text-slate-500 mb-4">{v.type}</span>
+                   <p className="text-slate-800 font-bold text-lg mb-4">{v.meaning}</p>
+                   <div className="p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100">
+                     <p className="text-sm italic text-slate-600 font-serif leading-relaxed">"{v.usage}"</p>
+                   </div>
+                 </div>
+               ))}
             </div>
-          )
+           )
         )}
 
         {activeTab === 'NOTES' && (
           bookmarks.notes.length === 0 ? (
-            <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200">
-                <FileText size={48} className="mx-auto text-slate-200 mb-4" />
-                <p className="text-slate-500 font-bold">No saved study notes yet.</p>
-            </div>
+            <EmptyState icon={<FileText size={48} />} title="No study notes" desc="Save summaries and important topics here." />
           ) : (
-            bookmarks.notes.map((note, idx) => (
-              <div key={note.id} className="bg-white rounded-3xl shadow-lg border border-slate-100 overflow-hidden group">
+            bookmarks.notes.map((note) => (
+              <div key={note.id} className="bg-white rounded-3xl shadow-lg border border-slate-100 overflow-hidden group mb-6">
                 <div className="p-6 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
                    <div className="flex items-center gap-3">
                       <div className="p-2 bg-indigo-600 text-white rounded-xl"><GraduationCap size={20}/></div>
@@ -233,3 +211,12 @@ export const BookmarksMode: React.FC<BookmarksModeProps> = ({ onBack }) => {
     </div>
   );
 };
+
+/* Helper Component for Empty States */
+const EmptyState = ({ icon, title, desc }: { icon: React.ReactNode, title: string, desc: string }) => (
+    <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200">
+        <div className="mx-auto text-slate-200 mb-4 flex justify-center">{icon}</div>
+        <p className="text-slate-500 font-bold">{title}</p>
+        <p className="text-slate-400 text-sm mt-1">{desc}</p>
+    </div>
+);
