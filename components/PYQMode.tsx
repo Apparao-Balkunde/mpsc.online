@@ -1,9 +1,8 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Subject, LoadingState, QuizQuestion, ExamType } from '../types';
 import { generatePYQs } from '../services/gemini';
 import { getProgress, toggleQuestionBookmark } from '../services/progress';
-import { History, Search, Loader2, ArrowLeft, Eye, Bookmark, Info, Calendar, Filter, BookOpen, ShieldCheck, AlertCircle, Database, GraduationCap, Zap, BrainCircuit, Sparkles, BookA, Languages, ChevronDown, ChevronUp, Copy, Check } from 'lucide-react';
+import { History, Search, Loader2, ArrowLeft, Bookmark, ShieldCheck, Database, GraduationCap, Zap, BrainCircuit, Sparkles, BookA, Languages, ChevronDown, ChevronUp, Copy, Check, Filter } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 interface PYQModeProps {
@@ -55,22 +54,25 @@ export function PYQMode({ initialExamType = 'ALL', onBack }: PYQModeProps) {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
 
-  useEffect(() => {
-    setBookmarks(getProgress().bookmarks.questions.map(q => q.question));
-    fetchQuestions();
-  }, []);
-
-  const fetchQuestions = async () => {
+  // Memoized fetch function to prevent infinite loops
+  const fetchQuestions = useCallback(async () => {
     setStatus('loading');
-    setQuestions([]);
     try {
       const result = await generatePYQs(subject, selectedYear, examType, topic);
       setQuestions(result.data);
       setFromCache(result.fromCache);
       setRevealedAnswers([]);
       setStatus('success');
-    } catch (e) { setStatus('error'); }
-  };
+    } catch (e) { 
+      setStatus('error'); 
+    }
+  }, [subject, selectedYear, examType, topic]);
+
+  // Initial load and sync bookmarks
+  useEffect(() => {
+    setBookmarks(getProgress().bookmarks.questions.map(q => q.question));
+    fetchQuestions();
+  }, [fetchQuestions]);
 
   const toggleReveal = (index: number) => {
     setRevealedAnswers(prev => prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]);
@@ -78,30 +80,30 @@ export function PYQMode({ initialExamType = 'ALL', onBack }: PYQModeProps) {
 
   const handleToggleBookmark = (q: QuizQuestion) => {
     const isAdded = toggleQuestionBookmark(q);
-    if (isAdded) {
-      setBookmarks(prev => [...prev, q.question]);
-    } else {
-      setBookmarks(prev => prev.filter(text => text !== q.question));
-    }
+    setBookmarks(prev => isAdded ? [...prev, q.question] : prev.filter(text => text !== q.question));
   };
 
-  const handleCopyExplanation = (text: string, idx: number) => {
-    navigator.clipboard.writeText(text);
+  const handleCopyExplanation = (q: QuizQuestion, idx: number) => {
+    const textToCopy = `प्रश्न: ${q.question}\nउत्तर: ${q.options[q.correctAnswerIndex]}\n\nस्पष्टीकरण:\n${q.explanation}`;
+    navigator.clipboard.writeText(textToCopy);
     setCopiedIdx(idx);
     setTimeout(() => setCopiedIdx(null), 2000);
   };
 
+  // Improved filtering (Search in questions & explanations)
   const filteredQuestions = questions.filter(q => 
-    q.question.toLowerCase().includes(searchKeyword.toLowerCase())
+    q.question.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+    q.explanation.toLowerCase().includes(searchKeyword.toLowerCase())
   );
 
   return (
     <div className="max-w-6xl mx-auto p-4 md:p-6 space-y-6">
-      <button onClick={onBack} className="flex items-center text-slate-500 hover:text-indigo-600 mb-4 transition-colors">
-        <ArrowLeft size={16} className="mr-1" /> Back to Dashboard
+      <button onClick={onBack} className="flex items-center text-slate-500 hover:text-indigo-600 mb-4 transition-colors font-bold">
+        <ArrowLeft size={18} className="mr-2" /> Back to Dashboard
       </button>
 
       <div className="bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden">
+        {/* Header Section */}
         <div className="p-10 bg-indigo-700 text-white relative">
           <div className="absolute top-0 right-0 p-10 opacity-10 pointer-events-none">
              <History size={160} />
@@ -115,9 +117,14 @@ export function PYQMode({ initialExamType = 'ALL', onBack }: PYQModeProps) {
                 </h2>
                 <p className="text-indigo-100 text-lg font-medium">Authentic MPSC questions with deep context analysis.</p>
              </div>
-             {fromCache && <div className="bg-emerald-600/30 backdrop-blur-md text-white px-6 py-2 rounded-2xl text-[11px] font-black flex items-center gap-3 border border-emerald-400/30 shadow-2xl"><Database size={16}/> LOCAL CACHE ACTIVE</div>}
+             {fromCache && (
+                <div className="bg-emerald-600/30 backdrop-blur-md text-white px-6 py-2 rounded-2xl text-[11px] font-black flex items-center gap-3 border border-emerald-400/30 shadow-2xl">
+                    <Database size={16}/> LOCAL CACHE ACTIVE
+                </div>
+             )}
           </div>
 
+          {/* Subject Tabs */}
           <div className="flex flex-wrap gap-3 mt-10 relative z-10">
             {Object.values(Subject).map(s => (
                 <button 
@@ -133,46 +140,41 @@ export function PYQMode({ initialExamType = 'ALL', onBack }: PYQModeProps) {
             ))}
           </div>
 
+          {/* Filters Grid */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end mt-10 relative z-10">
-            <div className="space-y-2">
-                <label className="text-[10px] font-black text-indigo-200 uppercase tracking-widest ml-1">Archive Year</label>
-                <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} className="w-full rounded-2xl border-none bg-white text-slate-900 p-4 text-sm font-bold shadow-lg outline-none focus:ring-4 focus:ring-yellow-400 transition-all">
-                    {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
-                </select>
-            </div>
-            <div className="space-y-2">
-                <label className="text-[10px] font-black text-indigo-200 uppercase tracking-widest ml-1">Exam Stream</label>
-                <select value={examType} onChange={(e) => setExamType(e.target.value as ExamType)} className="w-full rounded-2xl border-none bg-white text-slate-900 p-4 text-sm font-bold shadow-lg outline-none focus:ring-4 focus:ring-yellow-400 transition-all">
-                    <option value="RAJYASEVA">Rajyaseva (Prelims)</option>
-                    <option value="GROUP_B">Combined B (PSI/STI/ASO)</option>
-                    <option value="GROUP_C">Combined C (Clerk/Tax)</option>
-                </select>
-            </div>
-            <div className="space-y-2">
-                <label className="text-[10px] font-black text-indigo-200 uppercase tracking-widest ml-1">Subject Category</label>
-                <select value={topic} onChange={(e) => setTopic(e.target.value)} className="w-full rounded-2xl border-none bg-white text-slate-900 p-4 text-sm font-bold shadow-lg outline-none focus:ring-4 focus:ring-yellow-400 transition-all">
-                    {TOPICS_CONFIG[subject].map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-                </select>
-            </div>
-            <button onClick={fetchQuestions} className="bg-yellow-400 text-indigo-900 py-4.5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl hover:bg-yellow-300 active:scale-95 transition-all flex items-center justify-center gap-2">
-                <Search size={18} /> Search Archives
+            <FilterGroup label="Archive Year" value={selectedYear} onChange={setSelectedYear} options={YEARS.map(y => ({ label: y, value: y }))} />
+            <FilterGroup 
+                label="Exam Stream" 
+                value={examType} 
+                onChange={(v) => setExamType(v as ExamType)} 
+                options={[
+                    { label: 'Rajyaseva (Prelims)', value: 'RAJYASEVA' },
+                    { label: 'Combined B (PSI/STI/ASO)', value: 'GROUP_B' },
+                    { label: 'Combined C (Clerk/Tax)', value: 'GROUP_C' }
+                ]} 
+            />
+            <FilterGroup label="Subject Category" value={topic} onChange={setTopic} options={TOPICS_CONFIG[subject]} />
+            
+            <button onClick={fetchQuestions} className="bg-yellow-400 text-indigo-900 py-4.5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl hover:bg-yellow-300 active:scale-95 transition-all flex items-center justify-center gap-2 h-[52px]">
+                <Search size={18} /> Refresh List
             </button>
           </div>
         </div>
 
-        <div className="p-8 bg-slate-50/50">
+        {/* Content Section */}
+        <div className="p-8 bg-slate-50/50 min-h-[400px]">
              {status === 'loading' && (
-                <div className="text-center py-32">
+                <div className="text-center py-32 animate-pulse">
                     <Loader2 className="animate-spin h-20 w-20 text-indigo-600 mx-auto mb-6" />
                     <p className="text-slate-500 font-black uppercase tracking-widest text-xs">Accessing Official MPSC Archives...</p>
                 </div>
              )}
 
-             {status === 'success' && questions.length > 0 && (
+             {status === 'success' && (
                 <div className="space-y-10">
                     <div className="flex flex-col md:flex-row justify-between items-center gap-6 bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
                         <div className="flex items-center gap-5">
-                            <div className="w-14 h-14 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-black text-xl shadow-xl">{questions.length}</div>
+                            <div className="w-14 h-14 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-black text-xl shadow-xl">{filteredQuestions.length}</div>
                             <div>
                                 <h4 className="font-black text-slate-900 text-lg">Official Records Retrieved</h4>
                                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{subject} • {selectedYear} • {examType}</p>
@@ -180,7 +182,7 @@ export function PYQMode({ initialExamType = 'ALL', onBack }: PYQModeProps) {
                         </div>
                         <div className="relative w-full md:w-96 group">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors" size={20} />
-                            <input type="text" value={searchKeyword} onChange={(e) => setSearchKeyword(e.target.value)} placeholder="Filter keywords..." className="w-full py-4 pl-12 pr-6 bg-slate-50 border-2 border-transparent focus:border-indigo-500 rounded-2xl text-sm font-bold transition-all outline-none" />
+                            <input type="text" value={searchKeyword} onChange={(e) => setSearchKeyword(e.target.value)} placeholder="Filter by keywords or concepts..." className="w-full py-4 pl-12 pr-6 bg-slate-50 border-2 border-transparent focus:border-indigo-500 rounded-2xl text-sm font-bold transition-all outline-none" />
                         </div>
                     </div>
                     
@@ -214,17 +216,17 @@ export function PYQMode({ initialExamType = 'ALL', onBack }: PYQModeProps) {
                                 
                                 <div className="ml-0 md:ml-22 flex flex-col items-start gap-6">
                                     <button onClick={() => toggleReveal(idx)} className={`px-12 py-5 rounded-[1.5rem] text-sm font-black uppercase tracking-widest shadow-2xl transition-all flex items-center gap-3 ${revealedAnswers.includes(idx) ? 'bg-slate-900 text-white' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}>
-                                        {revealedAnswers.includes(idx) ? 'Close Review' : 'Detailed MPSC Review (80-90 Words)'}
+                                        {revealedAnswers.includes(idx) ? 'Close Review' : 'Detailed MPSC Review'}
                                         {revealedAnswers.includes(idx) ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                                     </button>
                                     
                                     {revealedAnswers.includes(idx) && (
-                                        <div className="w-full mt-6 space-y-8 animate-in slide-in-from-top-6 duration-700">
+                                        <div className="w-full mt-6 space-y-8 animate-in slide-in-from-top-6 duration-500">
                                             {q.mnemonic && (
                                                 <div className="bg-amber-100 p-8 rounded-[2.5rem] border-2 border-amber-200 flex items-start gap-6 shadow-sm">
                                                     <div className="bg-amber-500 text-white p-3 rounded-2xl shadow-xl shrink-0"><BrainCircuit size={28} /></div>
                                                     <div>
-                                                        <h5 className="text-[10px] font-black text-amber-700 uppercase tracking-widest mb-1">Trick (लक्षात ठेवण्याची क्लृप्ती)</h5>
+                                                        <h5 className="text-[10px] font-black text-amber-700 uppercase tracking-widest mb-1">Memory Trick</h5>
                                                         <p className="text-xl font-black text-amber-950 italic">"{q.mnemonic}"</p>
                                                     </div>
                                                 </div>
@@ -237,15 +239,15 @@ export function PYQMode({ initialExamType = 'ALL', onBack }: PYQModeProps) {
                                                         <div className="bg-indigo-600 p-3 rounded-2xl shadow-xl"><Zap className="text-yellow-400" size={24} /></div>
                                                         <div>
                                                             <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest">Syllabus-Linked Analysis</h4>
-                                                            <p className="text-xs text-indigo-400 font-bold uppercase tracking-tight italic">Detailed Analytical Summary</p>
+                                                            <p className="text-xs text-indigo-400 font-bold uppercase tracking-tight italic">Expert Analytical Summary</p>
                                                         </div>
                                                     </div>
                                                     <button 
-                                                        onClick={() => handleCopyExplanation(q.explanation, idx)}
+                                                        onClick={() => handleCopyExplanation(q, idx)}
                                                         className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-black transition-all"
                                                     >
                                                         {copiedIdx === idx ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
-                                                        {copiedIdx === idx ? 'Copied!' : 'Copy Explanation'}
+                                                        {copiedIdx === idx ? 'Copied!' : 'Copy Study Note'}
                                                     </button>
                                                 </div>
                                                 <div className="mb-6">
@@ -253,11 +255,11 @@ export function PYQMode({ initialExamType = 'ALL', onBack }: PYQModeProps) {
                                                         Correct Answer: {String.fromCharCode(65 + q.correctAnswerIndex)}
                                                     </span>
                                                 </div>
-                                                <div className="text-slate-300 text-xl leading-[2.2] font-medium font-serif tracking-tight">
-                                                    {q.explanation}
+                                                <div className="prose prose-invert prose-slate max-w-none text-slate-300 text-xl leading-[1.8] font-medium font-serif tracking-tight">
+                                                    <ReactMarkdown>{q.explanation}</ReactMarkdown>
                                                 </div>
                                                 <div className="mt-12 pt-8 border-t border-slate-900 flex items-center justify-between opacity-30">
-                                                    <span className="text-[10px] font-black uppercase tracking-widest">Archive Logic Analysis • MPSC Sarathi AI</span>
+                                                    <span className="text-[10px] font-black uppercase tracking-widest">Archive Logic Analysis • Sarathi AI</span>
                                                     <ShieldCheck size={24} />
                                                 </div>
                                             </div>
@@ -273,4 +275,20 @@ export function PYQMode({ initialExamType = 'ALL', onBack }: PYQModeProps) {
       </div>
     </div>
   );
+}
+
+// Helper component for filter selects
+function FilterGroup({ label, value, onChange, options }: { label: string; value: string; onChange: (v: string) => void; options: { label: string; value: string }[] }) {
+    return (
+        <div className="space-y-2">
+            <label className="text-[10px] font-black text-indigo-200 uppercase tracking-widest ml-1">{label}</label>
+            <select 
+                value={value} 
+                onChange={(e) => onChange(e.target.value)} 
+                className="w-full rounded-2xl border-none bg-white text-slate-900 p-4 text-sm font-bold shadow-lg outline-none focus:ring-4 focus:ring-yellow-400 transition-all cursor-pointer"
+            >
+                {options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+            </select>
+        </div>
+    );
 }
