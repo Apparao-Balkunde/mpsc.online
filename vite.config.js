@@ -4,19 +4,23 @@ import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
+  // हे महत्त्वाचे: बेस पाथ सेट केल्यामुळे फाईल्स शोधणे सोपे जाते
+  base: './', 
   resolve: {
     alias: {
-      // tsconfig मधील पाथ मॅच करण्यासाठी
       '@': path.resolve(__dirname, './src'),
     },
   },
   build: {
     outDir: 'dist',
     emptyOutDir: true,
-    sourcemap: false, // प्रोडक्शनमध्ये कोड सुरक्षित ठेवण्यासाठी
+    sourcemap: false, 
     rollupOptions: {
+      // एन्ट्री पॉईंट स्पष्टपणे डिफाइन करा
+      input: {
+        main: path.resolve(__dirname, 'index.html'),
+      },
       output: {
-        // मोठ्या लायब्ररीजचे चंक्स पाडणे (उदा. lucide, supabase)
         manualChunks: {
           vendor: ['react', 'react-dom', '@supabase/supabase-js'],
           ui: ['lucide-react']
@@ -27,6 +31,6 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: true,
-    host: true // नेटवर्कवर एक्सेस करण्यासाठी
+    host: true 
   }
 });
