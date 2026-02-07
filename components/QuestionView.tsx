@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { ArrowLeft, CheckCircle2, XCircle, HelpCircle, BookOpen, Filter, PenTool, GraduationCap } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, XCircle, HelpCircle, BookOpen, Filter, GraduationCap } from 'lucide-react';
 import { MPSCQuestion, Mode } from '../types';
 
 interface Props {
   type: Mode.PRELIMS | Mode.MAINS | Mode.MOCK;
   onBack: () => void;
+  tableName: string; // App.tsx मधून येणारे टेबलचे नाव
 }
 
-export const QuestionView: React.FC<Props> = ({ type, onBack }) => {
+export const QuestionView: React.FC<Props> = ({ type, onBack, tableName }) => {
   const [questions, setQuestions] = useState<MPSCQuestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
-  const [showModelAnswer, setShowModelAnswer] = useState<Record<number, boolean>>({});
 
   const [selExam, setSelExam] = useState('Rajyaseva');
   const [selSubject, setSelSubject] = useState('All');
@@ -20,29 +20,20 @@ export const QuestionView: React.FC<Props> = ({ type, onBack }) => {
 
   const yearsList = Array.from({ length: new Date().getFullYear() - 2010 + 1 }, (_, i) => (2010 + i).toString()).reverse();
 
-  // विषयांनुसार अचूक लॉजिक (तुमच्या नवीन मागणीनुसार)
+  // विषयांनुसार डायनॅमिक लॉजिक
   const getDynamicSubjects = () => {
-    // १. राज्यासेवा मुख्य (Rajyaseva Mains)
     if (selExam === 'Rajyaseva' && type === Mode.MAINS) {
       return ['GS', 'Marathi Literature', 'Current Affairs'];
     }
-
-    // २. ग्रुप B आणि C मुख्य (Combined Mains) - GS, Marathi, English
     if (selExam.includes('Combined') && type === Mode.MAINS) {
       return ['GS', 'Marathi Grammar', 'English Grammar'];
     }
-
-    // ३. पूर्व परीक्षा (Prelims) साठीचे सामान्य विषय
-    const prelimsGS = ['Polity', 'History', 'Culture', 'Geography', 'Economics', 'Environment', 'Science', 'Current Affairs'];
-    
     if (selExam === 'Saral Seva') {
       return ['General Studies', 'Marathi Grammar', 'English Grammar'];
     }
-
-    return prelimsGS;
+    return ['Polity', 'History', 'Culture', 'Geography', 'Economics', 'Environment', 'Science', 'Current Affairs'];
   };
 
-  // मुख्य परीक्षेत 'Saral Seva' नको
   const examOptions = type === Mode.MAINS 
     ? ['Rajyaseva', 'Combined Group B', 'Combined Group C'] 
     : ['Rajyaseva', 'Combined Group B', 'Combined Group C', 'Saral Seva'];
@@ -51,10 +42,14 @@ export const QuestionView: React.FC<Props> = ({ type, onBack }) => {
     const fetchQuestions = async () => {
       setLoading(true);
       try {
-        let query = supabase.from('mpsc_questions').select('*').eq('exam_type', type);
+        // 'mpsc_questions' ऐवजी tableName वापरले आहे
+        let query = supabase.from(tableName).select('*');
+        
+        // जर तुझ्या टेबलमध्ये exam_type कॉलम असेल तरच हे अनकमेंट कर
+        // query = query.eq('exam_type', type); 
+
         if (selExam !== 'All') query = query.eq('exam_name', selExam);
         
-        // जर 'GS' निवडले असेल तर सर्व सामान्य विषयांचे प्रश्न दाखवा
         if (selSubject === 'GS') {
             query = query.in('subject', ['Polity', 'History', 'Geography', 'Economics', 'Environment', 'Science']);
         } else if (selSubject !== 'All') {
@@ -67,13 +62,13 @@ export const QuestionView: React.FC<Props> = ({ type, onBack }) => {
         if (error) throw error;
         setQuestions(data || []);
       } catch (err: any) {
-        console.error(err.message);
+        console.error("डेटा लोड करताना चूक झाली:", err.message);
       } finally {
         setLoading(false);
       }
     };
     fetchQuestions();
-  }, [type, selExam, selSubject, selYear]);
+  }, [tableName, type, selExam, selSubject, selYear]);
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 animate-in fade-in duration-500">
@@ -92,32 +87,17 @@ export const QuestionView: React.FC<Props> = ({ type, onBack }) => {
         </div>
       </div>
 
-      {/* फिल्टर्स - ३ स्पष्ट ऑप्शन्स: GS, Marathi, English */}
+      {/* फिल्टर्स */}
       <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 mb-10 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <FilterSelect 
-          label="परीक्षा" 
-          options={examOptions} 
-          value={selExam} 
-          onChange={(v: string) => { setSelExam(v); setSelSubject('All'); }} 
-        />
-        <FilterSelect 
-          label="विषय निवडा" 
-          options={getDynamicSubjects()} 
-          value={selSubject} 
-          onChange={setSelSubject} 
-        />
-        <FilterSelect 
-          label="वर्ष" 
-          options={yearsList} 
-          value={selYear} 
-          onChange={setSelYear} 
-        />
+        <FilterSelect label="परीक्षा" options={examOptions} value={selExam} onChange={(v: string) => { setSelExam(v); setSelSubject('All'); }} />
+        <FilterSelect label="विषय निवडा" options={getDynamicSubjects()} value={selSubject} onChange={setSelSubject} />
+        <FilterSelect label="वर्ष" options={yearsList} value={selYear} onChange={setSelYear} />
       </div>
 
       {/* प्रश्नांची यादी */}
       <div className="space-y-8">
         {loading ? (
-          <div className="text-center py-20 font-bold text-slate-400">माहिती लोड होत आहे...</div>
+          <div className="text-center py-20 font-bold text-slate-400 italic animate-pulse">माहिती लोड होत आहे...</div>
         ) : questions.length === 0 ? (
           <div className="text-center py-20 bg-slate-50 rounded-[3rem] border-2 border-dashed border-slate-200">
             <HelpCircle className="mx-auto mb-4 text-slate-300" size={48} />
@@ -136,7 +116,6 @@ export const QuestionView: React.FC<Props> = ({ type, onBack }) => {
                 <span className="text-indigo-600 mr-2">Q.{idx + 1}</span> {q.question}
               </h3>
 
-              {/* MCQ Options */}
               <div className="grid grid-cols-1 gap-4">
                 {q.options?.map((opt, i) => {
                   const answered = selectedAnswers[q.id] !== undefined;
@@ -157,8 +136,10 @@ export const QuestionView: React.FC<Props> = ({ type, onBack }) => {
                   );
                 })}
                 {selectedAnswers[q.id] !== undefined && (
-                  <div className="mt-4 p-6 bg-indigo-50 rounded-3xl border-l-8 border-indigo-600 text-slate-700">
-                    <strong>उत्तर स्पष्टीकरण:</strong> {q.explanation}
+                  <div className="mt-4 p-6 bg-indigo-50 rounded-3xl border-l-8 border-indigo-600 animate-in slide-in-from-top-2 duration-300">
+                    <p className="text-slate-700 font-medium leading-relaxed">
+                      <strong className="text-indigo-700">उत्तर स्पष्टीकरण:</strong> {q.explanation}
+                    </p>
                   </div>
                 )}
               </div>
@@ -170,6 +151,7 @@ export const QuestionView: React.FC<Props> = ({ type, onBack }) => {
   );
 };
 
+// छोटे घटक (Components)
 const Badge = ({ text, color }: { text: string; color: string }) => (
   <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider ${color}`}>
     {text}
@@ -179,13 +161,16 @@ const Badge = ({ text, color }: { text: string; color: string }) => (
 const FilterSelect = ({ label, options, value, onChange }: any) => (
   <div className="flex flex-col gap-2">
     <label className="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">{label}</label>
-    <select 
-      value={value} 
-      onChange={(e) => onChange(e.target.value)} 
-      className="p-4 bg-slate-50 border-none rounded-2xl font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer appearance-none"
-    >
-      <option value="All">सर्व निवडा</option>
-      {options.map((opt: string) => <option key={opt} value={opt}>{opt}</option>)}
-    </select>
+    <div className="relative">
+      <select 
+        value={value} 
+        onChange={(e) => onChange(e.target.value)} 
+        className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer appearance-none"
+      >
+        <option value="All">सर्व निवडा</option>
+        {options.map((opt: string) => <option key={opt} value={opt}>{opt}</option>)}
+      </select>
+      <Filter size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
+    </div>
   </div>
 );
