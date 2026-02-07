@@ -5,7 +5,7 @@ import { QuestionView } from './components/QuestionView';
 import { VocabMode } from './components/VocabMode';
 import { History, BookOpen, BrainCircuit, LayoutDashboard, Languages } from 'lucide-react';
 
-// १. NavItem घटक (हा App च्या वर किंवा खाली असणे आवश्यक आहे)
+// १. NavItem घटक
 const NavItem = ({ icon, label, active, onClick }: any) => (
   <button 
     onClick={onClick} 
@@ -34,13 +34,16 @@ function App() {
   const [questionsCount, setQuestionsCount] = useState(0);
 
   useEffect(() => {
-    async function getCount() {
-      const { count, error } = await supabase
-        .from('mpsc_questions')
-        .select('*', { count: 'exact', head: true });
-      if (!error && count !== null) setQuestionsCount(count);
+    async function getCounts() {
+      // तिन्ही टेबल्समधील एकूण प्रश्नांची बेरीज करण्यासाठी
+      const { count: prelimsCount } = await supabase.from('prelims_questions').select('*', { count: 'exact', head: true });
+      const { count: mainsCount } = await supabase.from('mains_questions').select('*', { count: 'exact', head: true });
+      const { count: vocabCount } = await supabase.from('vocab_questions').select('*', { count: 'exact', head: true });
+      
+      const total = (prelimsCount || 0) + (mainsCount || 0) + (vocabCount || 0);
+      setQuestionsCount(total);
     }
-    getCount();
+    getCounts();
   }, []);
 
   return (
@@ -74,9 +77,10 @@ function App() {
           </div>
         )}
 
-        {mode === Mode.PRELIMS && <QuestionView type={Mode.PRELIMS} onBack={() => setMode(Mode.HOME)} />}
-        {mode === Mode.MAINS && <QuestionView type={Mode.MAINS} onBack={() => setMode(Mode.HOME)} />}
-        {mode === Mode.VOCAB && <VocabMode onBack={() => setMode(Mode.HOME)} />}
+        {/* योग्य टेबलवरून डेटा दाखवण्यासाठी Props पास केले आहेत */}
+        {mode === Mode.PRELIMS && <QuestionView type={Mode.PRELIMS} tableName="prelims_questions" onBack={() => setMode(Mode.HOME)} />}
+        {mode === Mode.MAINS && <QuestionView type={Mode.MAINS} tableName="mains_questions" onBack={() => setMode(Mode.HOME)} />}
+        {mode === Mode.VOCAB && <VocabMode tableName="vocab_questions" onBack={() => setMode(Mode.HOME)} />}
       </main>
     </div>
   );
