@@ -15,16 +15,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
     
     <style>
-      :root {
-        --primary-indigo: #4f46e5;
-      }
+      :root { --primary-indigo: #4f46e5; }
       body { 
         font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif; 
         background-color: #f8fafc;
         margin: 0;
-        -webkit-font-smoothing: antialiased;
       }
-      /* लोडर ॲनिमेशन */
       .loader {
         border-top-color: #4f46e5;
         animation: spinner 1.5s linear infinite;
@@ -34,21 +30,9 @@
         100% { transform: rotate(360deg); }
       }
     </style>
-
-    <script type="importmap">
-    {
-      "imports": {
-        "react": "https://esm.sh/react@18.2.0",
-        "react-dom": "https://esm.sh/react-dom@18.2.0",
-        "lucide-react": "https://esm.sh/lucide-react@0.263.1",
-        "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2"
-      }
-    }
-    </script>
   </head>
   
   <body class="selection:bg-indigo-100 selection:text-indigo-700">
-    
     <div id="root">
       <div class="flex flex-col items-center justify-center h-screen bg-slate-50">
         <div class="loader w-12 h-12 border-4 border-slate-200 rounded-full mb-4"></div>
@@ -59,13 +43,5 @@
     </div>
 
     <script type="module" src="/src/main.tsx"></script>
-
-    <noscript>
-      <div class="p-20 text-center">
-        <h2 class="text-2xl font-bold">कृपया जावास्क्रिप्ट सुरू करा.</h2>
-        <p>ही वेबसाईट पाहण्यासाठी तुमच्या ब्राउझरमध्ये JavaScript सक्षम असणे आवश्यक आहे.</p>
-      </div>
-    </noscript>
-
   </body>
 </html>
