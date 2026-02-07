@@ -18,15 +18,21 @@ export const QuestionView: React.FC<Props> = ({ type, onBack }) => {
   const [selSubject, setSelSubject] = useState('All');
   const [selYear, setSelYear] = useState('All');
 
-  // २०१० पासूनची वर्षे
   const yearsList = Array.from({ length: new Date().getFullYear() - 2010 + 1 }, (_, i) => (2010 + i).toString()).reverse();
 
-  // परीक्षेनुसार विषयांची यादी मिळवणे
-  const subjectsList = selExam === 'Rajyaseva' 
-    ? ['Polity', 'History', 'Culture', 'Geography', 'Economics', 'Environment', 'Science', 'Current Affairs', 'Marathi Literature']
-    : selExam.includes('Combined')
-    ? ['Polity', 'History', 'Culture', 'Geography', 'Economics', 'Science', 'Environment', 'Current Affairs', 'Marathi Grammar', 'English Grammar']
-    : ['General Studies', 'Marathi Grammar', 'English Grammar'];
+  // परीक्षेनुसार विषयांचे अचूक वर्गीकरण
+  const getDynamicSubjects = () => {
+    const commonGS = ['Polity', 'History', 'Culture', 'Geography', 'Economics', 'Environment', 'Science', 'Current Affairs'];
+    
+    if (selExam === 'Rajyaseva') {
+      return type === Mode.MAINS ? [...commonGS, 'Marathi Literature'] : commonGS;
+    } else if (selExam.includes('Combined')) {
+      return [...commonGS, 'Marathi Grammar', 'English Grammar'];
+    } else if (selExam === 'Saral Seva') {
+      return ['General Studies', 'Marathi Grammar', 'English Grammar'];
+    }
+    return commonGS;
+  };
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -51,30 +57,28 @@ export const QuestionView: React.FC<Props> = ({ type, onBack }) => {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 animate-in fade-in duration-500">
-      {/* Header */}
       <div className="flex items-center gap-4 mb-8">
         <button onClick={onBack} className="p-3 bg-white rounded-2xl shadow-sm border border-slate-100 hover:bg-slate-50 transition-all">
           <ArrowLeft size={20} className="text-slate-600" />
         </button>
         <div>
-          <h2 className="text-2xl font-black text-slate-800">{type === 'PRELIMS' ? 'पूर्व परीक्षा' : 'मुख्य परीक्षा'}</h2>
+          <h2 className="text-2xl font-black text-slate-800">{type === Mode.PRELIMS ? 'पूर्व परीक्षा' : 'मुख्य परीक्षा'}</h2>
           <p className="text-sm font-bold text-indigo-500 uppercase tracking-widest flex items-center gap-2">
             <GraduationCap size={16} /> {selExam} स्पेशल
           </p>
         </div>
       </div>
 
-      {/* Dynamic Filters */}
       <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 mb-10 grid grid-cols-1 md:grid-cols-3 gap-4">
         <FilterSelect 
-          label="परीक्षा निवडा" 
+          label="परीक्षा" 
           options={['Rajyaseva', 'Combined Group B', 'Combined Group C', 'Saral Seva']} 
           value={selExam} 
-          onChange={(val: string) => { setSelExam(val); setSelSubject('All'); }} 
+          onChange={(v: string) => { setSelExam(v); setSelSubject('All'); }} 
         />
         <FilterSelect 
-          label="विषय निवडा" 
-          options={subjectsList} 
+          label="विषय" 
+          options={getDynamicSubjects()} 
           value={selSubject} 
           onChange={setSelSubject} 
         />
@@ -86,17 +90,16 @@ export const QuestionView: React.FC<Props> = ({ type, onBack }) => {
         />
       </div>
 
-      {/* Questions List */}
       <div className="space-y-8">
         {loading ? (
-          <div className="text-center py-20 font-bold text-slate-400">माहिती लोड होत आहे...</div>
+          <div className="text-center py-20 font-bold text-slate-400 animate-pulse">माहिती शोधत आहोत...</div>
         ) : questions.length === 0 ? (
           <div className="text-center py-20 bg-slate-50 rounded-[3rem] border-2 border-dashed border-slate-200">
             <HelpCircle className="mx-auto mb-4 text-slate-300" size={48} />
-            <p className="font-bold text-slate-400">या निवडीसाठी सध्या प्रश्न उपलब्ध नाहीत.</p>
+            <p className="font-bold text-slate-400">या निवडीसाठी प्रश्न उपलब्ध नाहीत.</p>
           </div>
         ) : (
-          questions.map((q: any, idx) => (
+          questions.map((q, idx) => (
             <div key={q.id} className="bg-white p-6 md:p-10 rounded-[3rem] border border-slate-100 shadow-sm">
               <div className="flex flex-wrap gap-2 mb-6">
                 <Badge text={q.exam_name} color="bg-indigo-50 text-indigo-600" />
@@ -113,7 +116,7 @@ export const QuestionView: React.FC<Props> = ({ type, onBack }) => {
                 <div className="space-y-4">
                   <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-2xl border border-blue-100">
                     <PenTool size={18} className="text-blue-600" />
-                    <p className="text-xs font-bold text-blue-700">हा लेखी स्वरूपाचा प्रश्न आहे. मुद्दे तपासा.</p>
+                    <p className="text-xs font-bold text-blue-700">हा लेखी प्रश्न आहे. मुद्दे तपासा.</p>
                   </div>
                   <button 
                     onClick={() => setShowModelAnswer(prev => ({...prev, [q.id]: !prev[q.id]}))}
@@ -123,13 +126,13 @@ export const QuestionView: React.FC<Props> = ({ type, onBack }) => {
                   </button>
                   {showModelAnswer[q.id] && (
                     <div className="p-8 bg-amber-50/50 rounded-[2rem] border border-amber-100 animate-in slide-in-from-top-2">
-                      <div className="text-slate-700 whitespace-pre-wrap leading-loose font-medium">{q.explanation}</div>
+                      <div className="text-slate-700 whitespace-pre-wrap leading-relaxed font-medium">{q.explanation}</div>
                     </div>
                   )}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-4">
-                  {q.options?.map((opt: string, i: number) => {
+                  {q.options?.map((opt, i) => {
                     const answered = selectedAnswers[q.id] !== undefined;
                     const isCorrect = q.correct_answer_index === i;
                     const isSelected = selectedAnswers[q.id] === i;
@@ -143,9 +146,15 @@ export const QuestionView: React.FC<Props> = ({ type, onBack }) => {
                         }`}
                       >
                         {opt} {answered && isCorrect && <CheckCircle2 className="text-emerald-600" size={22} />}
+                        {answered && isSelected && !isCorrect && <XCircle className="text-rose-600" size={22} />}
                       </button>
                     );
                   })}
+                  {selectedAnswers[q.id] !== undefined && (
+                    <div className="mt-4 p-6 bg-indigo-50 rounded-3xl border-l-8 border-indigo-600 text-slate-700">
+                      <strong>स्पष्टीकरण:</strong> {q.explanation}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -162,6 +171,7 @@ const FilterSelect = ({ label, options, value, onChange }: any) => (
   <div className="flex flex-col gap-2">
     <label className="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">{label}</label>
     <select value={value} onChange={(e) => onChange(e.target.value)} className="p-4 bg-slate-50 border-none rounded-2xl font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer appearance-none transition-all">
+      <option value="All">सर्व</option>
       {options.map((opt: string) => <option key={opt} value={opt}>{opt}</option>)}
     </select>
   </div>
