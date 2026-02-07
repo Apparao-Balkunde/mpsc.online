@@ -1,41 +1,33 @@
 import express from 'express';
-import path from 'express'; // किंवा path डायरेक्ट इम्पोर्ट करा
-import { fileURLToPath } from 'url';
-import compression from 'compression'; // साईट फास्ट लोड होण्यासाठी
+import path from 'node:path'; // 'node:' प्रीफिक्स वापरणे अधिक सुरक्षित आहे
+import { fileURLToPath } from 'node:url';
+import compression from 'compression';
 
+// ES Modules मध्ये __dirname अशा प्रकारे सेट करावा लागतो
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// १. Compression वापरणे (ज्यामुळे तुमची वेबसाईट ५०% जास्त वेगाने लोड होईल)
+// Gzip Compression (साईट फास्ट लोड होण्यासाठी)
 app.use(compression());
 
-// २. 'dist' फोल्डर सर्व्ह करणे
-// 'immutable' कॅशिंग वापरून परफॉर्मन्स वाढवणे
-app.use(express.static(path.join(__dirname, 'dist'), {
-    maxAge: '1d',
-    etag: true
-}));
+// १. सर्वात आधी 'dist' फोल्डर सर्व्ह करणे
+// जर 'dist' फोल्डर सर्व्हरवर नसेल तर ही ओळ एरर देऊ शकते
+app.use(express.static(path.join(__dirname, 'dist')));
 
-// ३. सेक्युरिटी हेडर (ऐच्छिक पण महत्त्वाचे)
-app.use((req, res, next) => {
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('X-Frame-Options', 'DENY');
-    next();
-});
+// २. सर्व API रूट्स इथे टाकू शकता (सध्या गरज नाही)
 
-// ४. सर्व विनंत्या index.html कडे वळवणे (React SPA Routing)
+// ३. शेवटी सर्व विनंत्या index.html कडे वळवणे (React Routing साठी)
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
-// ५. सर्व्हर सुरू करणे
 app.listen(PORT, () => {
-    console.log(`-------------------------------------------`);
-    console.log(`🚀 MPSC Sarathi Portal is Live!`);
-    console.log(`🌐 URL: http://localhost:${PORT}`);
-    console.log(`📂 Serving from: ${path.join(__dirname, 'dist')}`);
-    console.log(`-------------------------------------------`);
+  console.log(`-------------------------------------------`);
+  console.log(`🚀 MPSC Sarathi Server is running!`);
+  console.log(`📍 Port: ${PORT}`);
+  console.log(`📂 Serving from: ${path.join(__dirname, 'dist')}`);
+  console.log(`-------------------------------------------`);
 });
