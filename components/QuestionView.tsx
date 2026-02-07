@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from './lib/supabase'; // पाथ रुटनुसार बदलला आहे
+import { supabase } from '../lib/supabase'; // फोल्डरच्या बाहेर जाण्यासाठी ../ वापरले आहे
 import { ArrowLeft, CheckCircle2, XCircle, HelpCircle } from 'lucide-react';
-import { MPSCQuestion, Mode } from './types'; // पाथ रुटनुसार बदलला आहे
+import { MPSCQuestion, Mode } from '../types'; // फोल्डरच्या बाहेर जाण्यासाठी ../ वापरले आहे
 
 interface Props {
   type: Mode.PRELIMS | Mode.MAINS | Mode.MOCK;
@@ -13,15 +13,13 @@ export const QuestionView: React.FC<Props> = ({ type, onBack }) => {
   const [loading, setLoading] = useState(true);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
   
-  // फिल्टर्स - सध्या हे फक्त UI साठी आहेत, कारण DB मध्ये हे कॉलम्स नाहीत
   const [subject, setSubject] = useState('All');
 
   useEffect(() => {
     const fetchQuestions = async () => {
       setLoading(true);
       try {
-        // तुमच्या DB मध्ये सध्या exam_type नाही, म्हणून सरळ select('*') करत आहोत
-        // जेणेकरून प्रश्न लोड होतील
+        // तुमच्या DB मध्ये सध्या exam_type नसल्याने सर्व डेटा सिलेक्ट करत आहोत
         const { data, error } = await supabase
           .from('mpsc_questions')
           .select('*');
@@ -38,7 +36,7 @@ export const QuestionView: React.FC<Props> = ({ type, onBack }) => {
       }
     };
     fetchQuestions();
-  }, [type]); // सध्या फिल्टर कॉलम नसल्यामुळे डिपेंडन्सी कमी केली आहे
+  }, [type]);
 
   const handleOptionClick = (questionId: number, optionIndex: number) => {
     if (selectedAnswers[questionId] !== undefined) return;
@@ -47,7 +45,6 @@ export const QuestionView: React.FC<Props> = ({ type, onBack }) => {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 animate-in fade-in duration-500">
-      {/* Header */}
       <div className="flex items-center gap-4 mb-8">
         <button onClick={onBack} className="p-3 bg-white rounded-2xl shadow-sm hover:bg-slate-50 transition-all border border-slate-100">
           <ArrowLeft size={20} className="text-slate-600" />
@@ -60,7 +57,6 @@ export const QuestionView: React.FC<Props> = ({ type, onBack }) => {
         </div>
       </div>
 
-      {/* Question Cards */}
       <div className="space-y-8">
         {loading ? (
           <div className="flex flex-col items-center py-20 gap-4">
