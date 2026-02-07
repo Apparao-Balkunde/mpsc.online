@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { ArrowLeft, BookOpen, Search, Filter, Languages } from 'lucide-react';
+import { ArrowLeft, Search, Languages, BookOpen } from 'lucide-react';
 
 export const VocabMode: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [vocab, setVocab] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   
-  // नवीन फिल्टर्स
-  const [selLang, setSelLang] = useState('All'); // Marathi / English
-  const [selType, setSelType] = useState('All'); // Synonyms / Antonyms / etc.
+  const [selLang, setSelLang] = useState('All'); 
+  const [selType, setSelType] = useState('All');
 
   const vocabTypes = [
     'Synonyms', 
@@ -23,16 +22,19 @@ export const VocabMode: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     const fetchVocab = async () => {
       setLoading(true);
       try {
+        // योग्य टेबलचे नाव 'vocab_questions' वापरले आहे
         let query = supabase.from('vocab_questions').select('*');
         
+        // फिल्टर्स लागू करणे
         if (selLang !== 'All') query = query.eq('language', selLang);
         if (selType !== 'All') query = query.eq('category', selType);
 
-        const { data, error } = await query;
+        const { data, error } = await query.order('created_at', { ascending: false });
+        
         if (error) throw error;
         setVocab(data || []);
-      } catch (err) {
-        console.error("Error fetching vocab:", err);
+      } catch (err: any) {
+        console.error("Vocab लोड करताना चूक झाली:", err.message);
       } finally {
         setLoading(false);
       }
@@ -40,8 +42,9 @@ export const VocabMode: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     fetchVocab();
   }, [selLang, selType]);
 
+  // क्लायंट-साईड सर्च फिल्टर
   const filteredVocab = vocab.filter(item => 
-    item.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.question?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.explanation?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -73,25 +76,31 @@ export const VocabMode: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <select 
-            value={selLang} 
-            onChange={(e) => setSelLang(e.target.value)}
-            className="p-4 bg-white border-none rounded-2xl font-bold text-slate-700 shadow-sm outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
-          >
-            <option value="All">सर्व भाषा</option>
-            <option value="Marathi">Marathi (मराठी)</option>
-            <option value="English">English (इंग्रजी)</option>
-          </select>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] font-black text-slate-400 uppercase ml-2">भाषा</label>
+            <select 
+              value={selLang} 
+              onChange={(e) => setSelLang(e.target.value)}
+              className="p-4 bg-white border-none rounded-2xl font-bold text-slate-700 shadow-sm outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+            >
+              <option value="All">सर्व भाषा</option>
+              <option value="Marathi">Marathi (मराठी)</option>
+              <option value="English">English (इंग्रजी)</option>
+            </select>
+          </div>
 
-          <select 
-            value={selType} 
-            onChange={(e) => setSelType(e.target.value)}
-            className="p-4 bg-white border-none rounded-2xl font-bold text-slate-700 shadow-sm outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
-          >
-            <option value="All">सर्व प्रकार</option>
-            {vocabTypes.map(type => <option key={type} value={type}>{type}</option>)}
-          </select>
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] font-black text-slate-400 uppercase ml-2">प्रकार</label>
+            <select 
+              value={selType} 
+              onChange={(e) => setSelType(e.target.value)}
+              className="p-4 bg-white border-none rounded-2xl font-bold text-slate-700 shadow-sm outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+            >
+              <option value="All">सर्व प्रकार</option>
+              {vocabTypes.map(type => <option key={type} value={type}>{type}</option>)}
+            </select>
+          </div>
         </div>
       </div>
 
@@ -101,11 +110,12 @@ export const VocabMode: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           <div className="text-center py-20 font-bold text-slate-400 animate-pulse">शब्द शोधत आहोत...</div>
         ) : filteredVocab.length === 0 ? (
           <div className="text-center py-20 bg-slate-50 rounded-[3rem] border-2 border-dashed border-slate-200">
-            <p className="font-bold text-slate-400">या प्रकारात सध्या शब्द उपलब्ध नाहीत.</p>
+            <BookOpen className="mx-auto mb-4 text-slate-200" size={48} />
+            <p className="font-bold text-slate-400">या निवडीसाठी सध्या शब्द उपलब्ध नाहीत.</p>
           </div>
         ) : (
           filteredVocab.map((item) => (
-            <div key={item.id} className="bg-white p-6 md:p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-md transition-all">
+            <div key={item.id} className="bg-white p-6 md:p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-md transition-all group">
               <div className="flex justify-between items-start mb-4">
                 <div className="flex flex-col gap-1">
                   <span className={`text-[10px] font-black px-3 py-1 rounded-lg uppercase tracking-wider w-fit ${
@@ -113,7 +123,9 @@ export const VocabMode: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                   }`}>
                     {item.language}
                   </span>
-                  <h3 className="text-2xl font-black text-slate-800 mt-2">{item.question}</h3>
+                  <h3 className="text-2xl font-black text-slate-800 mt-2 group-hover:text-indigo-600 transition-colors">
+                    {item.question}
+                  </h3>
                 </div>
                 <span className="px-3 py-1 bg-slate-100 text-slate-500 rounded-xl text-[10px] font-black uppercase">
                   {item.category}
@@ -121,16 +133,17 @@ export const VocabMode: React.FC<{ onBack: () => void }> = ({ onBack }) => {
               </div>
 
               <div className="space-y-4">
-                <div className="flex items-start gap-3">
+                <div className="flex items-start gap-3 bg-slate-50/50 p-4 rounded-2xl">
                   <div className="mt-1.5 w-2 h-2 rounded-full bg-indigo-500 flex-shrink-0" />
                   <p className="text-slate-700 font-bold leading-relaxed">{item.explanation}</p>
                 </div>
 
-                {item.options && (
-                   <div className="bg-indigo-50/50 p-5 rounded-[1.5rem] border border-indigo-100/50">
-                    <div className="text-[10px] font-black text-indigo-400 uppercase mb-2 tracking-widest">Correct Answer / Usage</div>
+                {/* जर पर्यायांमध्ये योग्य उत्तर असेल तर ते दाखवण्यासाठी */}
+                {item.options && item.options.length > 0 && (
+                   <div className="bg-indigo-50 p-5 rounded-[1.5rem] border border-indigo-100">
+                    <div className="text-[10px] font-black text-indigo-400 uppercase mb-2 tracking-widest">योग्य उत्तर / वापर (Usage)</div>
                     <p className="text-indigo-900 font-black text-lg">
-                      {item.options[item.correct_answer_index]}
+                      {item.options[item.correct_answer_index] || item.options[0]}
                     </p>
                   </div>
                 )}
