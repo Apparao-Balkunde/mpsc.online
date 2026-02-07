@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { ArrowLeft, CheckCircle2, XCircle, HelpCircle, BookOpen, Filter, Search } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, XCircle, HelpCircle, BookOpen, Filter, Search, PenTool } from 'lucide-react';
 import { MPSCQuestion, Mode } from '../types';
 
 interface Props {
@@ -26,9 +26,11 @@ export const QuestionView: React.FC<Props> = ({ type, onBack }) => {
     (_, i) => (2010 + i).toString()
   ).reverse();
 
+  // सुधारित विषयांची यादी (मराठी साहित्य समावेशासह)
   const subjectsList = [
     'Polity', 'History', 'Geography', 'Economics', 
-    'Science', 'Environment', 'CSAT', 'Marathi', 'English', 'Current Affairs'
+    'Science', 'Environment', 'Marathi Literature', 
+    'Marathi Grammar', 'English', 'CSAT', 'Current Affairs'
   ];
 
   useEffect(() => {
@@ -71,7 +73,9 @@ export const QuestionView: React.FC<Props> = ({ type, onBack }) => {
             <h2 className="text-2xl font-black text-slate-800">
               {type === 'PRELIMS' ? 'पूर्व परीक्षा' : 'मुख्य परीक्षा'}
             </h2>
-            <p className="text-sm font-bold text-slate-400 uppercase tracking-tighter">PYQ Series 2010 - {currentYear}</p>
+            <p className="text-sm font-bold text-slate-400 uppercase tracking-tighter">
+                {selSubject === 'Marathi Literature' ? 'मराठी साहित्य विशेष' : `PYQ Series 2010 - ${currentYear}`}
+            </p>
           </div>
         </div>
       </div>
@@ -79,7 +83,7 @@ export const QuestionView: React.FC<Props> = ({ type, onBack }) => {
       {/* Filters Section */}
       <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 mb-10">
         <div className="flex items-center gap-2 mb-4 text-indigo-600 font-black text-xs uppercase tracking-widest px-2">
-          <Filter size={14} /> फिल्टर निवडा
+          <Filter size={14} /> फिल्टर्स निवडा
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <FilterSelect 
@@ -108,13 +112,13 @@ export const QuestionView: React.FC<Props> = ({ type, onBack }) => {
         {loading ? (
           <div className="flex flex-col items-center py-20 gap-4">
             <div className="w-10 h-10 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
-            <p className="font-bold text-slate-400">प्रश्न शोधत आहोत...</p>
+            <p className="font-bold text-slate-400">माहिती लोड होत आहे...</p>
           </div>
         ) : questions.length === 0 ? (
           <div className="text-center py-20 bg-slate-50 rounded-[3rem] border-2 border-dashed border-slate-200">
             <HelpCircle className="mx-auto mb-4 text-slate-300" size={48} />
             <p className="font-bold text-slate-400 text-lg">या निवडीसाठी प्रश्न उपलब्ध नाहीत.</p>
-            <p className="text-sm text-slate-300">कृपया दुसरे फिल्टर निवडून पहा.</p>
+            <p className="text-sm text-slate-300">कृपया दुसरे वर्ष किंवा विषय निवडून पहा.</p>
           </div>
         ) : (
           questions.map((q: any, idx) => (
@@ -126,6 +130,9 @@ export const QuestionView: React.FC<Props> = ({ type, onBack }) => {
                   text={q.pattern_type} 
                   color={q.pattern_type === 'DESCRIPTIVE' ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-600"} 
                 />
+                {q.subject === 'Marathi Literature' && (
+                  <Badge text="साहित्य" color="bg-purple-50 text-purple-600" />
+                )}
               </div>
 
               <h3 className="text-xl font-bold text-slate-800 mb-8 leading-relaxed">
@@ -134,9 +141,14 @@ export const QuestionView: React.FC<Props> = ({ type, onBack }) => {
 
               {q.pattern_type === 'DESCRIPTIVE' ? (
                 <div className="space-y-4">
+                  <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-2xl border border-blue-100 mb-4">
+                    <PenTool size={18} className="text-blue-600" />
+                    <p className="text-xs font-bold text-blue-700">हा वर्णनात्मक प्रश्न आहे. उत्तर स्वतः लिहून पहा आणि मग मुद्दे तपासा.</p>
+                  </div>
+                  
                   <button 
                     onClick={() => setShowModelAnswer(prev => ({...prev, [q.id]: !prev[q.id]}))}
-                    className="flex items-center gap-2 bg-slate-900 text-white px-6 py-4 rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-lg shadow-slate-200"
+                    className="flex items-center gap-2 bg-slate-900 text-white px-6 py-4 rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-lg"
                   >
                     <BookOpen size={18} /> 
                     {showModelAnswer[q.id] ? 'उत्तर लपवा' : 'आदर्श उत्तर / मुख्य मुद्दे पहा'}
@@ -144,8 +156,8 @@ export const QuestionView: React.FC<Props> = ({ type, onBack }) => {
                   
                   {showModelAnswer[q.id] && (
                     <div className="p-8 bg-amber-50/50 rounded-[2rem] border border-amber-100 animate-in slide-in-from-top-2 duration-300">
-                      <h4 className="text-xs font-black text-amber-700 uppercase mb-4 tracking-widest">Model Answer Points:</h4>
-                      <div className="text-slate-700 whitespace-pre-wrap leading-relaxed font-medium">
+                      <h4 className="text-xs font-black text-amber-700 uppercase mb-4 tracking-widest">Model Answer / Writing Points:</h4>
+                      <div className="text-slate-700 whitespace-pre-wrap leading-loose font-medium">
                         {q.explanation}
                       </div>
                     </div>
@@ -181,7 +193,7 @@ export const QuestionView: React.FC<Props> = ({ type, onBack }) => {
                   {selectedAnswers[q.id] !== undefined && (
                     <div className="mt-6 p-6 bg-slate-50 rounded-[2rem] border-l-8 border-indigo-500 animate-in slide-in-from-top-2">
                       <h4 className="text-xs font-black text-indigo-600 uppercase mb-2 tracking-widest">स्पष्टीकरण:</h4>
-                      <p className="text-slate-700 font-medium">{q.explanation}</p>
+                      <p className="text-slate-700 font-medium leading-relaxed">{q.explanation}</p>
                     </div>
                   )}
                 </div>
@@ -208,7 +220,7 @@ const FilterSelect = ({ label, options, value, onChange }: any) => (
       onChange={(e) => onChange(e.target.value)} 
       className="p-4 bg-slate-50 border-none rounded-2xl font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer transition-all appearance-none"
     >
-      <option value="All">सर्व निवडा</option>
+      <option value="All">सर्व</option>
       {options.map((opt: string) => (
         <option key={opt} value={opt}>{opt}</option>
       ))}
