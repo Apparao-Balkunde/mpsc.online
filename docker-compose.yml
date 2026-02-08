@@ -1,0 +1,9 @@
+version: '3.8'
+
+services:
+  mpsc-frontend:
+    build: .
+    container_name: mpsc_online_app
+    ports:
+      - "8080:80" # तुझ्या ब्राउझरमध्ये localhost:8080 वर ॲप चालेल
+    restart: always
