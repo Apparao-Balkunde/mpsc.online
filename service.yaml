@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mpsc-sarathi-service
+spec:
+  type: LoadBalancer # क्लाउडवर (AWS/GCP) तुला पब्लिक IP मिळेल
+  selector:
+    app: mpsc-sarathi
+  ports:
+    - protocol: TCP
+      port: 80 # बाहेरचा पोर्ट
+      targetPort: 3000 # कंटेनरचा पोर्ट
