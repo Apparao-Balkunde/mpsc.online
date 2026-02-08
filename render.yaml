@@ -1,0 +1,21 @@
+services:
+  # १. तुमची वेब सर्व्हिस (MPSC Sarathi App)
+  - type: web
+    name: mpsc-sarathi-docker
+    env: docker # इथे आपण सांगतोय की Dockerfile वापर
+    plan: free   # Free tier साठी
+    region: oregon # तुम्ही जवळचे रिजन निवडू शकता
+    
+    # Environment Variables (Supabase साठी)
+    envVars:
+      - key: VITE_SUPABASE_URL
+        sync: false # ही व्हॅल्यू Render Dashboard वरून मॅन्युअली भरावी लागेल (सुरक्षेसाठी)
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+
+    # Docker कॉन्फिगरेशन
+    dockerContext: .
+    dockerfilePath: ./Dockerfile
+
+    # Health Check (सर्व्हर चालू आहे की नाही हे पाहण्यासाठी)
+    healthCheckPath: /
