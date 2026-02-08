@@ -1,10 +1,7 @@
-
 import { QuizQuestion, SavedNote, VocabWord } from '../types';
 
 /**
  * MASTER DATA STORE
- * तुम्ही डाउनलोड केलेली 'backup.json' फाईल मधील डेटा इथे पेस्ट केल्यास 
- * तो वेबसाईटवर कायमस्वरूपी दिसेल.
  */
 export const PERMANENT_MASTER_DATA = {
     questions: [
@@ -14,8 +11,7 @@ export const PERMANENT_MASTER_DATA = {
             correctAnswerIndex: 0,
             explanation: "जे शब्द संस्कृतमधून मराठीत जसेच्या तसे आले आहेत त्यांना तत्सम शब्द म्हणतात. पृथ्वी, दुग्ध, कन्या हे तत्सम शब्द आहेत.",
             subCategory: "Marathi Grammar"
-        },
-        // अधिक प्रश्न इथे पेस्ट करा...
+        }
     ] as QuizQuestion[],
     
     notes: [
@@ -26,10 +22,23 @@ export const PERMANENT_MASTER_DATA = {
             content: "समास म्हणजे शब्दांचे एकत्रीकरण होय.\n\n### समासाचे मुख्य ४ प्रकार:\n१. **अव्ययीभाव समास:** पहिले पद महत्त्वाचे.\n२. **तत्पुरुष समास:** दुसरे पद महत्त्वाचे.\n३. **द्वंद्व समास:** दोन्ही पदे महत्त्वाचे.\n४. **बहुव्रीही समास:** दोन्ही पदे गौण असून तिसऱ्याच पदाचा बोध होतो.",
             createdAt: "2024-05-20T10:00:00Z"
         }
-        // अधिक नोट्स इथे पेस्ट करा...
     ] as SavedNote[],
 
     vocab: [] as VocabWord[]
+};
+
+// --- Missing Functions for Build Fix ---
+
+/**
+ * LiteratureMode साठी आवश्यक फंक्शन
+ */
+export const getLiteratureAnalysis = async (topic: string) => {
+    // हे फंक्शन LiteratureMode.tsx ला हवं होतं म्हणून ॲड केलंय
+    return {
+        title: topic,
+        analysis: "या विषयावर सध्या डेटा उपलब्ध नाही. लवकरच अपडेट केला जाईल.",
+        questions: []
+    };
 };
 
 export const STANDARD_RAJYASEVA_MOCK: QuizQuestion[] = [
@@ -61,7 +70,7 @@ export const STANDARD_COMBINED_MOCK: QuizQuestion[] = [
     question: "Give the synonym of the word: 'ABANDON'",
     options: ["Keep", "Forsake", "Adopt", "Cherish"],
     correctAnswerIndex: 1,
-    explanation: "'Abandon' म्हणजे सोडून देणे. 'Forsake' हा त्याचा समानार्थी शब्द आहे.",
+    explanation: "'Abandon' म्हणजे सोडून देणे. 'Forsake' हा उसका समानार्थी शब्द आहे.",
     subCategory: "English Grammar"
   },
   {
