@@ -4,8 +4,8 @@ import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
-  // हे महत्त्वाचे: बेस पाथ सेट केल्यामुळे फाईल्स शोधणे सोपे जाते
-  base: './', 
+  // रेंडरसाठी '/' वापरणे अधिक सुरक्षित असते
+  base: '/', 
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -14,17 +14,12 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
-    sourcemap: false, 
+    // चंक्स मॅन्युअली न बनवता Vite ला हँडल करू द्या, यामुळे विसंगती टळते
     rollupOptions: {
-      // एन्ट्री पॉईंट स्पष्टपणे डिफाइन करा
-      input: {
-        main: path.resolve(__dirname, 'index.html'),
-      },
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', '@supabase/supabase-js'],
-          ui: ['lucide-react']
-        }
+        entryFileNames: `assets/[name].[hash].js`,
+        chunkFileNames: `assets/[name].[hash].js`,
+        assetFileNames: `assets/[name].[hash].[ext]`
       }
     }
   },
