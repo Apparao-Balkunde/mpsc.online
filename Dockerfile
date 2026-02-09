@@ -5,8 +5,8 @@ WORKDIR /app
 # १. फक्त package फाईल्स कॉपी करा
 COPY package*.json ./
 
-# २. Clean Install करा (विसंगती टाळण्यासाठी npm ci वापरा)
-RUN npm ci
+# २. npm install वापरा (पण स्वच्छ पद्धतीने)
+RUN npm install --no-audit --progress=false
 
 # ३. सर्व कोड कॉपी करा
 COPY . .
@@ -18,16 +18,13 @@ RUN npm run build
 FROM node:18-alpine
 WORKDIR /app
 
-# ५. प्रोडक्शनसाठी फक्त आवश्यक फाईल्स कॉपी करा
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/server.js ./
 
-# ६. प्रोडक्शनला लागणाऱ्या मोजक्याच dependencies इंस्टॉल करा (Node_modules पूर्ण कॉपी करू नका)
-RUN npm install --omit=dev
+# ५. फक्त उत्पादन (production) साठी लागणाऱ्या फाईल्स इन्स्टॉल करा
+RUN npm install --omit=dev --no-audit
 
-# Express सर्वरसाठी पोर्ट
 EXPOSE 3000
 
-# सर्वर सुरू करणे
 CMD ["node", "server.js"]
