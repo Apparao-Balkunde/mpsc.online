@@ -9,7 +9,7 @@
     "start": "node server.js"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.45.0",  // 👈 ही ओळ नव्हती, ती आता जोडली आहे
+    "@supabase/supabase-js": "^2.45.0",
     "express": "^4.19.2",
     "react": "18.2.0",
     "react-dom": "18.2.0",
