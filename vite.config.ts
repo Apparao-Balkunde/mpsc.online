@@ -5,35 +5,27 @@ import path from "path";
 export default defineConfig({
   plugins: [react()],
   
-  root: ".", // मुख्य फोल्डरमधून बिल्ड सुरू होईल
+  // रेंडरसाठी बेस पाथ '/' असणे आवश्यक आहे
+  base: '/',
 
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"), // पाथ सुटसुटीत ठेवण्यासाठी
-      // रिअॅक्टच्या आवृत्तीत विसंगती येऊ नये म्हणून खालील अलायस:
-      react: path.resolve("./node_modules/react"),
-      "react-dom": path.resolve("./node_modules/react-dom"),
+      // '@' ला 'src' कडे पॉईंट करा, जेणेकरून इम्पॉर्ट्स सोपे होतील
+      "@": path.resolve(__dirname, "./src"),
     },
-    // ड्युप्लिकेट रिअॅक्ट लोड होण्यापासून रोखण्यासाठी:
-    dedupe: ["react", "react-dom"],
-  },
-
-  optimizeDeps: {
-    force: true, // प्रत्येक वेळी कॅशे रिलोड करेल
-    include: ["react", "react-dom"],
   },
 
   build: {
     outDir: "dist",
     emptyOutDir: true,
-    commonjsOptions: {
-      include: [/node_modules/], // CommonJS लायब्ररीजसाठी महत्त्वाचे
-    },
+    sourcemap: false,
     rollupOptions: {
+      // इथे मॅन्युअल चंक्स नकोत, ते 'Secret Internals' एररचे मूळ आहेत
       output: {
-        // मॅन्युअल चंक्स काढून टाकल्यामुळे 'Secret Internals' चा धोका कमी होतो
-        manualChunks: undefined, 
+        entryFileNames: `assets/[name].[hash].js`,
+        chunkFileNames: `assets/[name].[hash].js`,
+        assetFileNames: `assets/[name].[hash].[ext]`
       }
     }
-  },
+  }
 });
