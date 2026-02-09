@@ -2,16 +2,20 @@
 FROM node:18-alpine AS builder
 WORKDIR /app
 
-# १. फक्त package फाईल्स कॉपी करा
-COPY package*.json ./
+# १. बिल्ड आर्गुमेंट्स (हे रेंडरवरून व्हॅल्यूज घेतील)
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_ANON_KEY
 
-# २. npm install वापरा (पण स्वच्छ पद्धतीने)
+# २. या आर्गुमेंट्सना एन्व्हायरनमेंट व्हेरिएबल्समध्ये रूपांतरित करा (Vite साठी आवश्यक)
+ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
+ENV VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
+
+COPY package*.json ./
 RUN npm install --no-audit --progress=false
 
-# ३. सर्व कोड कॉपी करा
 COPY . .
 
-# ४. Vite बिल्ड तयार करा
+# ३. आता Vite ला बिल्ड करताना वरील कीज मिळतील
 RUN npm run build
 
 # Step 2: Runtime Stage
@@ -22,7 +26,6 @@ COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/server.js ./
 
-# ५. फक्त उत्पादन (production) साठी लागणाऱ्या फाईल्स इन्स्टॉल करा
 RUN npm install --omit=dev --no-audit
 
 EXPOSE 3000
