@@ -4,59 +4,87 @@ import { Mode } from './types';
 import { QuestionView } from './components/QuestionView';
 import { VocabMode } from './components/VocabMode';
 import { LiteratureMode } from './components/LiteratureMode';
-import { History, BookOpen, LayoutDashboard, Languages, GraduationCap } from 'lucide-react';
+import { History, BookOpen, LayoutDashboard, Languages, GraduationCap, Menu, X } from 'lucide-react';
 
 const NavItem = ({ icon, label, active, onClick }: any) => (
-  <button onClick={onClick} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-bold transition-all ${active ? 'bg-indigo-50 text-indigo-600' : 'text-slate-400 hover:bg-slate-50'}`}>
+  <button 
+    onClick={onClick} 
+    className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-bold transition-all ${
+      active ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-400 hover:bg-slate-50'
+    }`}
+  >
     {icon} {label}
   </button>
 );
 
 const MenuCard = ({ title, icon: Icon, color, onSelect, targetMode }: any) => (
-  <button onClick={() => onSelect(targetMode)} className={`${color} p-8 rounded-[2.5rem] text-white text-left shadow-lg hover:scale-[1.02] transition-transform w-full`}>
-    <Icon size={32} className="mb-6 opacity-80" />
+  <button 
+    onClick={() => onSelect(targetMode)} 
+    className={`${color} p-8 rounded-[2.5rem] text-white text-left shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all w-full group`}
+  >
+    <div className="bg-white/20 w-fit p-3 rounded-2xl mb-6 group-hover:rotate-12 transition-transform">
+      <Icon size={32} className="opacity-100" />
+    </div>
     <h3 className="text-2xl font-black mb-1">{title}</h3>
     <p className="text-sm opacity-70 font-bold uppercase tracking-widest">सुरू करा →</p>
   </button>
 );
 
 function App() {
-  // १. रिफ्रेश झाल्यावर जुना मोड वाचण्यासाठी 'lazy initialization' वापरले आहे
+  // १. रिफ्रेश मॅनेजमेंट (Persistence)
   const [mode, setMode] = useState<Mode>(() => {
     const savedMode = localStorage.getItem('mpsc_current_mode');
     return (savedMode as Mode) || Mode.HOME;
   });
   
   const [count, setCount] = useState(0);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // २. जेव्हा जेव्हा मोड बदलेल, तेव्हा तो localStorage मध्ये सेव्ह करा
   useEffect(() => {
     localStorage.setItem('mpsc_current_mode', mode);
+    setIsMobileMenuOpen(false); // मोड बदलला की मोबाईल मेनू बंद करा
   }, [mode]);
 
   useEffect(() => {
     async function getCount() {
-      const { count: p } = await supabase.from('prelims_questions').select('*', { count: 'exact', head: true });
-      const { count: m } = await supabase.from('mains_questions').select('*', { count: 'exact', head: true });
-      setCount((p || 0) + (m || 0));
+      try {
+        const { count: p } = await supabase.from('prelims_questions').select('*', { count: 'exact', head: true });
+        const { count: m } = await supabase.from('mains_questions').select('*', { count: 'exact', head: true });
+        setCount((p || 0) + (m || 0));
+      } catch (err) {
+        console.error("Count fetch error:", err);
+      }
     }
     getCount();
   }, []);
 
-  // ३. होमवर जाण्यासाठी फंक्शन (जे localStorage सुद्धा अपडेट करेल)
-  const handleGoHome = () => {
-    setMode(Mode.HOME);
-  };
+  const handleGoHome = () => setMode(Mode.HOME);
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col md:flex-row">
-      {/* Sidebar Navigation */}
-      <nav className="hidden md:flex flex-col w-64 bg-white border-r border-slate-100 p-6">
-        <div className="flex items-center gap-3 mb-10 px-2 cursor-pointer" onClick={handleGoHome}>
+      
+      {/* Mobile Header */}
+      <div className="md:hidden flex items-center justify-between p-4 bg-white border-b border-slate-100 sticky top-0 z-50">
+        <div className="flex items-center gap-2" onClick={handleGoHome}>
+          <div className="bg-indigo-600 p-1.5 rounded-lg text-white"><BookOpen size={20} /></div>
+          <span className="font-black text-slate-800">MPSC सारथी</span>
+        </div>
+        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 text-slate-600">
+          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+      </div>
+
+      {/* Sidebar Navigation (Desktop & Mobile) */}
+      <nav className={`
+        ${isMobileMenuOpen ? 'flex' : 'hidden'} 
+        md:flex flex-col w-full md:w-64 bg-white border-r border-slate-100 p-6 fixed md:sticky top-0 h-screen z-40
+      `}>
+        <div className="hidden md:flex items-center gap-3 mb-10 px-2 cursor-pointer" onClick={handleGoHome}>
           <div className="bg-indigo-600 p-2 rounded-xl text-white"><BookOpen size={24} /></div>
           <span className="text-xl font-black text-slate-800">MPSC सारथी</span>
         </div>
-        <div className="space-y-2">
+        
+        <div className="space-y-2 mt-16 md:mt-0">
           <NavItem icon={<LayoutDashboard size={20}/>} label="डॅशबोर्ड" active={mode === Mode.HOME} onClick={handleGoHome} />
           <NavItem icon={<History size={20}/>} label="पूर्व परीक्षा" active={mode === Mode.PRELIMS} onClick={() => setMode(Mode.PRELIMS)} />
           <NavItem icon={<BookOpen size={20}/>} label="मुख्य परीक्षा" active={mode === Mode.MAINS} onClick={() => setMode(Mode.MAINS)} />
@@ -65,26 +93,45 @@ function App() {
         </div>
       </nav>
 
-      {/* Main Content */}
+      {/* Main Content Area */}
       <main className="flex-1 p-6 md:p-12 overflow-y-auto">
         {mode === Mode.HOME && (
-          <div className="max-w-5xl mx-auto">
-            <h1 className="text-4xl font-black text-slate-900 mb-2">नमस्कार! 👋</h1>
-            <p className="text-slate-500 mb-10 font-medium">एकूण उपलब्ध प्रश्न: <span className="text-indigo-600 font-bold">{count}</span></p>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <header className="mb-10">
+              <h1 className="text-4xl md:text-5xl font-black text-slate-900 mb-3 tracking-tight">नमस्कार! 👋</h1>
+              <div className="flex items-center gap-2 bg-indigo-50 w-fit px-4 py-2 rounded-2xl border border-indigo-100">
+                <span className="text-slate-600 font-bold">एकूण उपलब्ध प्रश्न:</span>
+                <span className="text-indigo-600 font-black text-lg">{count.toLocaleString()}</span>
+              </div>
+            </header>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-6">
               <MenuCard title="पूर्व परीक्षा" icon={History} targetMode={Mode.PRELIMS} color="bg-blue-600" onSelect={setMode} />
               <MenuCard title="मुख्य परीक्षा" icon={BookOpen} targetMode={Mode.MAINS} color="bg-emerald-600" onSelect={setMode} />
               <MenuCard title="शब्दसंग्रह" icon={Languages} targetMode={Mode.VOCAB} color="bg-purple-600" onSelect={setMode} />
               <MenuCard title="साहित्य" icon={GraduationCap} targetMode={Mode.LITERATURE} color="bg-orange-600" onSelect={setMode} />
             </div>
+
+            {/* Quick Tip Section */}
+            <div className="mt-12 p-8 bg-slate-900 rounded-[3rem] text-white overflow-hidden relative">
+               <div className="relative z-10">
+                 <h4 className="text-xl font-bold mb-2">अभ्यासाची टीप 💡</h4>
+                 <p className="text-slate-400 font-medium max-w-md">दररोज किमान ५० प्रश्नांचा सराव केल्यास यशाची खात्री वाढते. आजचे लक्ष्य पूर्ण करा!</p>
+               </div>
+               <div className="absolute right-[-20px] bottom-[-20px] opacity-10 rotate-12">
+                 <GraduationCap size={160} />
+               </div>
+            </div>
           </div>
         )}
 
-        {/* View Switching with Back Navigation */}
-        {mode === Mode.PRELIMS && <QuestionView type={Mode.PRELIMS} tableName="prelims_questions" onBack={handleGoHome} />}
-        {mode === Mode.MAINS && <QuestionView type={Mode.MAINS} tableName="mains_questions" onBack={handleGoHome} />}
-        {mode === Mode.VOCAB && <VocabMode onBack={handleGoHome} />}
-        {mode === Mode.LITERATURE && <LiteratureMode onBack={handleGoHome} />}
+        {/* Content Renderers */}
+        <div className="max-w-5xl mx-auto">
+          {mode === Mode.PRELIMS && <QuestionView type={Mode.PRELIMS} tableName="prelims_questions" onBack={handleGoHome} />}
+          {mode === Mode.MAINS && <QuestionView type={Mode.MAINS} tableName="mains_questions" onBack={handleGoHome} />}
+          {mode === Mode.VOCAB && <VocabMode onBack={handleGoHome} />}
+          {mode === Mode.LITERATURE && <LiteratureMode onBack={handleGoHome} />}
+        </div>
       </main>
     </div>
   );
