@@ -21,8 +21,18 @@ const MenuCard = ({ title, icon: Icon, color, onSelect, targetMode }: any) => (
 );
 
 function App() {
-  const [mode, setMode] = useState<Mode>(Mode.HOME);
+  // १. रिफ्रेश झाल्यावर जुना मोड वाचण्यासाठी 'lazy initialization' वापरले आहे
+  const [mode, setMode] = useState<Mode>(() => {
+    const savedMode = localStorage.getItem('mpsc_current_mode');
+    return (savedMode as Mode) || Mode.HOME;
+  });
+  
   const [count, setCount] = useState(0);
+
+  // २. जेव्हा जेव्हा मोड बदलेल, तेव्हा तो localStorage मध्ये सेव्ह करा
+  useEffect(() => {
+    localStorage.setItem('mpsc_current_mode', mode);
+  }, [mode]);
 
   useEffect(() => {
     async function getCount() {
@@ -33,15 +43,21 @@ function App() {
     getCount();
   }, []);
 
+  // ३. होमवर जाण्यासाठी फंक्शन (जे localStorage सुद्धा अपडेट करेल)
+  const handleGoHome = () => {
+    setMode(Mode.HOME);
+  };
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col md:flex-row">
+      {/* Sidebar Navigation */}
       <nav className="hidden md:flex flex-col w-64 bg-white border-r border-slate-100 p-6">
-        <div className="flex items-center gap-3 mb-10 px-2">
+        <div className="flex items-center gap-3 mb-10 px-2 cursor-pointer" onClick={handleGoHome}>
           <div className="bg-indigo-600 p-2 rounded-xl text-white"><BookOpen size={24} /></div>
           <span className="text-xl font-black text-slate-800">MPSC सारथी</span>
         </div>
         <div className="space-y-2">
-          <NavItem icon={<LayoutDashboard size={20}/>} label="डॅशबोर्ड" active={mode === Mode.HOME} onClick={() => setMode(Mode.HOME)} />
+          <NavItem icon={<LayoutDashboard size={20}/>} label="डॅशबोर्ड" active={mode === Mode.HOME} onClick={handleGoHome} />
           <NavItem icon={<History size={20}/>} label="पूर्व परीक्षा" active={mode === Mode.PRELIMS} onClick={() => setMode(Mode.PRELIMS)} />
           <NavItem icon={<BookOpen size={20}/>} label="मुख्य परीक्षा" active={mode === Mode.MAINS} onClick={() => setMode(Mode.MAINS)} />
           <NavItem icon={<Languages size={20}/>} label="शब्दसंग्रह" active={mode === Mode.VOCAB} onClick={() => setMode(Mode.VOCAB)} />
@@ -49,6 +65,7 @@ function App() {
         </div>
       </nav>
 
+      {/* Main Content */}
       <main className="flex-1 p-6 md:p-12 overflow-y-auto">
         {mode === Mode.HOME && (
           <div className="max-w-5xl mx-auto">
@@ -63,12 +80,14 @@ function App() {
           </div>
         )}
 
-        {mode === Mode.PRELIMS && <QuestionView type={Mode.PRELIMS} tableName="prelims_questions" onBack={() => setMode(Mode.HOME)} />}
-        {mode === Mode.MAINS && <QuestionView type={Mode.MAINS} tableName="mains_questions" onBack={() => setMode(Mode.HOME)} />}
-        {mode === Mode.VOCAB && <VocabMode onBack={() => setMode(Mode.HOME)} />}
-        {mode === Mode.LITERATURE && <LiteratureMode onBack={() => setMode(Mode.HOME)} />}
+        {/* View Switching with Back Navigation */}
+        {mode === Mode.PRELIMS && <QuestionView type={Mode.PRELIMS} tableName="prelims_questions" onBack={handleGoHome} />}
+        {mode === Mode.MAINS && <QuestionView type={Mode.MAINS} tableName="mains_questions" onBack={handleGoHome} />}
+        {mode === Mode.VOCAB && <VocabMode onBack={handleGoHome} />}
+        {mode === Mode.LITERATURE && <LiteratureMode onBack={handleGoHome} />}
       </main>
     </div>
   );
 }
+
 export default App;
