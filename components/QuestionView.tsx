@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { ArrowLeft, CheckCircle2, XCircle, HelpCircle, BookOpen, Filter, GraduationCap } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, HelpCircle, Filter, GraduationCap } from 'lucide-react';
 import { MPSCQuestion, Mode } from '../types';
 
 interface Props {
   type: Mode.PRELIMS | Mode.MAINS | Mode.MOCK;
   onBack: () => void;
-  tableName: string; // App.tsx मधून येणारे टेबलचे नाव
+  tableName: string; 
 }
 
 export const QuestionView: React.FC<Props> = ({ type, onBack, tableName }) => {
@@ -14,48 +14,56 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName }) => {
   const [loading, setLoading] = useState(true);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
 
-  const [selExam, setSelExam] = useState('Rajyaseva');
+  const [selExam, setSelExam] = useState('Combined Group B'); // Default Combined ठेवले आहे
   const [selSubject, setSelSubject] = useState('All');
   const [selYear, setSelYear] = useState('All');
 
   const yearsList = Array.from({ length: new Date().getFullYear() - 2010 + 1 }, (_, i) => (2010 + i).toString()).reverse();
 
-  // विषयांनुसार डायनॅमिक लॉजिक
+  // Combined साठी फक्त Paper 1 आणि Paper 2 चे लॉजिक
   const getDynamicSubjects = () => {
+    const isCombined = selExam.includes('Combined');
+    
+    if (isCombined && type === Mode.MAINS) {
+      return ['Paper 1', 'Paper 2'];
+    }
+    
     if (selExam === 'Rajyaseva' && type === Mode.MAINS) {
-      return ['GS', 'Marathi Literature', 'Current Affairs'];
+      return ['GS 1', 'GS 2', 'GS 3', 'GS 4', 'Marathi & English'];
     }
-    if (selExam.includes('Combined') && type === Mode.MAINS) {
-      return ['GS', 'Marathi Grammar', 'English Grammar'];
-    }
+
     if (selExam === 'Saral Seva') {
       return ['General Studies', 'Marathi Grammar', 'English Grammar'];
     }
-    return ['Polity', 'History', 'Culture', 'Geography', 'Economics', 'Environment', 'Science', 'Current Affairs'];
+
+    return ['Polity', 'History', 'Geography', 'Economics', 'Environment', 'Science', 'Current Affairs'];
   };
 
   const examOptions = type === Mode.MAINS 
-    ? ['Rajyaseva', 'Combined Group B', 'Combined Group C'] 
-    : ['Rajyaseva', 'Combined Group B', 'Combined Group C', 'Saral Seva'];
+    ? ['Combined Group B', 'Combined Group C', 'Rajyaseva'] 
+    : ['Combined Group B', 'Combined Group C', 'Rajyaseva', 'Saral Seva'];
 
   useEffect(() => {
     const fetchQuestions = async () => {
       setLoading(true);
       try {
-        // 'mpsc_questions' ऐवजी tableName वापरले आहे
         let query = supabase.from(tableName).select('*');
-        
-        // जर तुझ्या टेबलमध्ये exam_type कॉलम असेल तरच हे अनकमेंट कर
-        // query = query.eq('exam_type', type); 
 
+        // १. परीक्षेनुसार फिल्टर
         if (selExam !== 'All') query = query.eq('exam_name', selExam);
         
-        if (selSubject === 'GS') {
-            query = query.in('subject', ['Polity', 'History', 'Geography', 'Economics', 'Environment', 'Science']);
+        // २. पेपर/विषयानुसार स्मार्ट फिल्टरिंग
+        if (selSubject === 'Paper 1') {
+            // Combined Paper 1 मध्ये सहसा भाषा विषय असतात
+            query = query.in('subject', ['Marathi Grammar', 'English Grammar', 'Marathi', 'English']);
+        } else if (selSubject === 'Paper 2') {
+            // Paper 2 मध्ये GS आणि बुद्धिमत्ता असते
+            query = query.not('subject', 'in', '("Marathi Grammar","English Grammar","Marathi","English")');
         } else if (selSubject !== 'All') {
             query = query.eq('subject', selSubject);
         }
         
+        // ३. वर्षानुसार फिल्टर
         if (selYear !== 'All') query = query.eq('year', parseInt(selYear));
 
         const { data, error } = await query.order('year', { ascending: false });
@@ -79,7 +87,7 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName }) => {
         </button>
         <div>
           <h2 className="text-2xl font-black text-slate-800">
-            {type === Mode.PRELIMS ? 'पूर्व परीक्षा' : 'मुख्य परीक्षा'}
+            {type === Mode.MAINS ? 'मुख्य परीक्षा' : 'पूर्व परीक्षा'}
           </h2>
           <p className="text-sm font-bold text-indigo-500 uppercase tracking-widest flex items-center gap-2">
             <GraduationCap size={16} /> {selExam} स्पेशल
@@ -89,9 +97,24 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName }) => {
 
       {/* फिल्टर्स */}
       <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 mb-10 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <FilterSelect label="परीक्षा" options={examOptions} value={selExam} onChange={(v: string) => { setSelExam(v); setSelSubject('All'); }} />
-        <FilterSelect label="विषय निवडा" options={getDynamicSubjects()} value={selSubject} onChange={setSelSubject} />
-        <FilterSelect label="वर्ष" options={yearsList} value={selYear} onChange={setSelYear} />
+        <FilterSelect 
+            label="परीक्षा निवडा" 
+            options={examOptions} 
+            value={selExam} 
+            onChange={(v: string) => { setSelExam(v); setSelSubject('All'); }} 
+        />
+        <FilterSelect 
+            label={selExam.includes('Combined') && type === Mode.MAINS ? "पेपर निवडा" : "विषय निवडा"} 
+            options={getDynamicSubjects()} 
+            value={selSubject} 
+            onChange={setSelSubject} 
+        />
+        <FilterSelect 
+            label="वर्ष" 
+            options={yearsList} 
+            value={selYear} 
+            onChange={setSelYear} 
+        />
       </div>
 
       {/* प्रश्नांची यादी */}
@@ -138,7 +161,7 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName }) => {
                 {selectedAnswers[q.id] !== undefined && (
                   <div className="mt-4 p-6 bg-indigo-50 rounded-3xl border-l-8 border-indigo-600 animate-in slide-in-from-top-2 duration-300">
                     <p className="text-slate-700 font-medium leading-relaxed">
-                      <strong className="text-indigo-700">उत्तर स्पष्टीकरण:</strong> {q.explanation}
+                      <strong className="text-indigo-700">स्पष्टीकरण:</strong> {q.explanation}
                     </p>
                   </div>
                 )}
@@ -151,7 +174,6 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName }) => {
   );
 };
 
-// छोटे घटक (Components)
 const Badge = ({ text, color }: { text: string; color: string }) => (
   <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider ${color}`}>
     {text}
@@ -167,7 +189,7 @@ const FilterSelect = ({ label, options, value, onChange }: any) => (
         onChange={(e) => onChange(e.target.value)} 
         className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer appearance-none"
       >
-        <option value="All">सर्व निवडा</option>
+        <option value="All">सर्व</option>
         {options.map((opt: string) => <option key={opt} value={opt}>{opt}</option>)}
       </select>
       <Filter size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
