@@ -4,7 +4,8 @@ import { Mode } from './types';
 import { QuestionView } from './components/QuestionView';
 import { VocabMode } from './components/VocabMode';
 import { LiteratureMode } from './components/LiteratureMode';
-import { History, BookOpen, LayoutDashboard, Languages, GraduationCap, Menu, X } from 'lucide-react';
+// LayoutDashboard आयकॉन सराव परीक्षेसाठी वापरला आहे
+import { History, BookOpen, LayoutDashboard, Languages, GraduationCap, Menu, X, Trophy } from 'lucide-react';
 
 const NavItem = ({ icon, label, active, onClick }: any) => (
   <button 
@@ -31,7 +32,6 @@ const MenuCard = ({ title, icon: Icon, color, onSelect, targetMode }: any) => (
 );
 
 function App() {
-  // १. रिफ्रेश मॅनेजमेंट (Persistence)
   const [mode, setMode] = useState<Mode>(() => {
     const savedMode = localStorage.getItem('mpsc_current_mode');
     return (savedMode as Mode) || Mode.HOME;
@@ -42,7 +42,7 @@ function App() {
 
   useEffect(() => {
     localStorage.setItem('mpsc_current_mode', mode);
-    setIsMobileMenuOpen(false); // मोड बदलला की मोबाईल मेनू बंद करा
+    setIsMobileMenuOpen(false);
   }, [mode]);
 
   useEffect(() => {
@@ -50,6 +50,7 @@ function App() {
       try {
         const { count: p } = await supabase.from('prelims_questions').select('*', { count: 'exact', head: true });
         const { count: m } = await supabase.from('mains_questions').select('*', { count: 'exact', head: true });
+        // जर सराव परीक्षेचे वेगळे टेबल असेल तर तेही इथे प्लस करू शकतोस
         setCount((p || 0) + (m || 0));
       } catch (err) {
         console.error("Count fetch error:", err);
@@ -74,7 +75,7 @@ function App() {
         </button>
       </div>
 
-      {/* Sidebar Navigation (Desktop & Mobile) */}
+      {/* Sidebar Navigation */}
       <nav className={`
         ${isMobileMenuOpen ? 'flex' : 'hidden'} 
         md:flex flex-col w-full md:w-64 bg-white border-r border-slate-100 p-6 fixed md:sticky top-0 h-screen z-40
@@ -88,6 +89,8 @@ function App() {
           <NavItem icon={<LayoutDashboard size={20}/>} label="डॅशबोर्ड" active={mode === Mode.HOME} onClick={handleGoHome} />
           <NavItem icon={<History size={20}/>} label="पूर्व परीक्षा" active={mode === Mode.PRELIMS} onClick={() => setMode(Mode.PRELIMS)} />
           <NavItem icon={<BookOpen size={20}/>} label="मुख्य परीक्षा" active={mode === Mode.MAINS} onClick={() => setMode(Mode.MAINS)} />
+          {/* सराव परीक्षा नेव्हिगेशन लिंक */}
+          <NavItem icon={<Trophy size={20}/>} label="सराव परीक्षा" active={mode === Mode.MOCK} onClick={() => setMode(Mode.MOCK)} />
           <NavItem icon={<Languages size={20}/>} label="शब्दसंग्रह" active={mode === Mode.VOCAB} onClick={() => setMode(Mode.VOCAB)} />
           <NavItem icon={<GraduationCap size={20}/>} label="साहित्य" active={mode === Mode.LITERATURE} onClick={() => setMode(Mode.LITERATURE)} />
         </div>
@@ -105,21 +108,23 @@ function App() {
               </div>
             </header>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-6">
+            {/* डॅशबोर्ड कार्ड्स - आता ५ कार्ड्स दिसतील */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               <MenuCard title="पूर्व परीक्षा" icon={History} targetMode={Mode.PRELIMS} color="bg-blue-600" onSelect={setMode} />
               <MenuCard title="मुख्य परीक्षा" icon={BookOpen} targetMode={Mode.MAINS} color="bg-emerald-600" onSelect={setMode} />
+              {/* नवीन सराव परीक्षा कार्ड */}
+              <MenuCard title="सराव परीक्षा" icon={Trophy} targetMode={Mode.MOCK} color="bg-rose-500" onSelect={setMode} />
               <MenuCard title="शब्दसंग्रह" icon={Languages} targetMode={Mode.VOCAB} color="bg-purple-600" onSelect={setMode} />
               <MenuCard title="साहित्य" icon={GraduationCap} targetMode={Mode.LITERATURE} color="bg-orange-600" onSelect={setMode} />
             </div>
 
-            {/* Quick Tip Section */}
             <div className="mt-12 p-8 bg-slate-900 rounded-[3rem] text-white overflow-hidden relative">
                <div className="relative z-10">
-                 <h4 className="text-xl font-bold mb-2">अभ्यासाची टीप 💡</h4>
-                 <p className="text-slate-400 font-medium max-w-md">दररोज किमान ५० प्रश्नांचा सराव केल्यास यशाची खात्री वाढते. आजचे लक्ष्य पूर्ण करा!</p>
+                 <h4 className="text-xl font-bold mb-2">यशाचा मंत्र 💡</h4>
+                 <p className="text-slate-400 font-medium max-w-md">नियमित सराव आणि सातत्य हेच यशाचे गमक आहे. आजची टेस्ट सोडवून प्रगती तपासा!</p>
                </div>
                <div className="absolute right-[-20px] bottom-[-20px] opacity-10 rotate-12">
-                 <GraduationCap size={160} />
+                 <Trophy size={160} />
                </div>
             </div>
           </div>
@@ -129,6 +134,8 @@ function App() {
         <div className="max-w-5xl mx-auto">
           {mode === Mode.PRELIMS && <QuestionView type={Mode.PRELIMS} tableName="prelims_questions" onBack={handleGoHome} />}
           {mode === Mode.MAINS && <QuestionView type={Mode.MAINS} tableName="mains_questions" onBack={handleGoHome} />}
+          {/* सराव परीक्षेसाठी रेंडरर (येथे आपण मुख्य परीक्षेचेच टेबल वापरू शकतो किंवा सराव साठी वेगळे असल्यास ते बदला) */}
+          {mode === Mode.MOCK && <QuestionView type={Mode.MOCK} tableName="mains_questions" onBack={handleGoHome} />}
           {mode === Mode.VOCAB && <VocabMode onBack={handleGoHome} />}
           {mode === Mode.LITERATURE && <LiteratureMode onBack={handleGoHome} />}
         </div>
