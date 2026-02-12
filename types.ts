@@ -2,7 +2,7 @@ export enum Mode {
   HOME = 'HOME',
   PRELIMS = 'PRELIMS',
   MAINS = 'MAINS',
-  MOCK = 'MOCK', // नवीन मोड
+  MOCK = 'MOCK', // सराव परीक्षा मोड
   VOCAB = 'VOCAB',
   LITERATURE = 'LITERATURE'
 }
@@ -14,7 +14,7 @@ export interface MPSCQuestion {
   correct_answer_index: number;
   explanation: string;
   subject: string;
-  year: number;
+  year?: number; // सराव परीक्षेसाठी वर्ष Optional केले आहे (?)
   exam_name: string;
 }
 
