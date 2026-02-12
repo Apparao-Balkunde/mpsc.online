@@ -29,7 +29,7 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName }) => {
         return ['Rajyaseva', 'Combined Group B', 'Combined Group C', 'Saral Seva'];
       case 'VOCAB':
       case 'LITERATURE':
-        return ['Rajyaseva', 'Combined Group B', 'Combined Group C'];
+        return ['Rajyaseva'];
       default:
         return ['Rajyaseva', 'Combined Group B', 'Combined Group C', 'Saral Seva'];
     }
@@ -46,7 +46,7 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName }) => {
     }
 
     if (type === 'VOCAB') return ['Synonyms', 'Antonyms', 'One Word', 'Idioms & Phrases'];
-    if (type === 'LITERATURE') return ['Marathi Sahitya', 'English Literature', 'Authors & Books'];
+    if (type === 'LITERATURE') return ['Marathi Sahitya', 'Authors & Books'];
     
     if (selExam === 'Saral Seva') return ['General Studies', 'Marathi Grammar', 'English Grammar', 'Maths & Reasoning'];
 
