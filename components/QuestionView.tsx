@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { ArrowLeft, CheckCircle2, HelpCircle, Filter, GraduationCap, BookOpen } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, HelpCircle, Filter, GraduationCap, Trophy } from 'lucide-react';
 import { MPSCQuestion, Mode } from '../types';
 
 interface Props {
@@ -20,22 +20,22 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName }) => {
 
   const yearsList = Array.from({ length: new Date().getFullYear() - 2010 + 1 }, (_, i) => (2010 + i).toString()).reverse();
 
-  // १. परीक्षेचे पर्याय (Exam Options)
+  // १. परीक्षेचे पर्याय
   const getExamOptions = () => {
     switch (type) {
       case Mode.MAINS:
       case Mode.PRELIMS:
-      case Mode.MOCK: // Sarav Pariksha
+      case Mode.MOCK:
         return ['Rajyaseva', 'Combined Group B', 'Combined Group C', 'Saral Seva'];
       case 'VOCAB':
       case 'LITERATURE':
-        return ['Rajyaseva'];
+        return ['Rajyaseva', 'Combined Group B', 'Combined Group C'];
       default:
         return ['Rajyaseva', 'Combined Group B', 'Combined Group C', 'Saral Seva'];
     }
   };
 
-  // २. विषयांचे/पेपरचे पर्याय (Dynamic Subjects)
+  // २. विषयांचे पर्याय
   const getDynamicSubjects = () => {
     const isCombined = selExam.includes('Combined');
     const isRajyaseva = selExam === 'Rajyaseva';
@@ -59,26 +59,24 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName }) => {
       try {
         let query = supabase.from(tableName).select('*');
 
-        // फिल्टर १: परीक्षेचे नाव
         if (selExam !== 'All') query = query.eq('exam_name', selExam);
         
-        // फिल्टर २: विषयानुसार स्मार्ट मॅपिंग
         if (selSubject !== 'All') {
             if (selSubject === 'Paper 1') {
                 query = query.in('subject', ['Marathi', 'English', 'Marathi Grammar', 'English Grammar']);
             } else if (selSubject === 'Paper 2' && selExam.includes('Combined')) {
                 query = query.not('subject', 'in', '("Marathi","English","Marathi Grammar","English Grammar")');
-            } else if (selSubject === 'Paper 2' && isRajyaseva) {
-                query = query.in('subject', ['History', 'Geography', 'GS 1']);
             } else {
                 query = query.eq('subject', selSubject);
             }
         }
         
-        // फिल्टर ३: वर्ष
-        if (selYear !== 'All') query = query.eq('year', parseInt(selYear));
+        // सराव परीक्षेत वर्षाचा फिल्टर लावला जाणार नाही
+        if (type !== Mode.MOCK && selYear !== 'All') {
+            query = query.eq('year', parseInt(selYear));
+        }
 
-        const { data, error } = await query.order('year', { ascending: false });
+        const { data, error } = await query.order('id', { ascending: false });
         if (error) throw error;
         setQuestions(data || []);
       } catch (err: any) {
@@ -90,7 +88,6 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName }) => {
     fetchQuestions();
   }, [tableName, type, selExam, selSubject, selYear]);
 
-  // Header Title Logic
   const getHeaderTitle = () => {
     if (type === Mode.PRELIMS) return "पूर्व परीक्षा";
     if (type === Mode.MAINS) return "मुख्य परीक्षा";
@@ -110,13 +107,13 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName }) => {
         <div>
           <h2 className="text-2xl font-black text-slate-800">{getHeaderTitle()}</h2>
           <p className="text-sm font-bold text-indigo-500 uppercase tracking-widest flex items-center gap-2">
-            <GraduationCap size={16} /> {selExam} स्पेशल
+            {type === Mode.MOCK ? <Trophy size={16} /> : <GraduationCap size={16} />} {selExam} स्पेशल
           </p>
         </div>
       </div>
 
-      {/* फिल्टर्स */}
-      <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 mb-10 grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* फिल्टर्स - सराव परीक्षेत ३ ऐवजी २ कॉलम्स दिसतील */}
+      <div className={`bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 mb-10 grid grid-cols-1 ${type === Mode.MOCK ? 'md:grid-cols-2' : 'md:grid-cols-3'} gap-4`}>
         <FilterSelect 
             label="परीक्षा" 
             options={getExamOptions()} 
@@ -129,12 +126,15 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName }) => {
             value={selSubject} 
             onChange={setSelSubject} 
         />
-        <FilterSelect 
-            label="वर्ष" 
-            options={yearsList} 
-            value={selYear} 
-            onChange={setSelYear} 
-        />
+        {/* सराव परीक्षा सोडून इतर ठिकाणी वर्ष फिल्टर दिसेल */}
+        {type !== Mode.MOCK && (
+          <FilterSelect 
+              label="वर्ष" 
+              options={yearsList} 
+              value={selYear} 
+              onChange={setSelYear} 
+          />
+        )}
       </div>
 
       {/* प्रश्नांची यादी */}
@@ -152,7 +152,8 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName }) => {
               <div className="flex flex-wrap gap-2 mb-6">
                 <Badge text={q.exam_name} color="bg-indigo-50 text-indigo-600" />
                 <Badge text={q.subject} color="bg-purple-50 text-purple-600" />
-                <Badge text={`${q.year}`} color="bg-slate-100 text-slate-500" />
+                {/* कार्डवर वर्ष फक्त MOCK मोड नसल्यास दाखवा */}
+                {type !== Mode.MOCK && q.year && <Badge text={`${q.year}`} color="bg-slate-100 text-slate-500" />}
               </div>
 
               <h3 className="text-xl font-bold text-slate-800 mb-8 leading-relaxed">
