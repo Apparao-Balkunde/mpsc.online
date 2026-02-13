@@ -2,9 +2,11 @@ export enum Mode {
   HOME = 'HOME',
   PRELIMS = 'PRELIMS',
   MAINS = 'MAINS',
-  MOCK = 'MOCK', // सराव परीक्षा मोड
+  MOCK = 'MOCK', 
   VOCAB = 'VOCAB',
-  LITERATURE = 'LITERATURE'
+  LITERATURE = 'LITERATURE',
+  MOCK_TEST = 'MOCK_TEST',     // आपण आधीच्या कोडमध्ये वापरलेला नवीन मोड
+  CURRENT_AFFAIRS = 'CURRENT_AFFAIRS' // चालू घडामोडी मोड
 }
 
 export interface MPSCQuestion {
@@ -14,8 +16,20 @@ export interface MPSCQuestion {
   correct_answer_index: number;
   explanation: string;
   subject: string;
-  year?: number; // सराव परीक्षेसाठी वर्ष Optional केले आहे (?)
+  year?: number; 
   exam_name: string;
+}
+
+// १. चालू घडामोडींसाठी नवीन इंटरफेस (Topic & Details Logic)
+export interface CurrentAffairs {
+  id: number;
+  title: string;        // बातमीचा विषय (Topic)
+  details: string;      // सविस्तर माहिती (Details)
+  category?: string;    // राजकीय, क्रीडा, इ.
+  image_url?: string;
+  important_date: string;
+  exam_name: string;
+  year: number;
 }
 
 export interface DescriptiveQA {
