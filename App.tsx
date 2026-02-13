@@ -3,9 +3,8 @@ import { supabase } from './lib/supabase';
 import { Mode } from './types';
 import { QuestionView } from './components/QuestionView';
 import { VocabMode } from './components/VocabMode';
-import { LiteratureMode } from './components/LiteratureMode';
-// Newspaper आयकॉन चालू घडामोडींसाठी जोडला आहे
-import { History, BookOpen, LayoutDashboard, Languages, GraduationCap, Menu, X, Trophy, Newspaper } from 'lucide-react';
+// LiteratureMode ऐवजी आता आपण QuestionView वापरणार आहोत Optional साठी
+import { History, BookOpen, LayoutDashboard, Languages, GraduationCap, Menu, X, Trophy, Newspaper, BookmarkCheck } from 'lucide-react';
 
 const NavItem = ({ icon, label, active, onClick }: any) => (
   <button 
@@ -48,13 +47,14 @@ function App() {
   useEffect(() => {
     async function getCount() {
       try {
-        // सर्व टेबलमधील डेटा मोजणे
+        // सर्व टेबलमधील डेटा मोजणे (Optional Questions सह)
         const { count: p } = await supabase.from('prelims_questions').select('*', { count: 'exact', head: true });
         const { count: m } = await supabase.from('mains_questions').select('*', { count: 'exact', head: true });
         const { count: mock } = await supabase.from('mock_questions').select('*', { count: 'exact', head: true });
         const { count: ca } = await supabase.from('current_affairs').select('*', { count: 'exact', head: true });
+        const { count: opt } = await supabase.from('optional_questions').select('*', { count: 'exact', head: true });
         
-        setCount((p || 0) + (m || 0) + (mock || 0) + (ca || 0));
+        setCount((p || 0) + (m || 0) + (mock || 0) + (ca || 0) + (opt || 0));
       } catch (err) {
         console.error("Count fetch error:", err);
       }
@@ -69,7 +69,7 @@ function App() {
       
       {/* Mobile Header */}
       <div className="md:hidden flex items-center justify-between p-4 bg-white border-b border-slate-100 sticky top-0 z-50">
-        <div className="flex items-center gap-2" onClick={handleGoHome}>
+        <div className="flex items-center gap-2 cursor-pointer" onClick={handleGoHome}>
           <div className="bg-indigo-600 p-1.5 rounded-lg text-white"><BookOpen size={20} /></div>
           <span className="font-black text-slate-800">MPSC सारथी</span>
         </div>
@@ -94,8 +94,8 @@ function App() {
           <NavItem icon={<History size={20}/>} label="पूर्व परीक्षा" active={mode === Mode.PRELIMS} onClick={() => setMode(Mode.PRELIMS)} />
           <NavItem icon={<BookOpen size={20}/>} label="मुख्य परीक्षा" active={mode === Mode.MAINS} onClick={() => setMode(Mode.MAINS)} />
           <NavItem icon={<Trophy size={20}/>} label="सराव परीक्षा" active={mode === Mode.MOCK_TEST} onClick={() => setMode(Mode.MOCK_TEST)} />
+          <NavItem icon={<BookmarkCheck size={20}/>} label="वैकल्पिक (Optional)" active={mode === Mode.OPTIONAL} onClick={() => setMode(Mode.OPTIONAL)} />
           <NavItem icon={<Languages size={20}/>} label="शब्दसंग्रह" active={mode === Mode.VOCAB} onClick={() => setMode(Mode.VOCAB)} />
-          <NavItem icon={<GraduationCap size={20}/>} label="साहित्य" active={mode === Mode.LITERATURE} onClick={() => setMode(Mode.LITERATURE)} />
         </div>
       </nav>
 
@@ -111,14 +111,14 @@ function App() {
               </div>
             </header>
 
-            {/* डॅशबोर्ड कार्ड्स - आता ६ कार्ड्स दिसतील */}
+            {/* डॅशबोर्ड कार्ड्स - ६ कार्ड्स */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               <MenuCard title="चालू घडामोडी" icon={Newspaper} targetMode={Mode.CURRENT_AFFAIRS} color="bg-orange-500" onSelect={setMode} />
               <MenuCard title="पूर्व परीक्षा" icon={History} targetMode={Mode.PRELIMS} color="bg-blue-600" onSelect={setMode} />
               <MenuCard title="मुख्य परीक्षा" icon={BookOpen} targetMode={Mode.MAINS} color="bg-emerald-600" onSelect={setMode} />
               <MenuCard title="सराव परीक्षा" icon={Trophy} targetMode={Mode.MOCK_TEST} color="bg-rose-500" onSelect={setMode} />
+              <MenuCard title="Optional विषय" icon={BookmarkCheck} targetMode={Mode.OPTIONAL} color="bg-indigo-600" onSelect={setMode} />
               <MenuCard title="शब्दसंग्रह" icon={Languages} targetMode={Mode.VOCAB} color="bg-purple-600" onSelect={setMode} />
-              <MenuCard title="साहित्य" icon={GraduationCap} targetMode={Mode.LITERATURE} color="bg-indigo-600" onSelect={setMode} />
             </div>
 
             <div className="mt-12 p-8 bg-slate-900 rounded-[3rem] text-white overflow-hidden relative">
@@ -139,8 +139,8 @@ function App() {
           {mode === Mode.PRELIMS && <QuestionView type={Mode.PRELIMS} tableName="prelims_questions" onBack={handleGoHome} />}
           {mode === Mode.MAINS && <QuestionView type={Mode.MAINS} tableName="mains_questions" onBack={handleGoHome} />}
           {mode === Mode.MOCK_TEST && <QuestionView type="MOCK_TEST" tableName="mock_questions" onBack={handleGoHome} />}
+          {mode === Mode.OPTIONAL && <QuestionView type="OPTIONAL" tableName="optional_questions" onBack={handleGoHome} />}
           {mode === Mode.VOCAB && <VocabMode onBack={handleGoHome} />}
-          {mode === Mode.LITERATURE && <LiteratureMode onBack={handleGoHome} />}
         </div>
       </main>
     </div>
