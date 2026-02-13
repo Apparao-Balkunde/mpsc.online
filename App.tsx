@@ -4,8 +4,8 @@ import { Mode } from './types';
 import { QuestionView } from './components/QuestionView';
 import { VocabMode } from './components/VocabMode';
 import { LiteratureMode } from './components/LiteratureMode';
-// LayoutDashboard आयकॉन सराव परीक्षेसाठी वापरला आहे
-import { History, BookOpen, LayoutDashboard, Languages, GraduationCap, Menu, X, Trophy } from 'lucide-react';
+// Newspaper आयकॉन चालू घडामोडींसाठी जोडला आहे
+import { History, BookOpen, LayoutDashboard, Languages, GraduationCap, Menu, X, Trophy, Newspaper } from 'lucide-react';
 
 const NavItem = ({ icon, label, active, onClick }: any) => (
   <button 
@@ -48,10 +48,13 @@ function App() {
   useEffect(() => {
     async function getCount() {
       try {
+        // सर्व टेबलमधील डेटा मोजणे
         const { count: p } = await supabase.from('prelims_questions').select('*', { count: 'exact', head: true });
         const { count: m } = await supabase.from('mains_questions').select('*', { count: 'exact', head: true });
-        // जर सराव परीक्षेचे वेगळे टेबल असेल तर तेही इथे प्लस करू शकतोस
-        setCount((p || 0) + (m || 0));
+        const { count: mock } = await supabase.from('mock_questions').select('*', { count: 'exact', head: true });
+        const { count: ca } = await supabase.from('current_affairs').select('*', { count: 'exact', head: true });
+        
+        setCount((p || 0) + (m || 0) + (mock || 0) + (ca || 0));
       } catch (err) {
         console.error("Count fetch error:", err);
       }
@@ -85,12 +88,12 @@ function App() {
           <span className="text-xl font-black text-slate-800">MPSC सारथी</span>
         </div>
         
-        <div className="space-y-2 mt-16 md:mt-0">
+        <div className="space-y-2 mt-16 md:mt-0 overflow-y-auto">
           <NavItem icon={<LayoutDashboard size={20}/>} label="डॅशबोर्ड" active={mode === Mode.HOME} onClick={handleGoHome} />
+          <NavItem icon={<Newspaper size={20}/>} label="चालू घडामोडी" active={mode === Mode.CURRENT_AFFAIRS} onClick={() => setMode(Mode.CURRENT_AFFAIRS)} />
           <NavItem icon={<History size={20}/>} label="पूर्व परीक्षा" active={mode === Mode.PRELIMS} onClick={() => setMode(Mode.PRELIMS)} />
           <NavItem icon={<BookOpen size={20}/>} label="मुख्य परीक्षा" active={mode === Mode.MAINS} onClick={() => setMode(Mode.MAINS)} />
-          {/* सराव परीक्षा नेव्हिगेशन लिंक */}
-          <NavItem icon={<Trophy size={20}/>} label="सराव परीक्षा" active={mode === Mode.MOCK} onClick={() => setMode(Mode.MOCK)} />
+          <NavItem icon={<Trophy size={20}/>} label="सराव परीक्षा" active={mode === Mode.MOCK_TEST} onClick={() => setMode(Mode.MOCK_TEST)} />
           <NavItem icon={<Languages size={20}/>} label="शब्दसंग्रह" active={mode === Mode.VOCAB} onClick={() => setMode(Mode.VOCAB)} />
           <NavItem icon={<GraduationCap size={20}/>} label="साहित्य" active={mode === Mode.LITERATURE} onClick={() => setMode(Mode.LITERATURE)} />
         </div>
@@ -108,14 +111,14 @@ function App() {
               </div>
             </header>
 
-            {/* डॅशबोर्ड कार्ड्स - आता ५ कार्ड्स दिसतील */}
+            {/* डॅशबोर्ड कार्ड्स - आता ६ कार्ड्स दिसतील */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <MenuCard title="चालू घडामोडी" icon={Newspaper} targetMode={Mode.CURRENT_AFFAIRS} color="bg-orange-500" onSelect={setMode} />
               <MenuCard title="पूर्व परीक्षा" icon={History} targetMode={Mode.PRELIMS} color="bg-blue-600" onSelect={setMode} />
               <MenuCard title="मुख्य परीक्षा" icon={BookOpen} targetMode={Mode.MAINS} color="bg-emerald-600" onSelect={setMode} />
-              {/* नवीन सराव परीक्षा कार्ड */}
-              <MenuCard title="सराव परीक्षा" icon={Trophy} targetMode={Mode.MOCK} color="bg-rose-500" onSelect={setMode} />
+              <MenuCard title="सराव परीक्षा" icon={Trophy} targetMode={Mode.MOCK_TEST} color="bg-rose-500" onSelect={setMode} />
               <MenuCard title="शब्दसंग्रह" icon={Languages} targetMode={Mode.VOCAB} color="bg-purple-600" onSelect={setMode} />
-              <MenuCard title="साहित्य" icon={GraduationCap} targetMode={Mode.LITERATURE} color="bg-orange-600" onSelect={setMode} />
+              <MenuCard title="साहित्य" icon={GraduationCap} targetMode={Mode.LITERATURE} color="bg-indigo-600" onSelect={setMode} />
             </div>
 
             <div className="mt-12 p-8 bg-slate-900 rounded-[3rem] text-white overflow-hidden relative">
@@ -132,10 +135,10 @@ function App() {
 
         {/* Content Renderers */}
         <div className="max-w-5xl mx-auto">
+          {mode === Mode.CURRENT_AFFAIRS && <QuestionView type="CURRENT_AFFAIRS" tableName="current_affairs" onBack={handleGoHome} />}
           {mode === Mode.PRELIMS && <QuestionView type={Mode.PRELIMS} tableName="prelims_questions" onBack={handleGoHome} />}
           {mode === Mode.MAINS && <QuestionView type={Mode.MAINS} tableName="mains_questions" onBack={handleGoHome} />}
-          {/* सराव परीक्षेसाठी रेंडरर (येथे आपण मुख्य परीक्षेचेच टेबल वापरू शकतो किंवा सराव साठी वेगळे असल्यास ते बदला) */}
-          {mode === Mode.MOCK && <QuestionView type={Mode.MOCK} tableName="mains_questions" onBack={handleGoHome} />}
+          {mode === Mode.MOCK_TEST && <QuestionView type="MOCK_TEST" tableName="mock_questions" onBack={handleGoHome} />}
           {mode === Mode.VOCAB && <VocabMode onBack={handleGoHome} />}
           {mode === Mode.LITERATURE && <LiteratureMode onBack={handleGoHome} />}
         </div>
