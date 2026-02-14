@@ -10,6 +10,9 @@ export enum Mode {
   CURRENT_AFFAIRS = 'CURRENT_AFFAIRS' 
 }
 
+/**
+ * MCQ आधारित प्रश्नांसाठी इंटरफेस (Prelims, Mains, Mock)
+ */
 export interface MPSCQuestion {
   id: number;
   question: string;
@@ -22,14 +25,17 @@ export interface MPSCQuestion {
   created_at?: string;
 }
 
-// ३. OPTIONAL (Descriptive) साठी अपडेटेड इंटरफेस
+/**
+ * वर्णनात्मक (Descriptive) प्रश्नांसाठी इंटरफेस (Optional & Current Affairs)
+ * येथे 'year' आता अनिवार्य (Required) आहे.
+ */
 export interface OptionalQuestion {
   id: number;
   question_title: string;  
   answer_details: string;  
-  subject: 'Marathi Literature' | 'Public Administration' | string;         
+  subject: 'Marathi Literature' | 'Public Administration' | 'History' | 'Geography' | string;         
   exam_name: string;       
-  year: number; // वर्ष आता अनिवार्य आहे
+  year: number; 
   created_at?: string;
 }
 
