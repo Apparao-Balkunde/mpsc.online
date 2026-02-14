@@ -22,16 +22,23 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName }) => {
 
   const getSubjects = () => {
     if (type === Mode.PRELIMS) {
-      return ['History', 'Geography', 'Polity', 'Economics', 'Science', 'Environment', 'Current Affairs', 'GS Paper 2'];
-    }
+      if (selExam === 'Rajyaseva') {
+        return ['History', 'Geography', 'Polity', 'Economics', 'Science', 'Environment', 'Current Affairs', 'GS Paper 2'];
+        }
+      return ['History', 'Geography', 'Polity', 'Economics', 'Science', 'Environment', 'Current Affairs'];
+    } 
     if (type === Mode.MAINS) {
       if (selExam === 'Rajyaseva') {
         return ['Marathi', 'English', 'Paper 1', 'Paper 2', 'Paper 3', 'Paper 4'];
-      }
+        }
       return ['Paper 1', 'Paper 2'];
     }
     if (type === 'OPTIONAL') {
       return ['Marathi Literature', 'Public Administration', 'History', 'Geography', 'Political Science'];
+    }
+    // ४. Mock Test साठी (हा भाग तपासा, इथेच गडबड असू शकते)
+    if (type === Mode.MOCK_TEST || type === 'MOCK_TEST') {
+      return ['Polity', 'History', 'Geography', 'Economics', 'Science', 'Environment', 'Current Affairs'];
     }
     return [];
   };
