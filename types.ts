@@ -4,24 +4,26 @@ export enum Mode {
   MAINS = 'MAINS',
   MOCK = 'MOCK', 
   VOCAB = 'VOCAB',
-  LITERATURE = 'LITERATURE', // जुने साहित्य (गरज असल्यास ठेवा)
-  OPTIONAL = 'OPTIONAL',     // नवीन: वैकल्पिक विषयांसाठी स्वतंत्र मोड
-  MOCK_TEST = 'MOCK_TEST',   // सराव परीक्षा मोड
+  LITERATURE = 'LITERATURE', 
+  OPTIONAL = 'OPTIONAL',      // वैकल्पिक विषयांसाठी
+  MOCK_TEST = 'MOCK_TEST',    // सराव परीक्षा मोड
   CURRENT_AFFAIRS = 'CURRENT_AFFAIRS' // चालू घडामोडी मोड
 }
 
+// १. मुख्य MCQ प्रश्नांसाठी इंटरफेस (Prelims, Mains, Mock)
 export interface MPSCQuestion {
   id: number;
   question: string;
-  options: string[];
+  options: string[]; // JSONB मधील डेटा ऑरे म्हणून येईल
   correct_answer_index: number;
   explanation: string;
-  subject: string;
-  year?: number; 
-  exam_name: string;
+  subject: 'History' | 'Geography' | 'Polity' | 'Economics' | 'Science' | 'Environment' | 'Current Affairs' | 'GS Paper 2' | string;
+  year: number; 
+  exam_name: 'Rajyaseva' | 'Combined Group B' | 'Combined Group C' | string;
+  created_at?: string;
 }
 
-// १. चालू घडामोडींसाठी इंटरफेस (Topic & Details Logic)
+// २. चालू घडामोडींसाठी इंटरफेस (Topic & Details Logic)
 export interface CurrentAffairs {
   id: number;
   title: string;        // बातमीचा विषय (Topic)
@@ -33,18 +35,18 @@ export interface CurrentAffairs {
   year: number;
 }
 
-// २. OPTIONAL (Descriptive) साठी नवीन इंटरफेस
-// हा थेट तुझ्या 'optional_questions' टेबलच्या कॉलम्सशी मॅप होतो
+// ३. OPTIONAL (Descriptive) साठी इंटरफेस
 export interface OptionalQuestion {
   id: number;
   question_title: string;  // मुख्य प्रश्न
   answer_details: string;  // सविस्तर उत्तर (मुद्देसूद)
-  subject: string;         // Marathi Sahitya / Public Administration
-  exam_name: string;
+  subject: string;         // उदा. Marathi Sahitya
+  exam_name: string;       // उदा. Rajyaseva / UPSC
   year?: number;
   created_at?: string;
 }
 
+// ४. इतर साह्यकारी टाइप्स
 export interface DescriptiveQA {
   question: string;
   modelAnswer: string;
