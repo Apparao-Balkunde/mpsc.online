@@ -26,9 +26,9 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName }) => {
     }
     if (type === Mode.MAINS) {
       if (selExam === 'Rajyaseva') {
-        return ['Marathi', 'English', 'Paper 1 (History & Geo)', 'Paper 2 (Polity)', 'Paper 3 (HR & HRD)', 'Paper 4 (Sci-Tech & Econ)'];
+        return ['Marathi', 'English', 'Paper 1', 'Paper 2', 'Paper 3', 'Paper 4'];
       }
-      return ['Paper 1 (Lang)', 'Paper 2 (GS)'];
+      return ['Paper 1', 'Paper 2'];
     }
     if (type === 'OPTIONAL') {
       return ['Marathi Literature', 'Public Administration', 'History', 'Geography', 'Political Science'];
@@ -77,7 +77,7 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName }) => {
         </button>
         <div>
           <h2 className="text-2xl font-black text-slate-800">
-            {type === 'OPTIONAL' ? "वैकल्पिक विषय (Optional)" : 
+            {type === 'OPTIONAL' ? "वैकल्पिक विषय" : 
              type === 'CURRENT_AFFAIRS' ? "चालू घडामोडी" : "प्रश्न संच"}
           </h2>
           {/* Optional मध्ये Exam नाव लपवले आहे */}
