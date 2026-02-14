@@ -18,14 +18,23 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName }) => {
   // States for Filters
   const [selExam, setSelExam] = useState(type === 'MOCK_TEST' || type === 'OPTIONAL' ? 'Rajyaseva' : 'Combined Group B'); 
   const [selYear, setSelYear] = useState('All');
-  const [selSubject, setSelSubject] = useState('All'); // नवीन विषय फिल्टर
+  const [selSubject, setSelSubject] = useState('All');
 
-  // विषयांची यादी (Subjects List)
-  const subjectsList = [
-    'History', 'Geography', 'Polity', 'Economics', 
-    'Science', 'Environment', 'Current Affairs', 'GS Paper 2'
-  ];
+  // १. विषयांची डायनॅमिक यादी (Mains साठी विशेष लॉजिक)
+  const getSubjects = () => {
+    if (type === Mode.PRELIMS) {
+      return ['History', 'Geography', 'Polity', 'Economics', 'Science', 'Environment', 'Current Affairs', 'GS Paper 2'];
+    }
+    if (type === Mode.MAINS) {
+      if (selExam === 'Rajyaseva') {
+        return ['Marathi', 'English', 'Paper 1 (History & Geo)', 'Paper 2 (Polity)', 'Paper 3 (HR & HRD)', 'Paper 4 (Sci-Tech & Econ)'];
+      }
+      return ['Paper 1 (Lang)', 'Paper 2 (GS)']; // Combined B & C साठी
+    }
+    return [];
+  };
 
+  const subjectsList = getSubjects();
   const yearsList = Array.from({ length: new Date().getFullYear() - 2018 + 1 }, (_, i) => (2018 + i).toString()).reverse();
 
   useEffect(() => {
@@ -34,13 +43,9 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName }) => {
       try {
         let query = supabase.from(tableName).select('*');
 
-        // १. परीक्षा फिल्टर
         if (selExam !== 'All') query = query.eq('exam_name', selExam);
-        
-        // २. विषय फिल्टर (Prelims, Mains, Mock साठी)
         if (selSubject !== 'All') query = query.eq('subject', selSubject);
         
-        // ३. वर्ष फिल्टर (MOCK_TEST आणि OPTIONAL सोडून)
         if (type !== 'MOCK_TEST' && type !== 'OPTIONAL' && selYear !== 'All') {
             query = query.eq('year', parseInt(selYear));
         }
@@ -57,10 +62,7 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName }) => {
     fetchData();
   }, [tableName, type, selExam, selYear, selSubject]);
 
-  // UI ला किती कॉलम्समध्ये विभागचे ते ठरवणे
-  const filterGridClass = (type === 'MOCK_TEST' || type === 'OPTIONAL') 
-    ? 'grid-cols-1' 
-    : 'grid-cols-1 md:grid-cols-3';
+  const filterGridClass = (type === 'MOCK_TEST' || type === 'OPTIONAL') ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-3';
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 animate-in fade-in duration-500">
@@ -73,7 +75,8 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName }) => {
           <h2 className="text-2xl font-black text-slate-800">
             {type === 'CURRENT_AFFAIRS' ? "चालू घडामोडी" : 
              type === 'MOCK_TEST' ? "सराव परीक्षा" : 
-             type === 'OPTIONAL' ? "वैकल्पिक विषय (Optional)" : "प्रश्न संच"}
+             type === 'OPTIONAL' ? "वैकल्पिक विषय (Optional)" : 
+             type === Mode.MAINS ? "मुख्य परीक्षा" : "पूर्व परीक्षा"}
           </h2>
           <p className="text-sm font-bold text-indigo-500 uppercase tracking-widest flex items-center gap-2">
             {type === 'OPTIONAL' ? <BookOpen size={16} /> : <Trophy size={16} />} {selExam} विशेष
@@ -83,7 +86,6 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName }) => {
 
       {/* Filters Section */}
       <div className={`bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 mb-10 grid gap-4 ${filterGridClass}`}>
-        {/* १. परीक्षा निवडा */}
         <FilterSelect 
             label="परीक्षा निवडा" 
             options={['Rajyaseva', 'Combined Group B', 'Combined Group C']} 
@@ -91,17 +93,17 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName }) => {
             onChange={(val: string) => { setSelExam(val); setSelSubject('All'); }} 
         />
         
-        {/* २. विषय निवडा (Prelims/Mains/Mock साठी) */}
-        {type !== 'MOCK_TEST' && type !== 'OPTIONAL' && (
+        {/* विषय फिल्टर - फक्त Prelims/Mains/Mock साठी */}
+        {subjectsList.length > 0 && (
           <FilterSelect 
-            label="विषय निवडा" 
+            label="विषय / पेपर निवडा" 
             options={subjectsList} 
             value={selSubject} 
             onChange={setSelSubject} 
           />
         )}
         
-        {/* ३. वर्ष निवडा */}
+        {/* वर्ष फिल्टर */}
         {type !== 'MOCK_TEST' && type !== 'OPTIONAL' && (
           <FilterSelect 
               label="वर्ष" 
@@ -118,10 +120,10 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName }) => {
           <div className="text-center py-20 font-bold text-slate-400 italic animate-pulse">डेटा लोड होत आहे...</div>
         ) : dataList.length === 0 ? (
             <div className="text-center py-20 bg-slate-50 rounded-[3rem] border-2 border-dashed border-slate-200 text-slate-400 font-bold">
-                निवडलेल्या विषयात किंवा वर्षात माहिती उपलब्ध नाही.
+                माहिती उपलब्ध नाही.
             </div>
         ) : (type === 'CURRENT_AFFAIRS' || type === 'OPTIONAL') ? (
-          // Descriptive UI for Current Affairs & Optional
+          // Descriptive UI
           dataList.map((item) => (
             <div key={item.id} className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden transition-all">
               <button 
@@ -132,7 +134,7 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName }) => {
                   <div className="flex items-center gap-3 mb-2">
                     <Badge text={type === 'OPTIONAL' ? item.subject : (item.category || 'सामान्य')} color="bg-orange-50 text-orange-600" />
                     <span className="text-slate-400 text-[10px] font-black flex items-center gap-1 uppercase">
-                      <Calendar size={12} /> {item.important_date || item.year || '2026'}
+                      <Calendar size={12} /> {item.important_date || item.year || '2025'}
                     </span>
                   </div>
                   <h3 className="text-lg md:text-xl font-bold text-slate-800 leading-tight">
@@ -154,7 +156,7 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName }) => {
             </div>
           ))
         ) : (
-          // MCQ UI for Prelims, Mains, Mock
+          // MCQ UI
           dataList.map((q, idx) => (
             <div key={q.id} className="bg-white p-6 md:p-10 rounded-[3rem] border border-slate-100 shadow-sm">
               <div className="flex flex-wrap gap-2 mb-6">
@@ -198,7 +200,7 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName }) => {
   );
 };
 
-// Reusable Sub-components
+// Helpers
 const Badge = ({ text, color }: { text: string; color: string }) => (
   <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider ${color}`}>
     {text}
