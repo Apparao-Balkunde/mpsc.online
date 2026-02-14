@@ -11,7 +11,8 @@ export enum Mode {
 }
 
 /**
- * MCQ आधारित प्रश्नांसाठी इंटरफेस (Prelims, Mains, Mock)
+ * MCQ आधारित प्रश्नांसाठी इंटरफेस (Prelims, Mains, MOCK_TEST)
+ * विषय (Subject) मध्ये आपण सराव परीक्षेचे सर्व विषय दिले आहेत.
  */
 export interface MPSCQuestion {
   id: number;
@@ -19,21 +20,29 @@ export interface MPSCQuestion {
   options: string[]; 
   correct_answer_index: number;
   explanation: string;
-  subject: string;
-  year: number; 
+  // विषय सूचीमध्ये Mock Test चे विषय समाविष्ट केले आहेत
+  subject: 
+    | 'History' 
+    | 'Geography' 
+    | 'Polity' 
+    | 'Economics' 
+    | 'Science' 
+    | 'Environment' 
+    | 'Current Affairs' 
+    | string; 
+  year?: number; 
   exam_name: string;
   created_at?: string;
 }
 
 /**
- * वर्णनात्मक (Descriptive) प्रश्नांसाठी इंटरफेस (Optional & Current Affairs)
- * येथे 'year' आता अनिवार्य (Required) आहे.
+ * वर्णनात्मक प्रश्नांसाठी इंटरफेस (Optional & Current Affairs)
  */
 export interface OptionalQuestion {
   id: number;
   question_title: string;  
   answer_details: string;  
-  subject: 'Marathi Literature' | 'Public Administration' | 'History' | 'Geography' | string;         
+  subject: 'Marathi Literature' | 'Public Administration' | 'History' | 'Geography' | 'Political Science' | string;         
   exam_name: string;       
   year: number; 
   created_at?: string;
