@@ -1,0 +1,3 @@
+env:
+  TF_VAR_supabase_access_token: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+  TF_VAR_organization_id: ${{ secrets.SUPABASE_ORG_ID }}
