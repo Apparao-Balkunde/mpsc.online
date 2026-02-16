@@ -9,7 +9,6 @@ jobs:
     name: 'Terraform Apply'
     runs-on: ubuntu-latest
     
-    # इथे आपण सांगतोय की ही फाईल नेमकी कोणत्या फोल्डरमध्ये आहे
     defaults:
       run:
         working-directory: ./terraform
