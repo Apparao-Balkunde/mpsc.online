@@ -3,7 +3,11 @@ import { supabase } from './lib/supabase';
 import { Mode } from './types';
 import { QuestionView } from './components/QuestionView';
 import { VocabMode } from './components/VocabMode';
-import { History, BookOpen, LayoutDashboard, Languages, Trophy, Newspaper, BookmarkCheck } from 'lucide-react';
+import { MockTestMode } from './components/MockTestMode'; // नवीन कॉम्पोनंट इंपोर्ट केला
+import { 
+  History, BookOpen, LayoutDashboard, Languages, 
+  Trophy, Newspaper, BookmarkCheck 
+} from 'lucide-react';
 
 function App() {
   const [mode, setMode] = useState<Mode>(() => (localStorage.getItem('mpsc_current_mode') as Mode) || Mode.HOME);
@@ -16,9 +20,17 @@ function App() {
 
   useEffect(() => {
     async function getCount() {
+      // तुझ्या सुपाबेस टेबलची नावे इथे तपासा
       const tables = ['prelims_questions', 'mains_questions', 'mock_questions', 'current_affairs', 'optional_questions'];
-      const results = await Promise.all(tables.map(t => supabase.from(t).select('*', { count: 'exact', head: true })));
-      setCount(results.reduce((acc, curr) => acc + (curr.count || 0), 0));
+      try {
+        const results = await Promise.all(
+          tables.map(t => supabase.from(t).select('*', { count: 'exact', head: true }))
+        );
+        const total = results.reduce((acc, curr) => acc + (curr.count || 0), 0);
+        setCount(total);
+      } catch (err) {
+        console.error("Count fetch error:", err);
+      }
     }
     getCount();
   }, []);
@@ -65,7 +77,10 @@ function App() {
             {mode === Mode.MAINS && <QuestionView type={Mode.MAINS} tableName="mains_questions" onBack={() => setMode(Mode.HOME)} />}
             {mode === Mode.OPTIONAL && <QuestionView type="OPTIONAL" tableName="optional_questions" onBack={() => setMode(Mode.HOME)} />}
             {mode === Mode.CURRENT_AFFAIRS && <QuestionView type="CURRENT_AFFAIRS" tableName="current_affairs" onBack={() => setMode(Mode.HOME)} />}
-            {mode === Mode.MOCK_TEST && <QuestionView type="MOCK_TEST" tableName="mock_questions" onBack={() => setMode(Mode.HOME)} />}
+            
+            {/* सराव परीक्षेसाठी MockTestMode चालू केला */}
+            {mode === Mode.MOCK_TEST && <MockTestMode onBack={() => setMode(Mode.HOME)} />}
+            
             {mode === Mode.VOCAB && <VocabMode onBack={() => setMode(Mode.HOME)} />}
           </div>
         )}
@@ -74,7 +89,7 @@ function App() {
   );
 }
 
-// Helpers
+// NavItem & MenuCard Helpers (तुझ्या मूळ कोडप्रमाणे)
 const NavItem = ({ icon, label, active, onClick }: any) => (
   <button onClick={onClick} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-bold transition-all ${active ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-400 hover:bg-slate-50'}`}>
     {icon} {label}
@@ -89,5 +104,4 @@ const MenuCard = ({ title, icon: Icon, color, onSelect, targetMode }: any) => (
   </button>
 );
 
-// ERROR टाळण्यासाठी ही ओळ सर्वात महत्त्वाची आहे!
 export default App;
