@@ -2,7 +2,8 @@ export enum Mode {
   HOME = 'HOME',
   PRELIMS = 'PRELIMS',
   MAINS = 'MAINS',
-  MOCK = 'MOCK', 
+  MOCK = 'MOCK',
+  SARALSEVA = 'SARALSEVA', // हे आहे का तपासा
   VOCAB = 'VOCAB',
   LITERATURE = 'LITERATURE', 
   OPTIONAL = 'OPTIONAL',      
