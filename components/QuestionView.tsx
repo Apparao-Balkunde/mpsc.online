@@ -4,7 +4,7 @@ import { ArrowLeft, CheckCircle2, Trophy, BookOpen, ChevronDown, HelpCircle } fr
 import { Mode } from '../types';
 
 interface Props {
-  type: Mode.PRELIMS | Mode.MAINS | Mode.MOCK | 'VOCAB' | 'OPTIONAL' | 'MOCK_TEST' | 'CURRENT_AFFAIRS'; 
+  type: Mode.PRELIMS | Mode.MAINS | Mode.MOCK | 'VOCAB' | 'OPTIONAL' | 'MOCK_TEST' | 'CURRENT_AFFAIRS' | 'SARALSEVA'; 
   onBack: () => void;
   tableName: string; 
 }
@@ -19,14 +19,16 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName }) => {
   const [selYear, setSelYear] = useState('All');
   const [selSubject, setSelSubject] = useState('All');
 
-  // फॉरमॅट ठरवण्यासाठी मदतनीस कन्डिशन्स
-  const isMcqMode = type === Mode.PRELIMS || type === Mode.MAINS || type === Mode.MOCK || type === 'MOCK_TEST';
+  const isMcqMode = ['PRELIMS', 'MAINS', 'MOCK', 'MOCK_TEST', 'SARALSEVA'].includes(type as string);
   const isDetailMode = type === 'OPTIONAL' || type === 'CURRENT_AFFAIRS' || type === 'VOCAB';
 
   const getSubjects = () => {
     if (type === Mode.PRELIMS || type === 'MOCK_TEST') {
       return ['History', 'Geography', 'Polity', 'Economics', 'Science', 'Environment', 'Current Affairs', 'Maths'];
     } 
+    if (type === 'SARALSEVA') {
+      return ['Marathi', 'English', 'Maths & Reasoning', 'General Knowledge'];
+    }
     if (type === Mode.MAINS) {
       return selExam === 'Rajyaseva' ? ['Marathi', 'English', 'Paper 1', 'Paper 2', 'Paper 3', 'Paper 4'] : ['Paper 1', 'Paper 2', 'Maths'];
     }
@@ -47,9 +49,14 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName }) => {
       setLoading(true);
       try {
         let query = supabase.from(tableName).select('*');
-        if (!['OPTIONAL', 'VOCAB', 'CURRENT_AFFAIRS'].includes(type) && selExam !== 'All') {
+        
+        // सरळसेवा असेल तर फक्त त्या कॅटेगरीचे प्रश्न येतील
+        if (type === 'SARALSEVA') {
+          query = query.eq('exam_category', 'SARALSEVA');
+        } else if (!['OPTIONAL', 'VOCAB', 'CURRENT_AFFAIRS'].includes(type as string) && selExam !== 'All') {
           query = query.eq('exam_name', selExam);
         }
+
         if (selSubject !== 'All') query = query.eq('subject', selSubject);
         if (type !== 'MOCK_TEST' && selYear !== 'All') {
           query = query.eq('year', parseInt(selYear));
@@ -70,7 +77,6 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName }) => {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 animate-in fade-in duration-500">
-      {/* Header */}
       <div className="flex items-center gap-4 mb-8">
         <button onClick={onBack} className="p-3 bg-white rounded-2xl shadow-sm border border-slate-100 hover:bg-slate-50 transition-all active:scale-95">
           <ArrowLeft size={20} className="text-slate-600" />
@@ -79,20 +85,20 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName }) => {
           <h2 className="text-2xl font-black text-slate-800">
             {type === 'OPTIONAL' ? "वैकल्पिक विषय" : 
              type === 'MOCK_TEST' ? "सराव परीक्षा" :
+             type === 'SARALSEVA' ? "सरळसेवा भरती" :
              type === 'VOCAB' ? "शब्दसंग्रह (Vocab)" :
              type === 'CURRENT_AFFAIRS' ? "चालू घडामोडी" : "प्रश्न संच"}
           </h2>
-          {!['OPTIONAL', 'VOCAB'].includes(type) && (
+          {!['OPTIONAL', 'VOCAB'].includes(type as string) && (
             <p className="text-sm font-bold text-indigo-500 uppercase flex items-center gap-2">
-              <Trophy size={16} /> {selExam} विशेष
+              <Trophy size={16} /> {type === 'SARALSEVA' ? 'TCS/IBPS पॅटर्न' : selExam + ' विशेष'}
             </p>
           )}
         </div>
       </div>
 
-      {/* Filters */}
-      <div className={`bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 mb-10 grid grid-cols-1 ${isDetailMode ? 'md:grid-cols-2' : 'md:grid-cols-3'} gap-4`}>
-        {!isDetailMode && (
+      <div className={`bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 mb-10 grid grid-cols-1 ${isDetailMode || type === 'SARALSEVA' ? 'md:grid-cols-2' : 'md:grid-cols-3'} gap-4`}>
+        {(!isDetailMode && type !== 'SARALSEVA') && (
           <FilterSelect 
               label="परीक्षा निवडा" 
               options={['Rajyaseva', 'Combined Group B', 'Combined Group C']} 
@@ -111,7 +117,6 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName }) => {
         )}
       </div>
 
-      {/* Content */}
       <div className="space-y-6">
         {loading ? (
           <div className="text-center py-20 font-bold text-slate-400 italic animate-pulse">डेटा लोड होत आहे...</div>
@@ -122,74 +127,71 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName }) => {
           </div>
         ) : (
           dataList.map((item, idx) => (
-            isDetailMode ? (
-              /* --- DETAIL FORMAT (Vocab, Optional, Current Affairs) --- */
-              <div key={item.id} className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden mb-4 transition-all hover:shadow-md">
-                <button onClick={() => setExpandedId(expandedId === item.id ? null : item.id)} className="w-full p-6 flex items-center justify-between text-left hover:bg-slate-50 transition-colors">
-                  <div className="flex-1">
-                    <div className="flex gap-2 mb-2">
-                      <Badge text={item.subject || item.category} color="bg-orange-50 text-orange-600" />
-                      {item.year && <Badge text={`${item.year}`} color="bg-slate-100 text-slate-500" />}
-                    </div>
-                    <h3 className="text-lg font-bold text-slate-800 leading-snug">
-                       {item.question || item.question_title || item.title}
-                    </h3>
+             isDetailMode ? (
+               <div key={item.id} className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden mb-4 transition-all hover:shadow-md">
+                 <button onClick={() => setExpandedId(expandedId === item.id ? null : item.id)} className="w-full p-6 flex items-center justify-between text-left hover:bg-slate-50 transition-colors">
+                   <div className="flex-1">
+                     <div className="flex gap-2 mb-2">
+                       <Badge text={item.subject || item.category} color="bg-orange-50 text-orange-600" />
+                       {item.year && <Badge text={`${item.year}`} color="bg-slate-100 text-slate-500" />}
+                     </div>
+                     <h3 className="text-lg font-bold text-slate-800 leading-snug">
+                        {item.question || item.question_title || item.title}
+                     </h3>
+                   </div>
+                   <div className={`p-2 rounded-full transition-transform ${expandedId === item.id ? 'bg-indigo-50 text-indigo-600 rotate-180' : 'bg-slate-50 text-slate-400'}`}>
+                     <ChevronDown size={20} />
+                   </div>
+                 </button>
+                 {expandedId === item.id && (
+                   <div className="px-8 pb-8 animate-in slide-in-from-top-2">
+                     <div className="h-px bg-slate-100 mb-6" />
+                     <div className="text-slate-600 leading-relaxed font-medium text-lg whitespace-pre-line bg-slate-50 p-6 rounded-3xl border border-slate-100">
+                        {item.explanation || item.answer_details || item.details}
+                     </div>
+                   </div>
+                 )}
+               </div>
+             ) : (
+               <div key={item.id} className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm mb-6">
+                  <div className="flex flex-wrap gap-2 mb-6">
+                     <Badge text={item.exam_category === 'SARALSEVA' ? 'SARALSEVA' : (item.exam_name || 'MPSC')} color="bg-indigo-50 text-indigo-600" />
+                     <Badge text={item.subject} color="bg-purple-50 text-purple-600" />
+                     {item.year && <Badge text={`${item.year}`} color="bg-slate-100 text-slate-500" />}
                   </div>
-                  <div className={`p-2 rounded-full transition-transform ${expandedId === item.id ? 'bg-indigo-50 text-indigo-600 rotate-180' : 'bg-slate-50 text-slate-400'}`}>
-                    <ChevronDown size={20} />
+                  <h3 className="text-xl font-bold text-slate-800 mb-8 leading-relaxed">
+                     <span className="text-indigo-600 mr-2">Q.{idx + 1}</span> {item.question}
+                  </h3>
+                  <div className="grid grid-cols-1 gap-4 mb-8">
+                     {item.options?.map((option: string, optIdx: number) => {
+                         const isSelected = selectedAnswers[item.id] === optIdx;
+                         const isCorrect = optIdx === item.correct_answer_index;
+                         const showResult = selectedAnswers[item.id] !== undefined;
+                         return (
+                           <button
+                             key={optIdx}
+                             disabled={showResult}
+                             onClick={() => setSelectedAnswers(prev => ({ ...prev, [item.id]: optIdx }))}
+                             className={`p-5 rounded-2xl border-2 text-left font-bold transition-all flex items-center justify-between
+                               ${isSelected 
+                                 ? (isCorrect ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-rose-500 bg-rose-50 text-rose-700') 
+                                 : (showResult && isCorrect ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-slate-100 bg-slate-50 text-slate-600 hover:border-indigo-200 hover:bg-white')
+                               }`}
+                           >
+                             <span>{option}</span>
+                             {showResult && isCorrect && <CheckCircle2 size={20} className="text-emerald-600" />}
+                           </button>
+                         );
+                     })}
                   </div>
-                </button>
-                {expandedId === item.id && (
-                  <div className="px-8 pb-8 animate-in slide-in-from-top-2">
-                    <div className="h-px bg-slate-100 mb-6" />
-                    <div className="text-slate-600 leading-relaxed font-medium text-lg whitespace-pre-line bg-slate-50 p-6 rounded-3xl border border-slate-100">
-                       {/* Vocab साठी explanation आणि इतरांसाठी answer_details/details */}
-                       {item.explanation || item.answer_details || item.details}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              /* --- MCQ FORMAT (Prelims, Mains, Mock Test) --- */
-              <div key={item.id} className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm mb-6">
-                 <div className="flex flex-wrap gap-2 mb-6">
-                    <Badge text={item.exam_name || 'MPSC'} color="bg-indigo-50 text-indigo-600" />
-                    <Badge text={item.subject} color="bg-purple-50 text-purple-600" />
-                    {item.year && <Badge text={`${item.year}`} color="bg-slate-100 text-slate-500" />}
-                 </div>
-                 <h3 className="text-xl font-bold text-slate-800 mb-8 leading-relaxed">
-                    <span className="text-indigo-600 mr-2">Q.{idx + 1}</span> {item.question}
-                 </h3>
-                 <div className="grid grid-cols-1 gap-4 mb-8">
-                    {item.options?.map((option: string, optIdx: number) => {
-                        const isSelected = selectedAnswers[item.id] === optIdx;
-                        const isCorrect = optIdx === item.correct_answer_index;
-                        const showResult = selectedAnswers[item.id] !== undefined;
-                        return (
-                          <button
-                            key={optIdx}
-                            disabled={showResult}
-                            onClick={() => setSelectedAnswers(prev => ({ ...prev, [item.id]: optIdx }))}
-                            className={`p-5 rounded-2xl border-2 text-left font-bold transition-all flex items-center justify-between
-                              ${isSelected 
-                                ? (isCorrect ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-rose-500 bg-rose-50 text-rose-700') 
-                                : (showResult && isCorrect ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-slate-100 bg-slate-50 text-slate-600 hover:border-indigo-200 hover:bg-white')
-                              }`}
-                          >
-                            <span>{option}</span>
-                            {showResult && isCorrect && <CheckCircle2 size={20} className="text-emerald-600" />}
-                          </button>
-                        );
-                    })}
-                 </div>
-                 {selectedAnswers[item.id] !== undefined && (
+                  {selectedAnswers[item.id] !== undefined && (
                     <div className="p-6 bg-indigo-50 rounded-3xl border border-indigo-100 animate-in slide-in-from-top-2">
                       <div className="flex items-center gap-2 mb-3 text-indigo-700 font-black uppercase text-[10px] tracking-widest"><BookOpen size={16} /> स्पष्टीकरण</div>
                       <p className="text-slate-600 leading-relaxed font-medium whitespace-pre-line">{item.explanation}</p>
                     </div>
-                 )}
-              </div>
-            )
+                  )}
+               </div>
+             )
           ))
         )}
       </div>
