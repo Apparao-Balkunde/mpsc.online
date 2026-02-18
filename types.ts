@@ -11,28 +11,30 @@ export enum Mode {
 }
 
 /**
- * सुपाबेस मधील कॉलम नेम्सशी मॅच होणारा इंटरफेस
+ * सुपाबेस मधील कॉलम नेम्सशी मॅच होणारा मुख्य इंटरफेस
  */
 export interface MPSCQuestion {
   id: number;
   question: string;
-  options: string[]; 
+  options: string[]; // सुपाबेसमध्ये JSONB फॉरमॅट हवा
   correct_answer_index: number;
   explanation: string;
   subject: string;
-  sub_category?: string; // विषयांतर्गत घटक (उदा. भूगोल -> नदी प्रणाली)
-  mnemonic?: string;     // लक्षात ठेवण्यासाठी ट्रिक (Short trick)
-  exam_category?: 'RAJYASEVA' | 'COMBINED_B' | 'SARALSEVA' | string; // सुपाबेस फिल्टरसाठी
+  sub_category?: string; 
+  mnemonic?: string;     
+  exam_category?: 'RAJYASEVA' | 'COMBINED_B' | 'COMBINED_C' | 'SARALSEVA' | string; 
   year?: number; 
   exam_name?: string;
   created_at?: string;
 }
 
 /**
- * MockTest साठी विशेष इंटरफेस (गरज भासल्यास)
- * आपण MPSCQuestion सुद्धा वापरू शकतो, पण स्पष्टतेसाठी हे सोपे पडते.
+ * Mock Test साठी विशेष इंटरफेस
+ * यामध्ये आपण युजरने निवडलेले उत्तर आणि इतर गोष्टी ट्रॅक करू शकतो
  */
-export interface QuizQuestion extends MPSCQuestion {}
+export interface QuizQuestion extends MPSCQuestion {
+  // भविष्यात गरज पडल्यास इथे नवीन फील्ड्स ॲड करता येतील
+}
 
 /**
  * वर्णनात्मक प्रश्नांसाठी इंटरफेस (Optional & Current Affairs)
@@ -48,6 +50,19 @@ export interface OptionalQuestion {
 }
 
 /**
- * Loading State मध्ये आपण 'fetching' सुद्धा टाकू शकतो जर हवे असेल तर
+ * Loading State
  */
 export type LoadingState = 'idle' | 'loading' | 'success' | 'error';
+
+/**
+ * परीक्षेचा निकाल साठवण्यासाठी इंटरफेस (Analytics साठी)
+ */
+export interface ExamResult {
+  totalQuestions: number;
+  correctAnswers: number;
+  score: number;
+  percentage: number;
+  timeTaken: string;
+  category: string;
+  date: string;
+}
