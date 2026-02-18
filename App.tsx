@@ -113,7 +113,7 @@ function App() {
           <div className={`${isExamMode ? 'w-full' : 'max-w-5xl mx-auto'}`}>
             {mode === Mode.PRELIMS && <QuestionView type={Mode.PRELIMS} tableName="prelims_questions" onBack={() => setMode(Mode.HOME)} />}
             {mode === Mode.MAINS && <QuestionView type={Mode.MAINS} tableName="mains_questions" onBack={() => setMode(Mode.HOME)} />}
-            {mode === ('SARALSEVA' as Mode) && <QuestionView type={'SARALSEVA' as any} tableName="prelims_questions" onBack={() => setMode(Mode.HOME)} />}
+            {mode === ('SARALSEVA' as Mode) && <QuestionView type={'SARALSEVA' as any} tableName="saralseva_questions" onBack={() => setMode(Mode.HOME)} />}
             {mode === Mode.MOCK && <QuestionView type={Mode.MOCK} tableName="mock_questions" onBack={() => setMode(Mode.HOME)} />}
             {mode === Mode.MOCK_TEST && <MockTestMode onBack={() => setMode(Mode.HOME)} />}
             {mode === Mode.CURRENT_AFFAIRS && <QuestionView type="CURRENT_AFFAIRS" tableName="current_affairs" onBack={() => setMode(Mode.HOME)} />}
