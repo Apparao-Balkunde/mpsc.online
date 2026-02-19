@@ -40,7 +40,7 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName }) => {
 
   // विभागानुसार परीक्षेची नावे (उदा. TCS/IBPS किंवा राज्यसेवा/संयुक्त)
   const getExamOptions = () => {
-    if (type === 'SARALSEVA') return ['TCS', 'IBPS', 'Zilha Parishad', 'Talathi', 'Police Bharti'];
+    if (type === 'SARALSEVA') return ['TCS', 'IBPS', 'ZP', 'Talathi', 'Police Bharti'];
     return ['Rajyaseva', 'Combined Group B', 'Combined Group C'];
   };
 
