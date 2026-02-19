@@ -39,7 +39,7 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName }) => {
   };
 
   const getExamOptions = () => {
-    if (type === 'SARALSEVA') return ['TCS', 'IBPS', 'ZP', 'Talathi', 'Police Bharti'];
+    if (type === 'SARALSEVA') return ['TCS', 'IBPS', 'ZP', 'Talathi', 'Police Bharti', 'MPSC'];
     return ['Rajyaseva', 'Combined Group B', 'Combined Group C'];
   };
 
