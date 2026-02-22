@@ -22,27 +22,27 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
   const startTest = async () => {
     setStatus('loading');
     try {
-      // १. परीक्षेनुसार मर्यादा आणि वेळ ठरवणे
       let limit = 100;
-      let duration = 60 * 60; // Default 60 min
+      let duration = 60 * 60;
 
       if (testType === 'Rajyaseva') {
         limit = 100;
-        duration = 120 * 60; // 120 min
+        duration = 120 * 60; 
       } else if (testType === 'Combined Group B' || testType === 'Combined Group C') {
         limit = 100;
-        duration = 60 * 60; // 60 min
+        duration = 60 * 60; 
       } else if (testType === 'Saralseva') {
         limit = 120;
-        duration = 120 * 60; // 120 min
+        duration = 120 * 60; 
       }
 
+      // १. डेटाबेस मधून प्रश्न मागवणे
       let query = supabase.from('mock_questions').select('*');
       if (testType !== 'All') {
         query = query.eq('exam_name', testType);
       }
 
-      const { data, error } = await query.limit(limit);
+      const { data, error } = await query; // सर्व प्रश्न आधी लोड करा (शफलिंगसाठी)
       
       if (error) throw error;
       if (!data || data.length === 0) {
@@ -51,7 +51,18 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
         return;
       }
 
-      const formatted = data.map(q => ({
+      // २. Shuffling Logic (Fisher-Yates Algorithm)
+      // यामुळे दरवेळी नवीन आणि रँडम प्रश्न मिळतील
+      let allQuestions = [...data];
+      for (let i = allQuestions.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [allQuestions[i], allQuestions[j]] = [allQuestions[j], allQuestions[i]];
+      }
+
+      // ३. रँडम प्रश्नांमधून मर्यादेनुसार (Limit) प्रश्न निवडणे
+      const selectedQuestions = allQuestions.slice(0, limit);
+
+      const formatted = selectedQuestions.map(q => ({
         id: q.id,
         question: q.question,
         options: q.options, 
@@ -63,8 +74,11 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
       setQuestions(formatted);
       setUserAnswers(new Array(formatted.length).fill(-1));
       setTimeLeft(duration);
+      setCurrentIdx(0); // रिसेट इंडेक्स
+      setIsFinished(false);
       setStatus('success');
       
+      if (timerRef.current) clearInterval(timerRef.current);
       timerRef.current = setInterval(() => {
         setTimeLeft(prev => {
           if (prev <= 1) { finishTest(); return 0; }
@@ -72,6 +86,7 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
         });
       }, 1000);
     } catch (e) {
+      console.error("Error fetching questions:", e);
       setStatus('error');
     }
   };
@@ -91,7 +106,7 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
       : `${m}:${sec.toString().padStart(2, '0')}`;
   };
 
-  // --- १. सुरूवातीचा इंटरफेस ---
+  // --- १. सुरूवातीचा इंटरफेस (Selection) ---
   if (status === 'idle') return (
     <div className="max-w-2xl mx-auto mt-10 p-8 bg-white rounded-[3rem] shadow-xl border border-slate-100 text-center">
       <div className="bg-amber-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -161,12 +176,11 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
             </div>
           </div>
 
-          <button onClick={onBack} className="bg-slate-900 text-white px-10 py-4 rounded-2xl font-black flex items-center gap-3 mx-auto">
+          <button onClick={onBack} className="bg-slate-900 text-white px-10 py-4 rounded-2xl font-black flex items-center gap-3 mx-auto shadow-xl hover:bg-slate-800 transition-all">
             <LayoutDashboard size={20}/> डॅशबोर्डवर जा
           </button>
         </div>
 
-        {/* Detailed Review Section */}
         <h3 className="text-2xl font-black text-slate-800 mb-6 px-4">प्रश्नांचे विश्लेषण (Review)</h3>
         <div className="space-y-6">
           {questions.map((q, idx) => (
@@ -181,9 +195,7 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
                   <span className="text-rose-500 font-black text-[10px] uppercase flex items-center gap-1"><X size={12}/> चुकीचे उत्तर</span>
                 )}
               </div>
-              
               <h4 className="text-lg font-bold text-slate-800 mb-6">{q.question}</h4>
-              
               <div className="grid gap-2 mb-6">
                 {q.options.map((opt, i) => (
                   <div key={i} className={`p-4 rounded-xl border flex items-center justify-between text-sm font-bold ${i === q.correctAnswerIndex ? 'bg-emerald-50 border-emerald-500 text-emerald-700' : i === userAnswers[idx] ? 'bg-rose-50 border-rose-500 text-rose-700' : 'bg-white border-slate-50 text-slate-500'}`}>
@@ -192,7 +204,6 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
                   </div>
                 ))}
               </div>
-
               <div className="bg-slate-900 p-5 rounded-2xl text-xs">
                 <div className="flex items-center gap-2 text-indigo-400 font-black uppercase mb-2">
                   <BookOpen size={14}/> स्पष्टीकरण
