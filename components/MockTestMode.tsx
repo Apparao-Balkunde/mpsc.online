@@ -2,9 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase'; 
 import { LoadingState, QuizQuestion } from '../types';
 import { 
-  Clock, Trophy, CheckCircle2, ArrowLeft, ArrowRight, 
-  Loader2, LayoutDashboard, Check, X, ShieldCheck, Target, 
-  HelpCircle, BookOpen, AlertCircle
+  Trophy, CheckCircle2, ArrowLeft, Loader2, LayoutDashboard, 
+  Check, X, Target, BookOpen, AlertCircle
 } from 'lucide-react';
 
 interface MockTestModeProps { onBack: () => void; }
@@ -19,31 +18,23 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
   const [testType, setTestType] = useState('Rajyaseva');
   const timerRef = useRef<any>(null);
 
+  // १. चाचणी सुरू करणे (RPC वापरून रँडम प्रश्न लोड करणे)
   const startTest = async () => {
     setStatus('loading');
     try {
       let limit = 100;
       let duration = 60 * 60;
 
-      if (testType === 'Rajyaseva') {
-        limit = 100;
-        duration = 120 * 60; 
-      } else if (testType === 'Combined Group B' || testType === 'Combined Group C') {
-        limit = 100;
-        duration = 60 * 60; 
-      } else if (testType === 'Saralseva') {
-        limit = 120;
-        duration = 120 * 60; 
-      }
+      if (testType === 'Rajyaseva') { limit = 100; duration = 120 * 60; }
+      else if (testType === 'Saralseva') { limit = 120; duration = 120 * 60; }
+      else { limit = 100; duration = 60 * 60; }
 
-      // १. डेटाबेस मधून प्रश्न मागवणे
-      let query = supabase.from('mock_questions').select('*');
-      if (testType !== 'All') {
-        query = query.eq('exam_name', testType);
-      }
+      // Database Function (RPC) कॉल करून रँडम प्रश्न आणणे
+      const { data, error } = await supabase.rpc('get_random_mock_questions', {
+        exam_filter: testType,
+        row_limit: limit
+      });
 
-      const { data, error } = await query; // सर्व प्रश्न आधी लोड करा (शफलिंगसाठी)
-      
       if (error) throw error;
       if (!data || data.length === 0) {
         alert("या परीक्षेसाठी सध्या प्रश्न उपलब्ध नाहीत!");
@@ -51,18 +42,7 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
         return;
       }
 
-      // २. Shuffling Logic (Fisher-Yates Algorithm)
-      // यामुळे दरवेळी नवीन आणि रँडम प्रश्न मिळतील
-      let allQuestions = [...data];
-      for (let i = allQuestions.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [allQuestions[i], allQuestions[j]] = [allQuestions[j], allQuestions[i]];
-      }
-
-      // ३. रँडम प्रश्नांमधून मर्यादेनुसार (Limit) प्रश्न निवडणे
-      const selectedQuestions = allQuestions.slice(0, limit);
-
-      const formatted = selectedQuestions.map(q => ({
+      const formatted = data.map((q: any) => ({
         id: q.id,
         question: q.question,
         options: q.options, 
@@ -74,7 +54,7 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
       setQuestions(formatted);
       setUserAnswers(new Array(formatted.length).fill(-1));
       setTimeLeft(duration);
-      setCurrentIdx(0); // रिसेट इंडेक्स
+      setCurrentIdx(0);
       setIsFinished(false);
       setStatus('success');
       
@@ -86,15 +66,37 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
         });
       }, 1000);
     } catch (e) {
-      console.error("Error fetching questions:", e);
+      console.error("Error:", e);
       setStatus('error');
     }
   };
 
-  const finishTest = () => {
+  // २. चाचणी संपवणे आणि निकाल सेव्ह करणे
+  const finishTest = async () => {
     clearInterval(timerRef.current);
     setIsFinished(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // स्कोअर कॅल्क्युलेशन
+    const correctCount = userAnswers.filter((ans, i) => ans === questions[i].correctAnswerIndex).length;
+    const attemptedCount = userAnswers.filter(ans => ans !== -1).length;
+    const wrongCount = attemptedCount - correctCount;
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from('user_results').insert([{
+          user_id: user.id,
+          test_type: testType,
+          score: correctCount,
+          total_questions: questions.length,
+          correct_answers: correctCount,
+          wrong_answers: wrongCount
+        }]);
+      }
+    } catch (err) {
+      console.error("Result save error:", err);
+    }
   };
 
   const formatTime = (s: number) => {
@@ -106,7 +108,7 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
       : `${m}:${sec.toString().padStart(2, '0')}`;
   };
 
-  // --- १. सुरूवातीचा इंटरफेस (Selection) ---
+  // --- UI Logic ---
   if (status === 'idle') return (
     <div className="max-w-2xl mx-auto mt-10 p-8 bg-white rounded-[3rem] shadow-xl border border-slate-100 text-center">
       <div className="bg-amber-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -145,11 +147,10 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
   if (status === 'loading') return (
     <div className="text-center py-40">
       <Loader2 className="animate-spin mx-auto mb-4 text-indigo-600" size={48} />
-      <p className="font-black text-slate-500 italic uppercase tracking-widest text-sm">तुमची सराव परीक्षा तयार होत आहे...</p>
+      <p className="font-black text-slate-500 italic uppercase tracking-widest text-sm">तुमची रँडम चाचणी तयार होत आहे...</p>
     </div>
   );
 
-  // --- २. निकाल आणि रिव्ह्यू स्क्रीन ---
   if (isFinished) {
     const score = userAnswers.filter((ans, i) => ans === questions[i].correctAnswerIndex).length;
     const attempted = userAnswers.filter(ans => ans !== -1).length;
@@ -160,11 +161,10 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
         <div className="bg-white p-10 rounded-[3.5rem] shadow-2xl text-center border-b-[12px] border-indigo-600 mb-10">
           <Trophy size={60} className="mx-auto text-yellow-500 mb-4" />
           <h2 className="text-3xl font-black text-slate-900 uppercase">चाचणी पूर्ण झाली!</h2>
-          
           <div className="grid grid-cols-3 gap-4 my-10">
             <div className="bg-slate-50 p-6 rounded-3xl">
               <div className="text-3xl font-black text-indigo-600">{score}</div>
-              <div className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">एकूण गुण</div>
+              <div className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">गुण</div>
             </div>
             <div className="bg-emerald-50 p-6 rounded-3xl">
               <div className="text-3xl font-black text-emerald-600">{attempted}</div>
@@ -172,43 +172,26 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
             </div>
             <div className="bg-rose-50 p-6 rounded-3xl">
               <div className="text-3xl font-black text-rose-600">{unattempted}</div>
-              <div className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">राहून गेलेले</div>
+              <div className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">बाकी</div>
             </div>
           </div>
-
           <button onClick={onBack} className="bg-slate-900 text-white px-10 py-4 rounded-2xl font-black flex items-center gap-3 mx-auto shadow-xl hover:bg-slate-800 transition-all">
             <LayoutDashboard size={20}/> डॅशबोर्डवर जा
           </button>
         </div>
 
-        <h3 className="text-2xl font-black text-slate-800 mb-6 px-4">प्रश्नांचे विश्लेषण (Review)</h3>
+        <h3 className="text-2xl font-black text-slate-800 mb-6 px-4">Review</h3>
         <div className="space-y-6">
           {questions.map((q, idx) => (
             <div key={q.id} className={`bg-white p-8 rounded-[2.5rem] border-2 shadow-sm ${userAnswers[idx] === q.correctAnswerIndex ? 'border-emerald-100' : userAnswers[idx] === -1 ? 'border-slate-100' : 'border-rose-100'}`}>
-              <div className="flex justify-between items-center mb-4">
-                <span className="text-[10px] font-black px-3 py-1 bg-slate-100 rounded-lg text-slate-500 uppercase italic">प्रश्न {idx + 1}</span>
-                {userAnswers[idx] === -1 ? (
-                  <span className="text-amber-500 font-black text-[10px] uppercase flex items-center gap-1"><AlertCircle size={12}/> सोडवला नाही</span>
-                ) : userAnswers[idx] === q.correctAnswerIndex ? (
-                  <span className="text-emerald-500 font-black text-[10px] uppercase flex items-center gap-1"><Check size={12}/> बरोबर उत्तर</span>
-                ) : (
-                  <span className="text-rose-500 font-black text-[10px] uppercase flex items-center gap-1"><X size={12}/> चुकीचे उत्तर</span>
-                )}
+               <div className="flex justify-between items-center mb-4">
+                <span className="text-[10px] font-black px-3 py-1 bg-slate-100 rounded-lg text-slate-500">प्रश्न {idx + 1}</span>
+                {userAnswers[idx] === q.correctAnswerIndex ? <Check className="text-emerald-500" size={18}/> : <X className="text-rose-500" size={18}/>}
               </div>
               <h4 className="text-lg font-bold text-slate-800 mb-6">{q.question}</h4>
-              <div className="grid gap-2 mb-6">
-                {q.options.map((opt, i) => (
-                  <div key={i} className={`p-4 rounded-xl border flex items-center justify-between text-sm font-bold ${i === q.correctAnswerIndex ? 'bg-emerald-50 border-emerald-500 text-emerald-700' : i === userAnswers[idx] ? 'bg-rose-50 border-rose-500 text-rose-700' : 'bg-white border-slate-50 text-slate-500'}`}>
-                    {opt}
-                    {i === q.correctAnswerIndex && <Check size={16}/>}
-                  </div>
-                ))}
-              </div>
               <div className="bg-slate-900 p-5 rounded-2xl text-xs">
-                <div className="flex items-center gap-2 text-indigo-400 font-black uppercase mb-2">
-                  <BookOpen size={14}/> स्पष्टीकरण
-                </div>
-                <p className="text-slate-300 leading-relaxed font-medium">{q.explanation || 'स्पष्टीकरण उपलब्ध नाही.'}</p>
+                <p className="text-indigo-400 font-black mb-2 flex items-center gap-2"><BookOpen size={14}/> स्पष्टीकरण</p>
+                <p className="text-slate-300">{q.explanation || 'उपलब्ध नाही.'}</p>
               </div>
             </div>
           ))}
@@ -217,26 +200,19 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
     );
   }
 
-  // --- ३. चाचणी सुरू असतानाचा इंटरफेस ---
   return (
     <div className="max-w-5xl mx-auto px-4 pb-20">
       <div className="bg-slate-900 text-white p-5 rounded-[2.5rem] flex justify-between items-center sticky top-4 z-40 shadow-2xl border border-slate-700 mb-8">
-        <button onClick={() => confirm("बाहेर पडायचे का?") && onBack()} className="bg-slate-800 p-2 px-4 rounded-xl text-[10px] font-black flex items-center gap-2 hover:bg-rose-600 transition-all uppercase tracking-widest"><ArrowLeft size={14}/> Exit</button>
+        <button onClick={() => confirm("बाहेर पडायचे?") && onBack()} className="bg-slate-800 p-2 px-4 rounded-xl text-[10px] font-black flex items-center gap-2 hover:bg-rose-600 transition-all"><ArrowLeft size={14}/> EXIT</button>
         <div className="text-center">
-          <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">{testType}</div>
           <div className={`font-mono text-2xl font-black ${timeLeft < 300 ? 'text-rose-500 animate-pulse' : 'text-yellow-400'}`}>{formatTime(timeLeft)}</div>
         </div>
-        <button onClick={() => confirm("चाचणी सबमिट करायची का?") && finishTest()} className="bg-emerald-600 p-2 px-4 rounded-xl text-[10px] font-black flex items-center gap-2 shadow-lg uppercase tracking-widest"><CheckCircle2 size={14}/> Submit</button>
+        <button onClick={() => confirm("सबमिट करायचे?") && finishTest()} className="bg-emerald-600 p-2 px-4 rounded-xl text-[10px] font-black flex items-center gap-2">SUBMIT</button>
       </div>
 
-      {/* Question Navigation Bubbles */}
       <div className="flex flex-wrap gap-2 mb-6 px-4">
         {questions.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setCurrentIdx(i)}
-            className={`w-8 h-8 rounded-lg text-[10px] font-bold transition-all ${currentIdx === i ? 'bg-indigo-600 text-white scale-110' : userAnswers[i] !== -1 ? 'bg-emerald-100 text-emerald-600' : 'bg-white text-slate-400 border border-slate-100'}`}
-          >
+          <button key={i} onClick={() => setCurrentIdx(i)} className={`w-8 h-8 rounded-lg text-[10px] font-bold ${currentIdx === i ? 'bg-indigo-600 text-white' : userAnswers[i] !== -1 ? 'bg-emerald-100 text-emerald-600' : 'bg-white border text-slate-400'}`}>
             {i + 1}
           </button>
         ))}
@@ -245,21 +221,14 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
       <div className="bg-white p-8 md:p-12 rounded-[3.5rem] shadow-xl border border-slate-100">
         <div className="mb-10">
           <span className="bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest">{questions[currentIdx].subCategory}</span>
-          <h2 className="text-2xl md:text-3xl font-bold mt-8 leading-tight text-slate-800">
-            <span className="text-indigo-600 mr-2">Q.{currentIdx + 1}</span> {questions[currentIdx].question}
-          </h2>
+          <h2 className="text-2xl font-bold mt-8 text-slate-800">Q.{currentIdx + 1} {questions[currentIdx].question}</h2>
         </div>
 
         <div className="grid gap-4 mb-10">
-          {questions[currentIdx].options.map((opt, i) => (
-            <button 
-              key={i}
-              onClick={() => { const n = [...userAnswers]; n[currentIdx] = i; setUserAnswers(n); }}
-              className={`w-full text-left p-6 rounded-2xl border-2 transition-all font-bold text-lg flex items-center gap-4 ${userAnswers[currentIdx] === i ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-50 hover:bg-slate-50 text-slate-600'}`}
-            >
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm ${userAnswers[currentIdx] === i ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-400'}`}>
-                {String.fromCharCode(65 + i)}
-              </div>
+          {questions[currentIdx].options.map((opt: string, i: number) => (
+            <button key={i} onClick={() => { const n = [...userAnswers]; n[currentIdx] = i; setUserAnswers(n); }}
+              className={`w-full text-left p-6 rounded-2xl border-2 transition-all font-bold text-lg flex items-center gap-4 ${userAnswers[currentIdx] === i ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-50 hover:bg-slate-50 text-slate-600'}`}>
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm ${userAnswers[currentIdx] === i ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-400'}`}>{String.fromCharCode(65 + i)}</div>
               {opt}
             </button>
           ))}
@@ -267,8 +236,7 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
 
         <div className="flex justify-between items-center pt-8 border-t border-slate-100">
           <button disabled={currentIdx === 0} onClick={() => setCurrentIdx(prev => prev - 1)} className="font-black text-slate-400 hover:text-slate-600 disabled:opacity-0">मागे</button>
-          <div className="text-slate-300 font-bold text-sm">{currentIdx + 1} / {questions.length}</div>
-          <button onClick={() => currentIdx === questions.length - 1 ? finishTest() : setCurrentIdx(prev => prev + 1)} className="bg-indigo-600 text-white px-10 py-4 rounded-2xl font-black shadow-lg shadow-indigo-100 hover:scale-105 transition-all">
+          <button onClick={() => currentIdx === questions.length - 1 ? finishTest() : setCurrentIdx(prev => prev + 1)} className="bg-indigo-600 text-white px-10 py-4 rounded-2xl font-black shadow-lg hover:scale-105 transition-all">
             {currentIdx === questions.length - 1 ? 'निकाल पहा' : 'पुढील प्रश्न'}
           </button>
         </div>
