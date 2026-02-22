@@ -103,26 +103,27 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
     return h > 0 ? `${h}:${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}` : `${m}:${sec.toString().padStart(2, '0')}`;
   };
 
-  // --- निकाल आणि सविस्तर स्पष्टीकरण स्क्रीन ---
+  // --- ३. निकाल आणि सविस्तर विश्लेषण स्क्रीन ---
   if (isFinished) {
     const score = userAnswers.filter((ans, i) => ans === questions[i].correctAnswerIndex).length;
     const attempted = userAnswers.filter(ans => ans !== -1).length;
 
     return (
       <div className="max-w-4xl mx-auto px-4 pb-20">
+        {/* स्कोअर कार्ड */}
         <div className="bg-white p-10 rounded-[3.5rem] shadow-2xl text-center border-b-[12px] border-indigo-600 mb-10 mt-10">
           <Trophy size={60} className="mx-auto text-yellow-500 mb-4" />
           <h2 className="text-3xl font-black text-slate-900 uppercase">चाचणी पूर्ण झाली!</h2>
           <div className="grid grid-cols-3 gap-4 my-10">
-            <div className="bg-slate-50 p-6 rounded-3xl">
+            <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
               <div className="text-3xl font-black text-indigo-600">{score}/{questions.length}</div>
               <div className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">गुण</div>
             </div>
-            <div className="bg-emerald-50 p-6 rounded-3xl">
+            <div className="bg-emerald-50 p-6 rounded-3xl border border-emerald-100">
               <div className="text-3xl font-black text-emerald-600">{attempted}</div>
               <div className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">सोडवलेले</div>
             </div>
-            <div className="bg-rose-50 p-6 rounded-3xl">
+            <div className="bg-rose-50 p-6 rounded-3xl border border-rose-100">
               <div className="text-3xl font-black text-rose-600">{questions.length - attempted}</div>
               <div className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">बाकी</div>
             </div>
@@ -133,49 +134,65 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
         </div>
 
         <h3 className="text-2xl font-black text-slate-800 mb-8 px-4 flex items-center gap-2">
-            <BookOpen className="text-indigo-600" /> सविस्तर स्पष्टीकरण (Review)
+            <BookOpen className="text-indigo-600" /> प्रश्नांचे विश्लेषण (Review)
         </h3>
 
-        <div className="space-y-8">
-          {questions.map((q, idx) => (
-            <div key={idx} className={`bg-white p-8 rounded-[2.5rem] border-2 shadow-sm ${userAnswers[idx] === q.correctAnswerIndex ? 'border-emerald-100' : userAnswers[idx] === -1 ? 'border-slate-100' : 'border-rose-100'}`}>
-              <div className="flex justify-between items-center mb-6">
-                <span className="text-[10px] font-black px-4 py-1.5 bg-slate-900 text-white rounded-full uppercase">प्रश्न {idx + 1}</span>
-                {userAnswers[idx] === q.correctAnswerIndex ? (
-                    <span className="text-emerald-600 font-black text-xs uppercase flex items-center gap-1 bg-emerald-50 px-3 py-1 rounded-lg"> <CheckCircle2 size={14}/> बरोबर </span>
-                ) : userAnswers[idx] === -1 ? (
-                    <span className="text-amber-500 font-black text-xs uppercase flex items-center gap-1 bg-amber-50 px-3 py-1 rounded-lg"> <AlertCircle size={14}/> सोडवला नाही </span>
-                ) : (
-                    <span className="text-rose-600 font-black text-xs uppercase flex items-center gap-1 bg-rose-50 px-3 py-1 rounded-lg"> <X size={14}/> चुकीचे </span>
-                )}
-              </div>
+        {/* रिव्ह्यू लिस्ट */}
+        <div className="space-y-10">
+          {questions.map((q, idx) => {
+            const isCorrect = userAnswers[idx] === q.correctAnswerIndex;
+            const isUnattempted = userAnswers[idx] === -1;
 
-              <h4 className="text-xl font-bold text-slate-800 mb-6 leading-relaxed">{q.question}</h4>
-              
-              <div className="grid gap-3 mb-8">
-                {q.options.map((opt, i) => (
-                  <div key={i} className={`p-5 rounded-2xl border-2 flex items-center justify-between font-bold ${i === q.correctAnswerIndex ? 'bg-emerald-50 border-emerald-500 text-emerald-800' : i === userAnswers[idx] ? 'bg-rose-50 border-rose-500 text-rose-800' : 'bg-white border-slate-50 text-slate-400'}`}>
-                    <div className="flex items-center gap-4">
-                      <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs ${i === q.correctAnswerIndex ? 'bg-emerald-500 text-white' : i === userAnswers[idx] ? 'bg-rose-500 text-white' : 'bg-slate-100 text-slate-400'}`}>{String.fromCharCode(65 + i)}</span>
-                      {opt}
-                    </div>
-                    {i === q.correctAnswerIndex && <Check size={20} className="text-emerald-600" />}
+            return (
+              <div key={idx} className={`bg-white p-8 rounded-[2.5rem] border-2 shadow-sm ${isCorrect ? 'border-emerald-100 shadow-emerald-50' : isUnattempted ? 'border-slate-100' : 'border-rose-100 shadow-rose-50'}`}>
+                
+                {/* स्टेटस बॅज */}
+                <div className="flex justify-between items-center mb-6">
+                  <span className="text-[10px] font-black px-4 py-1.5 bg-slate-900 text-white rounded-full uppercase tracking-widest">प्रश्न {idx + 1}</span>
+                  {isCorrect ? (
+                    <span className="text-emerald-600 font-black text-xs uppercase flex items-center gap-1.5 bg-emerald-50 px-3 py-1 rounded-lg border border-emerald-100"> <CheckCircle2 size={16}/> बरोबर </span>
+                  ) : isUnattempted ? (
+                    <span className="text-amber-500 font-black text-xs uppercase flex items-center gap-1.5 bg-amber-50 px-3 py-1 rounded-lg border border-amber-100"> <AlertCircle size={16}/> सोडवला नाही </span>
+                  ) : (
+                    <span className="text-rose-600 font-black text-xs uppercase flex items-center gap-1.5 bg-rose-50 px-3 py-1 rounded-lg border border-rose-100"> <X size={16}/> चुकीचे उत्तर </span>
+                  )}
+                </div>
+
+                <h4 className="text-xl font-bold text-slate-800 mb-8 leading-relaxed">{q.question}</h4>
+                
+                {/* तुलना विभाग: तुमचे उत्तर vs बरोबर उत्तर */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                  <div className={`p-5 rounded-2xl border-2 ${isCorrect ? 'bg-emerald-50 border-emerald-200' : isUnattempted ? 'bg-slate-50 border-slate-200' : 'bg-rose-50 border-rose-200'}`}>
+                    <p className="text-[10px] font-black uppercase text-slate-400 mb-2">तुमचे उत्तर:</p>
+                    <p className={`font-bold ${isCorrect ? 'text-emerald-700' : isUnattempted ? 'text-slate-500 italic' : 'text-rose-700'}`}>
+                      {isUnattempted ? 'दिले नाही' : q.options[userAnswers[idx]]}
+                    </p>
                   </div>
-                ))}
-              </div>
 
-              <div className="bg-indigo-50 border border-indigo-100 p-6 rounded-[2rem]">
-                <p className="text-indigo-700 font-black uppercase text-[10px] mb-2 tracking-widest flex items-center gap-2"><BookOpen size={14}/> स्पष्टीकरण:</p>
-                <p className="text-slate-700 leading-relaxed italic font-medium">{q.explanation || 'स्पष्टीकरण उपलब्ध नाही.'}</p>
+                  <div className="p-5 rounded-2xl border-2 bg-emerald-50 border-emerald-500 shadow-sm shadow-emerald-100">
+                    <p className="text-[10px] font-black uppercase text-emerald-600 mb-2">अचूक उत्तर:</p>
+                    <p className="font-bold text-emerald-800">{q.options[q.correctAnswerIndex]}</p>
+                  </div>
+                </div>
+
+                {/* स्पष्टीकरण बॉक्स */}
+                <div className="bg-indigo-50 border border-indigo-100 p-6 rounded-[2.5rem] relative overflow-hidden">
+                  <div className="flex items-center gap-2 text-indigo-700 font-black uppercase text-[10px] mb-3 tracking-widest">
+                    <BookOpen size={16}/> सविस्तर स्पष्टीकरण:
+                  </div>
+                  <p className="text-slate-700 leading-relaxed font-medium italic">
+                    {q.explanation || 'या प्रश्नाचे स्पष्टीकरण सध्या उपलब्ध नाही.'}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     );
   }
 
-  // --- मुख्य चाचणी इंटरफेस (Active Test) ---
+  // --- मुख्य चाचणी इंटरफेस ---
   if (status === 'success') return (
     <div className="max-w-5xl mx-auto px-4 pb-20">
       <div className="bg-slate-900 text-white p-5 rounded-[2.5rem] flex justify-between items-center sticky top-4 z-40 shadow-2xl border border-slate-700 mb-8">
@@ -187,7 +204,6 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
         <button onClick={() => confirm("चाचणी सबमिट करायची का?") && finishTest()} className="bg-emerald-600 p-2 px-4 rounded-xl text-[10px] font-black flex items-center gap-2 uppercase tracking-widest shadow-lg"><CheckCircle2 size={14}/> Submit</button>
       </div>
 
-      {/* प्रोग्रेस बार / नेव्हिगेशन */}
       <div className="flex flex-wrap gap-2 mb-6 px-4">
         {questions.map((_, i) => (
           <button key={i} onClick={() => setCurrentIdx(i)} className={`w-8 h-8 rounded-lg text-[10px] font-bold transition-all ${currentIdx === i ? 'bg-indigo-600 text-white scale-110 shadow-lg shadow-indigo-200' : userAnswers[i] !== -1 ? 'bg-emerald-100 text-emerald-600' : 'bg-white text-slate-300 border border-slate-100'}`}>
