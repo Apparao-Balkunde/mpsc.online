@@ -64,7 +64,6 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
     clearInterval(timerRef.current);
     setIsFinished(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    // Database save logic remains same...
   };
 
   const formatTime = (s: number) => {
@@ -74,14 +73,13 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
     return h > 0 ? `${h}:${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}` : `${m}:${sec.toString().padStart(2, '0')}`;
   };
 
-  // --- १. निकाल आणि सर्व पर्यायांसह रिव्ह्यू स्क्रीन ---
+  // १. निकाल रिव्ह्यू स्क्रीन
   if (isFinished) {
     const score = userAnswers.filter((ans, i) => ans === questions[i].correctAnswerIndex).length;
     const attempted = userAnswers.filter(ans => ans !== -1).length;
 
     return (
       <div className="max-w-4xl mx-auto px-4 pb-20 mt-10">
-        {/* Score Summary Card */}
         <div className="bg-white p-10 rounded-[3.5rem] shadow-2xl text-center border-b-[12px] border-indigo-600 mb-10">
           <Trophy size={60} className="mx-auto text-yellow-500 mb-4" />
           <h2 className="text-3xl font-black text-slate-900 uppercase">चाचणी निकाल</h2>
@@ -108,7 +106,6 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
             <BookOpen className="text-indigo-600" /> सर्व प्रश्नांचे विश्लेषण
         </h3>
 
-        {/* Detailed Review List */}
         <div className="space-y-12">
           {questions.map((q, idx) => {
             const userAnswer = userAnswers[idx];
@@ -116,9 +113,7 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
 
             return (
               <div key={idx} className="bg-white p-8 rounded-[3rem] border-2 border-slate-100 shadow-sm relative overflow-hidden">
-                {/* Side Indicator */}
                 <div className={`absolute left-0 top-0 bottom-0 w-3 ${userAnswer === -1 ? 'bg-slate-200' : isCorrect ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-                
                 <div className="flex justify-between items-start mb-6 ml-2">
                   <span className="bg-slate-900 text-white text-[10px] font-black px-4 py-1 rounded-full uppercase">प्रश्न {idx + 1}</span>
                   {userAnswer === -1 ? (
@@ -129,29 +124,13 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
                     <span className="text-rose-600 text-xs font-black bg-rose-50 px-3 py-1 rounded-lg uppercase flex items-center gap-1"><X size={14}/> चुकीचे</span>
                   )}
                 </div>
-
                 <h4 className="text-xl font-bold text-slate-800 mb-8 leading-relaxed ml-2">{q.question}</h4>
-                
-                {/* All Options with Selection State */}
                 <div className="grid gap-4 mb-8 ml-2">
                   {q.options.map((opt, optIdx) => {
                     const isSelected = userAnswer === optIdx;
                     const isActuallyCorrect = q.correctAnswerIndex === optIdx;
-
-                    let borderClass = "border-slate-100";
-                    let bgClass = "bg-slate-50/50";
-                    let icon = null;
-
-                    if (isActuallyCorrect) {
-                      borderClass = "border-emerald-500 ring-2 ring-emerald-100";
-                      bgClass = "bg-emerald-50 text-emerald-900";
-                      icon = <CheckCircle2 className="text-emerald-500" size={20} />;
-                    } else if (isSelected && !isCorrect) {
-                      borderClass = "border-rose-500";
-                      bgClass = "bg-rose-50 text-rose-900";
-                      icon = <X className="text-rose-500" size={20} />;
-                    }
-
+                    let borderClass = isActuallyCorrect ? "border-emerald-500 ring-2 ring-emerald-100" : (isSelected && !isCorrect ? "border-rose-500" : "border-slate-100");
+                    let bgClass = isActuallyCorrect ? "bg-emerald-50 text-emerald-900" : (isSelected && !isCorrect ? "bg-rose-50 text-rose-900" : "bg-slate-50/50");
                     return (
                       <div key={optIdx} className={`p-5 rounded-2xl border-2 flex items-center justify-between font-bold transition-all ${borderClass} ${bgClass}`}>
                         <div className="flex items-center gap-4">
@@ -160,24 +139,14 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
                           </span>
                           {opt}
                         </div>
-                        {icon}
+                        {isActuallyCorrect ? <CheckCircle2 className="text-emerald-500" size={20} /> : (isSelected && <X className="text-rose-500" size={20} />)}
                       </div>
                     );
                   })}
                 </div>
-
-                {/* Explanation Box */}
                 <div className="bg-indigo-50/80 border border-indigo-100 p-6 rounded-[2rem] ml-2">
-                  <div className="flex items-center gap-2 text-indigo-700 font-black uppercase text-[10px] mb-3 tracking-widest">
-                    <BookOpen size={16}/> सविस्तर स्पष्टीकरण:
-                  </div>
-                  <p className="text-slate-700 leading-relaxed font-medium italic">
-                    {q.explanation || 'या प्रश्नाचे स्पष्टीकरण लवकरच जोडले जाईल.'}
-                  </p>
-                  <div className="mt-4 pt-4 border-t border-indigo-100/50 text-[11px] font-bold text-indigo-400 uppercase tracking-tighter">
-                    तुमचे निवडलेले उत्तर: {userAnswer === -1 ? 'काहीही नाही' : String.fromCharCode(65 + userAnswer)} | 
-                    योग्य उत्तर: {String.fromCharCode(65 + q.correctAnswerIndex)}
-                  </div>
+                  <div className="flex items-center gap-2 text-indigo-700 font-black uppercase text-[10px] mb-3 tracking-widest"><BookOpen size={16}/> स्पष्टीकरण:</div>
+                  <p className="text-slate-700 leading-relaxed font-medium italic">{q.explanation || 'स्पष्टीकरण उपलब्ध नाही.'}</p>
                 </div>
               </div>
             );
@@ -187,59 +156,68 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
     );
   }
 
-  // --- २. ऍक्टिव्ह टेस्ट इंटरफेस ---
+  // २. ऍक्टिव्ह टेस्ट इंटरफेस
   if (status === 'success') return (
-    <div className="max-w-5xl mx-auto px-4 pb-20">
+    <div className="max-w-7xl mx-auto px-4 pb-20 mt-4">
+      {/* Top Header */}
       <div className="bg-slate-900 text-white p-5 rounded-[2.5rem] flex justify-between items-center sticky top-4 z-40 shadow-2xl border border-slate-700 mb-8">
         <button onClick={() => confirm("बाहेर पडायचे?") && onBack()} className="bg-slate-800 p-2 px-4 rounded-xl text-[10px] font-black flex items-center gap-2 hover:bg-rose-600 uppercase transition-all tracking-widest"><ArrowLeft size={14}/> Exit</button>
         <div className="text-center">
           <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">{testType}</div>
           <div className={`font-mono text-2xl font-black ${timeLeft < 300 ? 'text-rose-500 animate-pulse' : 'text-yellow-400'}`}>{formatTime(timeLeft)}</div>
         </div>
-        <button onClick={() => confirm("चाचणी सबमिट करायची का?") && finishTest()} className="bg-emerald-600 p-2 px-4 rounded-xl text-[10px] font-black flex items-center gap-2 uppercase tracking-widest shadow-lg"><CheckCircle2 size={14}/> Submit</button>
+        <button onClick={() => confirm("सबमिट करायची का?") && finishTest()} className="bg-emerald-600 p-2 px-4 rounded-xl text-[10px] font-black flex items-center gap-2 uppercase tracking-widest shadow-lg"><CheckCircle2 size={14}/> Submit</button>
       </div>
 
-      {/* Progress Dots */}
-      <div className="flex flex-wrap gap-2 mb-6 px-4">
-        {questions.map((_, i) => (
-          <button key={i} onClick={() => setCurrentIdx(i)} className={`w-8 h-8 rounded-lg text-[10px] font-bold transition-all ${currentIdx === i ? 'bg-indigo-600 text-white scale-110 shadow-lg shadow-indigo-200' : userAnswers[i] !== -1 ? 'bg-emerald-100 text-emerald-600' : 'bg-white text-slate-300 border border-slate-100'}`}>
-            {i + 1}
-          </button>
-        ))}
-      </div>
-
-      {/* Question Card */}
-      <div className="bg-white p-8 md:p-12 rounded-[3.5rem] shadow-xl border border-slate-100">
-        <div className="mb-10">
-          <span className="bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest">{questions[currentIdx].subCategory}</span>
-          <h2 className="text-2xl md:text-3xl font-bold mt-8 text-slate-800 leading-tight">
-            <span className="text-indigo-600 mr-2">Q.{currentIdx + 1}</span> 
-            {questions[currentIdx].question}
-          </h2>
+      <div className="flex flex-col lg:flex-row gap-8">
+        {/* Sidebar: Progress Dots (5 per row) */}
+        <div className="lg:w-80 order-2 lg:order-1">
+          <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 sticky top-32">
+            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 px-2">प्रश्नावली ({questions.length})</h3>
+            <div className="grid grid-cols-5 gap-2 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+              {questions.map((_, i) => (
+                <button key={i} onClick={() => setCurrentIdx(i)} className={`h-10 w-full rounded-xl text-[10px] font-bold transition-all ${currentIdx === i ? 'bg-indigo-600 text-white scale-110 shadow-lg ring-2 ring-indigo-100' : userAnswers[i] !== -1 ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-50 text-slate-300 border border-slate-100'}`}>
+                  {i + 1}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
-        <div className="grid gap-4 mb-10">
-          {questions[currentIdx].options.map((opt: string, i: number) => (
-            <button key={i} onClick={() => { const n = [...userAnswers]; n[currentIdx] = i; setUserAnswers(n); }}
-              className={`w-full text-left p-6 rounded-2xl border-2 transition-all font-bold text-lg flex items-center gap-4 ${userAnswers[currentIdx] === i ? 'border-indigo-600 bg-indigo-50 text-indigo-700 shadow-sm' : 'border-slate-50 hover:bg-slate-50 text-slate-600'}`}>
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-colors ${userAnswers[currentIdx] === i ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-400'}`}>{String.fromCharCode(65 + i)}</div>
-              {opt}
-            </button>
-          ))}
-        </div>
+        {/* Main: Question Content */}
+        <div className="flex-1 order-1 lg:order-2">
+          <div className="bg-white p-8 md:p-12 rounded-[3.5rem] shadow-xl border border-slate-100 min-h-[500px] flex flex-col justify-between">
+            <div>
+              <span className="bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest">{questions[currentIdx].subCategory}</span>
+              <h2 className="text-2xl md:text-3xl font-bold mt-8 text-slate-800 leading-tight">
+                <span className="text-indigo-600 mr-2">Q.{currentIdx + 1}</span> {questions[currentIdx].question}
+              </h2>
 
-        <div className="flex justify-between items-center pt-8 border-t border-slate-100">
-          <button disabled={currentIdx === 0} onClick={() => setCurrentIdx(prev => prev - 1)} className="font-black text-slate-400 hover:text-slate-600 disabled:opacity-0 transition-all uppercase tracking-widest text-xs">मागे</button>
-          <div className="text-slate-300 font-bold text-sm tracking-widest">{currentIdx + 1} / {questions.length}</div>
-          <button onClick={() => currentIdx === questions.length - 1 ? finishTest() : setCurrentIdx(prev => prev + 1)} className="bg-indigo-600 text-white px-10 py-4 rounded-2xl font-black shadow-lg shadow-indigo-100 hover:scale-105 transition-all uppercase tracking-widest text-xs">
-            {currentIdx === questions.length - 1 ? 'निकाल पहा' : 'पुढील प्रश्न'}
-          </button>
+              <div className="grid gap-4 mt-10">
+                {questions[currentIdx].options.map((opt: string, i: number) => (
+                  <button key={i} onClick={() => { const n = [...userAnswers]; n[currentIdx] = i; setUserAnswers(n); }}
+                    className={`w-full text-left p-6 rounded-2xl border-2 transition-all font-bold text-lg flex items-center gap-4 ${userAnswers[currentIdx] === i ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-50 hover:bg-slate-50 text-slate-600'}`}>
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm ${userAnswers[currentIdx] === i ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-400'}`}>{String.fromCharCode(65 + i)}</div>
+                    {opt}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center pt-10 mt-10 border-t border-slate-100">
+              <button disabled={currentIdx === 0} onClick={() => setCurrentIdx(prev => prev - 1)} className="font-black text-slate-400 hover:text-slate-600 disabled:opacity-0 transition-all uppercase tracking-widest text-xs">मागे</button>
+              <div className="text-slate-300 font-bold text-sm tracking-widest">{currentIdx + 1} / {questions.length}</div>
+              <button onClick={() => currentIdx === questions.length - 1 ? finishTest() : setCurrentIdx(prev => prev + 1)} className="bg-indigo-600 text-white px-10 py-4 rounded-2xl font-black shadow-lg hover:scale-105 transition-all uppercase tracking-widest text-xs">
+                {currentIdx === questions.length - 1 ? 'निकाल पहा' : 'पुढील प्रश्न'}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
 
-  // --- ३. सिलेक्शन स्क्रीन (Idle) ---
+  // ३. सिलेक्शन स्क्रीन
   if (status === 'idle') return (
     <div className="max-w-2xl mx-auto mt-10 p-8 bg-white rounded-[3rem] shadow-xl border border-slate-100 text-center">
       <div className="bg-amber-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -267,4 +245,5 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
   );
 
   return null;
-}
+                  }
+                  
