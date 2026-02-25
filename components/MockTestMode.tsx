@@ -8,53 +8,92 @@ import {
 
 interface MockTestModeProps { onBack: () => void; }
 
-// --- १. प्रीमियम सपोर्ट मॉड्यूल (Option 3: सर्वात स्टेबल QR API) ---
 const SupportModule = ({ title }: { title: string }) => {
   const [amt, setAmt] = useState<string>("");
-  // युजरने रक्कम टाकली असेल तर ती घेतो, नाहीतर '0' घेतो जेणेकरून QR कायम दिसेल
+  const [hasPaid, setHasPaid] = useState(false);
   const currentAmt = amt && parseFloat(amt) > 0 ? amt : "0";
 
-  return (
-    <div className="bg-gradient-to-br from-indigo-50 to-white p-6 rounded-[2.5rem] border border-indigo-100 shadow-sm mb-6 overflow-hidden relative group">
-      <div className="absolute -right-4 -top-4 text-indigo-100 opacity-20 group-hover:scale-110 transition-transform">
-        <Heart size={80} fill="currentColor" />
+  // UPI Deep Link तयार करणे
+  const upiLink = `upi://pay?pa=apparaobalkunde901@oksbi&pn=Apparao%20Bal%20kunde&am=${currentAmt}&cu=INR`;
+
+  if (hasPaid) {
+    return (
+      <div className="bg-emerald-50 border-2 border-emerald-200 p-6 rounded-[2.5rem] text-center animate-in zoom-in duration-500 mb-6">
+        <div className="bg-emerald-500 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg shadow-emerald-200">
+          <Check size={24} className="text-white" />
+        </div>
+        <h3 className="text-lg font-black text-emerald-800 uppercase tracking-tight">धन्यवाद! ❤️</h3>
+        <p className="text-[11px] font-bold text-emerald-600 leading-tight mt-1">
+          तुमच्या ₹{amt} च्या योगदानाबद्दल आम्ही आभारी आहोत!
+        </p>
+        <button onClick={() => { setHasPaid(false); setAmt(""); }} className="mt-4 text-[10px] font-black text-emerald-700 uppercase underline decoration-2">पुन्हा सपोर्ट करा</button>
       </div>
-      
-      <div className="flex items-center gap-2 mb-2 relative">
+    );
+  }
+
+  return (
+    <div className="bg-gradient-to-br from-indigo-50 to-white p-6 rounded-[2.5rem] border border-indigo-100 shadow-sm mb-6 relative group">
+      <div className="flex items-center gap-2 mb-2">
         <Heart size={16} className="text-rose-500 fill-rose-500 animate-pulse" />
         <h3 className="text-[11px] font-black text-slate-700 uppercase tracking-wider">{title}</h3>
       </div>
       
-      <p className="text-[10px] text-slate-500 mb-4 font-bold italic leading-tight relative">
-        "तुमचा सपोर्ट, माझं मोटिव्हेशन!" – तुम्ही तुमच्या इच्छेनुसार कितीही योगदान देऊ शकता.
+      <p className="text-[10px] text-slate-500 mb-4 font-bold italic leading-tight">
+        "तुमचा सपोर्ट, माझं मोटिव्हेशन!" – खालील बटण दाबून थेट ॲपवरून पेमेंट करा.
       </p>
-      
-      <div className="flex gap-3 items-center relative">
-        <div className="flex-1">
-          <input 
-            type="number" 
-            value={amt}
-            placeholder="रक्कम ₹"
-            className="w-full bg-white border-2 border-slate-100 rounded-xl px-4 py-2 font-black text-indigo-600 outline-none focus:border-indigo-400 text-sm transition-all"
-            onChange={(e) => setAmt(e.target.value)}
-          />
-        </div>
-        <div className="bg-white p-2 rounded-2xl shadow-xl border border-indigo-200 animate-in zoom-in duration-300">
-          {/* सर्वात स्टेबल QR API (Option 3) */}
-          <img 
-            src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=apparaobalkunde901@oksbi&pn=Apparao%20Bal%20kunde&am=${currentAmt}&cu=INR`} 
-            alt="QR Code" 
-            className="w-20 h-20"
-          />
-        </div>
+
+      {/* रक्कम टाकण्यासाठी इनपुट */}
+      <div className="relative mb-4">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">₹</span>
+        <input 
+          type="number" 
+          inputMode="decimal"
+          value={amt}
+          placeholder="रक्कम टाका"
+          className="w-full bg-white border-2 border-slate-100 rounded-xl pl-7 pr-3 py-2 font-black text-indigo-600 outline-none focus:border-indigo-400 text-sm transition-all shadow-inner"
+          onChange={(e) => setAmt(e.target.value)}
+        />
       </div>
-      <p className="mt-2 text-[9px] font-black text-indigo-500 uppercase text-center tracking-tighter animate-pulse">
-        {parseFloat(currentAmt) > 0 ? `₹${currentAmt} स्कॅन करून सपोर्ट करा!` : "स्कॅन करून सपोर्ट करा!"}
-      </p>
+
+      {/* मोबाईल युजर्ससाठी डायरेक्ट पेमेंट बटण */}
+      {parseFloat(currentAmt) > 0 ? (
+        <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+          <a 
+            href={upiLink}
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-2xl font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-indigo-100 transition-all active:scale-95 uppercase tracking-widest"
+          >
+            <Coffee size={16} /> GPay / PhonePe ने पे करा
+          </a>
+          
+          <div className="flex items-center gap-4 my-2">
+            <div className="h-[1px] bg-slate-100 flex-1"></div>
+            <span className="text-[9px] font-black text-slate-300 uppercase">किंवा क्यूआर स्कॅन करा</span>
+            <div className="h-[1px] bg-slate-100 flex-1"></div>
+          </div>
+
+          <div className="bg-white p-3 rounded-2xl shadow-sm border border-indigo-50 flex justify-center">
+            <img 
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(upiLink)}`} 
+              alt="QR Code" 
+              className="w-24 h-24"
+            />
+          </div>
+
+          <button 
+            onClick={() => setHasPaid(true)}
+            className="w-full mt-2 bg-emerald-500 text-white py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all"
+          >
+            मी पेमेंट केले आहे ✅
+          </button>
+        </div>
+      ) : (
+        <div className="text-center p-4 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">सपोर्ट करण्यासाठी रक्कम टाका</p>
+        </div>
+      )}
     </div>
   );
 };
-
 export function MockTestMode({ onBack }: MockTestModeProps) {
   const [status, setStatus] = useState<LoadingState>('idle');
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
