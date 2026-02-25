@@ -8,10 +8,11 @@ import {
 
 interface MockTestModeProps { onBack: () => void; }
 
-// --- १. प्रीमियम सपोर्ट मॉड्यूल (Reusable Component) ---
+// --- १. प्रीमियम सपोर्ट मॉड्यूल (Option 3: सर्वात स्टेबल QR API) ---
 const SupportModule = ({ title }: { title: string }) => {
   const [amt, setAmt] = useState<string>("");
-  const showQR = parseFloat(amt) > 0;
+  // युजरने रक्कम टाकली असेल तर ती घेतो, नाहीतर '0' घेतो जेणेकरून QR कायम दिसेल
+  const currentAmt = amt && parseFloat(amt) > 0 ? amt : "0";
 
   return (
     <div className="bg-gradient-to-br from-indigo-50 to-white p-6 rounded-[2.5rem] border border-indigo-100 shadow-sm mb-6 overflow-hidden relative group">
@@ -28,7 +29,7 @@ const SupportModule = ({ title }: { title: string }) => {
         "तुमचा सपोर्ट, माझं मोटिव्हेशन!" – तुम्ही तुमच्या इच्छेनुसार कितीही योगदान देऊ शकता.
       </p>
       
-      <div className="flex gap-3 items-end relative">
+      <div className="flex gap-3 items-center relative">
         <div className="flex-1">
           <input 
             type="number" 
@@ -38,17 +39,18 @@ const SupportModule = ({ title }: { title: string }) => {
             onChange={(e) => setAmt(e.target.value)}
           />
         </div>
-        {showQR && (
-          <div className="bg-white p-2 rounded-2xl shadow-xl border border-indigo-200 animate-in zoom-in duration-300">
-            <img 
-              src={`https://upiqr.in/api/qr?name=Apparao%20Bal%20kunde&vpa=apparaobalkunde901@oksbi&am=${amt}`} 
-              alt="QR Code" 
-              className="w-20 h-20"
-            />
-          </div>
-        )}
+        <div className="bg-white p-2 rounded-2xl shadow-xl border border-indigo-200 animate-in zoom-in duration-300">
+          {/* सर्वात स्टेबल QR API (Option 3) */}
+          <img 
+            src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=apparaobalkunde901@oksbi&pn=Apparao%20Bal%20kunde&am=${currentAmt}&cu=INR`} 
+            alt="QR Code" 
+            className="w-20 h-20"
+          />
+        </div>
       </div>
-      {showQR && <p className="mt-2 text-[9px] font-black text-indigo-500 uppercase text-center animate-pulse">स्कॅन करून सपोर्ट करा!</p>}
+      <p className="mt-2 text-[9px] font-black text-indigo-500 uppercase text-center tracking-tighter animate-pulse">
+        {parseFloat(currentAmt) > 0 ? `₹${currentAmt} स्कॅन करून सपोर्ट करा!` : "स्कॅन करून सपोर्ट करा!"}
+      </p>
     </div>
   );
 };
@@ -166,14 +168,11 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
                 <h4 className="text-xl font-bold text-slate-800 mb-8 ml-2">{q.question}</h4>
                 <div className="grid gap-3 mb-8 ml-2">
                   {q.options.map((opt, optIdx) => {
-                    const isSelected = userAnswer === optIdx;
                     const isActuallyCorrect = q.correctAnswerIndex === optIdx;
-                    let borderClass = isActuallyCorrect ? "border-emerald-500 ring-2 ring-emerald-100" : (isSelected ? "border-rose-500" : "border-slate-100");
-                    let bgClass = isActuallyCorrect ? "bg-emerald-50" : (isSelected ? "bg-rose-50" : "bg-slate-50/50");
                     return (
-                      <div key={optIdx} className={`p-5 rounded-2xl border-2 flex items-center justify-between font-bold transition-all ${borderClass} ${bgClass}`}>
+                      <div key={optIdx} className={`p-5 rounded-2xl border-2 flex items-center justify-between font-bold transition-all ${isActuallyCorrect ? 'border-emerald-500 bg-emerald-50' : 'border-slate-100 bg-slate-50/50'}`}>
                         <div className="flex items-center gap-4">
-                          <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs ${isActuallyCorrect ? 'bg-emerald-500 text-white' : isSelected ? 'bg-rose-500 text-white' : 'bg-slate-200 text-slate-500'}`}>{String.fromCharCode(65 + optIdx)}</span>
+                          <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs ${isActuallyCorrect ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'}`}>{String.fromCharCode(65 + optIdx)}</span>
                           {opt}
                         </div>
                         {isActuallyCorrect && <CheckCircle2 className="text-emerald-500" size={20} />}
@@ -206,9 +205,8 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8">
-        {/* Sidebar: Progress Dots */}
         <div className="lg:w-80 order-2 lg:order-1">
-          {/* --- दुसरी जागा: साइडबारमध्ये डॉट्सच्या वर --- */}
+          {/* --- दुसरी जागा: प्रोग्रेस डॉट्सच्या वर --- */}
           <SupportModule title="आम्हाला सपोर्ट करा" />
 
           <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 sticky top-32">
@@ -221,7 +219,6 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
           </div>
         </div>
 
-        {/* Main Content */}
         <div className="flex-1 order-1 lg:order-2">
           <div className="bg-white p-8 md:p-12 rounded-[3.5rem] shadow-xl border border-slate-100 min-h-[550px] flex flex-col justify-between">
             <div>
@@ -260,7 +257,6 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
         <h2 className="text-3xl font-black text-slate-800 mb-8 text-center uppercase tracking-tight">सराव परीक्षा निवडा</h2>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-          {/* Exam Selection Buttons */}
           <div className="grid grid-cols-1 gap-4">
             {['Rajyaseva', 'Combined Group B', 'Combined Group C', 'Saralseva'].map((id) => (
               <button key={id} onClick={() => setTestType(id)} className={`p-6 rounded-[2rem] border-2 text-left transition-all flex items-center justify-between ${testType === id ? 'border-indigo-600 bg-indigo-50 ring-4 ring-indigo-50 shadow-lg shadow-indigo-100' : 'border-slate-50 bg-slate-50 hover:bg-slate-100'}`}>
@@ -275,14 +271,13 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
             <SupportModule title="तुम्ही पेमेंट करू इच्छिता?" />
             <div className="bg-slate-50 p-6 rounded-[2.5rem] border border-slate-100">
                <p className="text-xs font-bold text-slate-500 leading-relaxed italic">
-                 "सपोर्ट करणे पूर्णपणे ऐच्छिक आहे. तुमच्या छोट्याशा मदतीमुळे आम्हाला असेच दर्जेदार प्रश्न संच मोफत उपलब्ध करून देण्यास प्रेरणा मिळते!"
+                 "सपोर्ट करणे पूर्णपणे ऐच्छिक आहे. तुमच्या मदतीमुळे आम्हाला असेच दर्जेदार प्रश्न संच मोफत उपलब्ध करून देण्यास प्रेरणा मिळते!"
                </p>
             </div>
           </div>
         </div>
 
         <button onClick={startTest} className="w-full bg-indigo-600 text-white py-6 rounded-[2rem] font-black text-xl shadow-xl hover:bg-indigo-700 transition-all uppercase tracking-widest mt-10 hover:scale-[1.02]">चाचणी सुरू करा</button>
-        <button onClick={onBack} className="mt-8 text-slate-400 font-bold hover:text-slate-600 transition-all uppercase tracking-widest text-xs block mx-auto">मागे जा</button>
       </div>
     </div>
   );
