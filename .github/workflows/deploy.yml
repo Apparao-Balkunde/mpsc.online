@@ -21,4 +21,4 @@ jobs:
           script: |
             cd /home/ubuntu/mpsc.online
             git pull origin main
-            docker-compose up -d --build
+            docker-compose up -d --build --remove-orphans
