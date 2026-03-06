@@ -1,0 +1,24 @@
+name: Deploy to Oracle Cloud
+
+on:
+  push:
+    branches:
+      - main  # जेव्हा main ब्रांचवर पुश होईल तेव्हा
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Executing remote ssh commands using password
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}      # तुमचा सर्व्हर IP (92.4.66.208)
+          username: ${{ secrets.USERNAME }} # ubuntu
+          key: ${{ secrets.SSH_KEY }}     # तुमची .key फाईलचा मजकूर
+          script: |
+            cd /home/ubuntu/mpsc.online
+            git pull origin main
+            docker-compose up -d --build
