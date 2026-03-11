@@ -1,155 +1,284 @@
-import React, { useState } from 'react';
-import { DescriptiveQA, LoadingState } from '../types';
-// AI ऐवजी तुमची Local Data सेवा वापरा
-import { getLiteratureAnalysis } from '../services/localData'; 
-import { ArrowLeft, Loader2, Eye, EyeOff, Copy, FileText, GraduationCap, Database, BookOpen } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
+import {
+  ArrowLeft, BookOpen, ChevronDown, Eye, EyeOff,
+  GraduationCap, Search, HelpCircle
+} from 'lucide-react';
 
-interface LiteratureModeProps { onBack: () => void; }
+interface LitQuestion {
+  id: number;
+  question: string;
+  model_answer: string;
+  topic: string;
+  author?: string;
+  work?: string;
+  difficulty?: string;
+  exam_name?: string;
+  subject?: string;
+  year?: number;
+}
 
-// मराठी साहित्यातील महत्त्वाचे संशोधनाचे विषय
 const LIT_TOPICS = [
-  "दलित साहित्यातील विद्रोहाचे स्वरूप", 
-  "स्त्रीवादी जाणिवांचा तौलनिक अभ्यास", 
-  "कोसला कादंबरी: अस्तित्ववाद", 
-  "मर्ढेकरांच्या कवितेतील विसंवाद"
+  'कवी परिचय',
+  'लेखक परिचय',
+  'कादंबरी',
+  'नाटक',
+  'कविता',
+  'दलित साहित्य',
+  'स्त्रीवादी साहित्य',
+  'व्याकरण',
 ];
 
-export const LiteratureMode: React.FC<LiteratureModeProps> = ({ onBack }) => {
-  const [topic, setTopic] = useState('');
-  const [status, setStatus] = useState<LoadingState>('idle');
-  const [qaData, setQaData] = useState<DescriptiveQA | null>(null);
-  const [showModelAnswer, setShowModelAnswer] = useState(false);
+const EXAMS = ['Rajyaseva Mains', 'NET/SET', 'PhD Entrance', 'MPSC Combined'];
 
-  const handleFetchAnalysis = async () => {
-    if (!topic) return;
-    setStatus('loading');
-    
-    // थोडा वेळ देऊन डेटा लोड करणे जेणेकरून तो नैसर्गिक वाटेल
-    setTimeout(() => {
+export const LiteratureMode: React.FC<{ onBack: () => void }> = ({ onBack }) => {
+  const [questions, setQuestions] = useState<LitQuestion[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selTopic, setSelTopic] = useState('All');
+  const [selExam, setSelExam] = useState('All');
+  const [revealed, setRevealed] = useState<Record<number, boolean>>({});
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
       try {
-        const result = getLiteratureAnalysis(topic);
-        if (result) {
-          setQaData(result);
-          setStatus('success');
-        } else {
-          setStatus('error');
-        }
-      } catch (e) { 
-        setStatus('error'); 
+        let query = supabase.from('literature_questions').select('*');
+        if (selTopic !== 'All') query = query.eq('topic', selTopic);
+        if (selExam !== 'All') query = query.eq('exam_name', selExam);
+        const { data, error } = await query.order('id', { ascending: false });
+        if (error) throw error;
+        setQuestions(data || []);
+        setRevealed({});
+      } catch (err: any) {
+        console.error('Literature लोड करताना चूक:', err.message);
+      } finally {
+        setLoading(false);
       }
-    }, 800);
-  };
+    };
+    fetchData();
+  }, [selTopic, selExam]);
+
+  const filtered = questions.filter(
+    q =>
+      q.question?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      q.author?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      q.work?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const toggleReveal = (id: number) =>
+    setRevealed(prev => ({ ...prev, [id]: !prev[id] }));
 
   return (
-    <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-6">
-      {/* Back Button */}
-      <button onClick={onBack} className="flex items-center text-slate-500 hover:text-indigo-600 mb-4 transition-colors font-bold">
-        <ArrowLeft size={18} className="mr-2" /> डॅशबोर्डवर परत जा
-      </button>
-
-      {/* Input Section */}
-      <div className="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
-        <div className="p-6 bg-gradient-to-r from-orange-50 to-orange-100 border-b border-orange-200">
-          <h2 className="text-2xl font-black text-orange-900 mb-2 flex items-center">
-            <GraduationCap className="mr-3 text-orange-700 h-8 w-8" /> 
-            साहित्य समीक्षा (MPSC/PhD)
-          </h2>
-          <p className="text-orange-800 text-sm font-medium italic">मुख्य परीक्षा आणि संशोधकांसाठी सखोल विश्लेषण आणि आदर्श उत्तरे.</p>
+    <div className="max-w-4xl mx-auto px-4 py-8 animate-in fade-in duration-500">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={onBack}
+            className="p-3 bg-white rounded-2xl shadow-sm border border-slate-100 hover:bg-slate-50 transition-all"
+          >
+            <ArrowLeft size={20} className="text-slate-600" />
+          </button>
+          <div>
+            <h2 className="text-2xl font-black text-slate-900 tracking-tighter">मराठी साहित्य</h2>
+            <p className="text-[10px] font-black text-orange-500 uppercase tracking-widest mt-0.5">
+              Mains & NET/SET साठी सखोल अभ्यास
+            </p>
+          </div>
         </div>
-        
-        <div className="p-6">
-            <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">महत्त्वाचे विषय निवडा:</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
-               {LIT_TOPICS.map((t) => (
-                 <button 
-                   key={t} 
-                   onClick={() => setTopic(t)} 
-                   className={`text-left p-4 rounded-xl border-2 transition-all ${topic === t ? 'bg-orange-50 border-orange-500 text-orange-900 font-bold shadow-sm' : 'border-slate-100 text-slate-700 hover:border-orange-200 hover:bg-slate-50'}`}
-                 >
-                   {t}
-                 </button>
-               ))}
-            </div>
-            
-            <div className="flex flex-col md:flex-row gap-3">
-                <input 
-                  type="text" 
-                  value={topic} 
-                  onChange={(e) => setTopic(e.target.value)} 
-                  placeholder="इतर कोणताही साहित्य विषय टाइप करा..." 
-                  className="flex-1 border-2 border-slate-100 rounded-xl p-4 outline-none focus:border-orange-400 transition-all font-medium" 
-                />
-                <button 
-                  onClick={handleFetchAnalysis} 
-                  className="bg-orange-600 hover:bg-orange-700 text-white px-8 py-4 rounded-xl font-black shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95"
-                >
-                  {status === 'loading' ? <Loader2 className="animate-spin" /> : <BookOpen size={20} />} 
-                  विश्लेषण पहा
-                </button>
-            </div>
+        <div className="bg-orange-50 p-3 rounded-2xl">
+          <GraduationCap className="text-orange-400" size={28} />
         </div>
       </div>
 
-      {/* Loading State */}
-      {status === 'loading' && (
-        <div className="text-center py-20">
-          <Loader2 className="animate-spin h-12 w-12 text-orange-600 mx-auto mb-4" />
-          <p className="text-slate-800 font-black">साहित्यिक पुरावे आणि संदर्भ शोधत आहे...</p>
-        </div>
+      {/* Search */}
+      <div className="relative mb-4">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+        <input
+          type="text"
+          placeholder="लेखक, कृती किंवा विषय शोधा..."
+          className="w-full pl-12 pr-4 py-4 bg-white rounded-2xl shadow-sm border border-slate-100 outline-none focus:border-orange-400 font-medium transition-all"
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+        />
+      </div>
+
+      {/* Filters */}
+      <div className="grid grid-cols-2 gap-4 mb-8">
+        <SelectFilter
+          label="साहित्य प्रकार"
+          value={selTopic}
+          onChange={setSelTopic}
+          options={LIT_TOPICS}
+          allLabel="सर्व प्रकार"
+          accentColor="orange"
+        />
+        <SelectFilter
+          label="परीक्षा"
+          value={selExam}
+          onChange={setSelExam}
+          options={EXAMS}
+          allLabel="सर्व परीक्षा"
+          accentColor="orange"
+        />
+      </div>
+
+      {/* Quick Topic Chips */}
+      <div className="flex flex-wrap gap-2 mb-8">
+        {['All', ...LIT_TOPICS].slice(0, 6).map(t => (
+          <button
+            key={t}
+            onClick={() => setSelTopic(t)}
+            className={`px-4 py-2 rounded-full text-xs font-black transition-all ${
+              selTopic === t
+                ? 'bg-orange-600 text-white shadow-md shadow-orange-100'
+                : 'bg-white text-slate-500 border border-slate-200 hover:border-orange-400'
+            }`}
+          >
+            {t === 'All' ? 'सर्व' : t}
+          </button>
+        ))}
+      </div>
+
+      {/* Count */}
+      {!loading && (
+        <p className="text-xs text-slate-400 font-bold mb-4 px-1">
+          {filtered.length} प्रश्न / विषय सापडले
+        </p>
       )}
 
-      {/* Result Section */}
-      {status === 'success' && qaData && (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="bg-white p-8 rounded-2xl shadow-lg border-l-8 border-orange-600 relative overflow-hidden">
-                <div className="flex justify-between items-center mb-4">
-                    <span className="bg-orange-100 text-orange-900 text-[10px] font-black px-3 py-1 rounded-full uppercase flex items-center gap-1">
-                      <FileText size={12}/> संदर्भीय प्रश्न
-                    </span>
-                    <button onClick={() => navigator.clipboard.writeText(qaData.question)} className="text-slate-300 hover:text-orange-600 transition-colors">
-                      <Copy size={20} />
-                    </button>
-                </div>
-                <h3 className="text-2xl font-bold text-slate-900 leading-relaxed font-serif">{qaData.question}</h3>
-            </div>
+      {/* Questions */}
+      <div className="space-y-6">
+        {loading ? (
+          <div className="text-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4" />
+            <p className="font-black text-slate-400 animate-pulse">साहित्य डाटा लोड होत आहे...</p>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-20 bg-slate-50 rounded-[3rem] border-2 border-dashed border-slate-200">
+            <HelpCircle size={48} className="mx-auto text-slate-300 mb-4" />
+            <p className="font-bold text-slate-400">या निवडीसाठी सध्या प्रश्न उपलब्ध नाहीत.</p>
+            <p className="text-xs text-slate-300 mt-1">वेगळा प्रकार किंवा परीक्षा निवडा</p>
+          </div>
+        ) : (
+          filtered.map((q, idx) => {
+            const isRevealed = revealed[q.id];
+            return (
+              <div
+                key={q.id}
+                className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-md transition-all overflow-hidden"
+              >
+                {/* Card Top Strip */}
+                <div className="h-1.5 w-full bg-gradient-to-r from-orange-500 to-amber-400" />
 
-            <div className="flex flex-col gap-4">
-                <button 
-                  onClick={() => setShowModelAnswer(!showModelAnswer)} 
-                  className={`self-center px-10 py-4 rounded-full font-black shadow-xl flex items-center gap-3 transition-all ${showModelAnswer ? 'bg-slate-800 text-white' : 'bg-orange-600 text-white hover:bg-orange-700 animate-bounce-subtle'}`}
-                >
-                  {showModelAnswer ? <EyeOff size={20} /> : <Eye size={20} />} 
-                  {showModelAnswer ? 'विश्लेषण लपवा' : 'तज्ञांचे आदर्श उत्तर पहा'}
-                </button>
+                <div className="p-8">
+                  {/* Metadata badges */}
+                  <div className="flex flex-wrap gap-2 mb-5">
+                    {q.topic && (
+                      <span className="bg-orange-50 text-orange-600 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-tight">
+                        {q.topic}
+                      </span>
+                    )}
+                    {q.exam_name && (
+                      <span className="bg-slate-100 text-slate-500 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-tight">
+                        {q.exam_name}
+                      </span>
+                    )}
+                    {q.author && (
+                      <span className="bg-amber-50 text-amber-600 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-tight">
+                        ✍️ {q.author}
+                      </span>
+                    )}
+                    {q.work && (
+                      <span className="bg-purple-50 text-purple-600 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-tight">
+                        📖 {q.work}
+                      </span>
+                    )}
+                    {q.year && (
+                      <span className="bg-indigo-50 text-indigo-500 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-tight">
+                        {q.year}
+                      </span>
+                    )}
+                  </div>
 
-                {showModelAnswer && (
-                    <div className="bg-white rounded-2xl shadow-2xl border border-indigo-100 overflow-hidden mb-10 animate-in zoom-in-95 duration-300">
-                        <div className="bg-slate-900 text-white p-5 flex justify-between items-center">
-                          <h4 className="font-bold flex items-center gap-2">
-                            <CheckCircle2 size={20} className="text-emerald-400"/> 
-                            संशोधन आधारित उत्तर (Model Research Answer)
-                          </h4>
-                          <span className="text-[10px] font-black bg-slate-800 px-3 py-1 rounded-lg border border-slate-700 flex items-center gap-1">
-                            <Database size={12}/> अधिकृत स्रोत
-                          </span>
+                  {/* Question */}
+                  <h3 className="text-xl font-bold text-slate-800 leading-relaxed mb-6">
+                    <span className="text-orange-500 mr-2 font-black">प्र. {idx + 1}</span>
+                    {q.question}
+                  </h3>
+
+                  {/* Toggle Button */}
+                  <button
+                    onClick={() => toggleReveal(q.id)}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${
+                      isRevealed
+                        ? 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                        : 'bg-orange-600 text-white shadow-lg shadow-orange-100 hover:scale-[1.02]'
+                    }`}
+                  >
+                    {isRevealed ? (
+                      <><EyeOff size={14} /> उत्तर लपवा</>
+                    ) : (
+                      <><Eye size={14} /> आदर्श उत्तर पहा</>
+                    )}
+                  </button>
+
+                  {/* Model Answer */}
+                  {isRevealed && (
+                    <div className="mt-6 animate-in fade-in slide-in-from-top-2 duration-300">
+                      <div className="bg-slate-900 rounded-[1.5rem] p-6">
+                        <div className="flex items-center gap-2 mb-4 text-orange-400 font-black uppercase tracking-widest text-[10px]">
+                          <BookOpen size={14} />
+                          संशोधन आधारित आदर्श उत्तर
                         </div>
-                        <div className="p-8 md:p-12 prose max-w-none font-serif text-lg leading-loose text-slate-800 bg-orange-50/20">
-                          <ReactMarkdown>{qaData.modelAnswer}</ReactMarkdown>
-                        </div>
+                        <p className="text-slate-200 leading-relaxed font-medium whitespace-pre-line text-sm">
+                          {q.model_answer || 'उत्तर लवकरच उपलब्ध केले जाईल.'}
+                        </p>
+                      </div>
                     </div>
-                )}
-            </div>
-        </div>
-      )}
-
-      {/* Error State */}
-      {status === 'error' && (
-        <div className="text-center py-20 bg-red-50 rounded-2xl border-2 border-dashed border-red-200">
-          <p className="text-red-600 font-bold text-lg">क्षमस्व! या विषयावर सध्या माहिती उपलब्ध नाही.</p>
-          <p className="text-red-500 text-sm mt-1">कृपया वरीलपैकी एक विषय निवडा.</p>
-        </div>
-      )}
+                  )}
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
     </div>
   );
 };
+
+const SelectFilter = ({
+  label,
+  value,
+  onChange,
+  options,
+  allLabel,
+  accentColor,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: string[];
+  allLabel: string;
+  accentColor: string;
+}) => (
+  <div className="flex flex-col gap-1">
+    <label className="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">{label}</label>
+    <div className="relative">
+      <select
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        className={`w-full p-4 bg-white rounded-2xl font-bold outline-none border-2 border-transparent focus:border-${accentColor}-500 transition-all appearance-none cursor-pointer text-slate-700 shadow-sm`}
+      >
+        <option value="All">{allLabel}</option>
+        {options.map(opt => (
+          <option key={opt} value={opt}>
+            {opt}
+          </option>
+        ))}
+      </select>
+      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
+    </div>
+  </div>
+);
