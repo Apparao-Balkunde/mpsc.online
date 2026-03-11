@@ -5,10 +5,11 @@ import { QuestionView } from './components/QuestionView';
 import { MockTestMode } from './components/MockTestMode';
 import { VocabMode } from './components/VocabMode';
 import { LiteratureMode } from './components/LiteratureMode';
+import { SpardhaYodha } from './components/SpardhaYodha';
 import {
   History, BookOpen, Trophy, Newspaper, ShieldCheck,
-  Zap, BookMarked, Menu, X, Target, Flame, Languages,
-  GraduationCap, ChevronRight, Star, TrendingUp, Clock, Award
+  Zap, BookMarked, X, Target, Flame, Languages,
+  GraduationCap, ChevronRight, Star, TrendingUp, Clock, Award, Swords
 } from 'lucide-react';
 
 // Progress helpers
@@ -40,7 +41,7 @@ export function updateProgress(attempted: number, correct: number) {
   saveProgress(p);
 }
 
-// Section config
+// Regular section cards (excludes featured cards shown separately)
 const SECTIONS = [
   { mode: Mode.PRELIMS,         label: 'पूर्व परीक्षा',   sub: 'PYQ संच',            icon: History,       accent: '#3B82F6', tag: 'PYQ'   },
   { mode: Mode.MAINS,           label: 'मुख्य परीक्षा',   sub: 'GS + भाषा',          icon: BookMarked,    accent: '#10B981', tag: 'PYQ'   },
@@ -74,14 +75,13 @@ export default function App() {
   const [mode, setMode] = useState<Mode>(() => (localStorage.getItem('mpsc_mode') as Mode) || Mode.HOME);
   const [count, setCount] = useState(0);
   const [progress, setProgress] = useState<UserProgress>(loadProgress());
-  const [menuOpen, setMenuOpen] = useState(false);
   const [time, setTime] = useState(new Date());
   const isExam = mode === Mode.MOCK_TEST;
+  const isSpardha = mode === Mode.SPARDHA;
 
   useEffect(() => {
     localStorage.setItem('mpsc_mode', mode);
     window.scrollTo(0, 0);
-    setMenuOpen(false);
     setProgress(loadProgress());
   }, [mode]);
 
@@ -104,13 +104,20 @@ export default function App() {
   const go = (m: Mode) => setMode(m);
   const back = () => { setMode(Mode.HOME); setProgress(loadProgress()); };
 
-  // Non-home view
+  // SpardhaYodha — full screen, no header
+  if (isSpardha) {
+    return <SpardhaYodha onBack={back} />;
+  }
+
+  // All other non-home modes
   if (mode !== Mode.HOME) {
     return (
       <div style={{ minHeight: '100vh', background: '#0B0F1A', fontFamily: "'Poppins','Noto Sans Devanagari',sans-serif" }}>
         {!isExam && (
-          <div style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}
-            className="sticky top-0 z-50 flex items-center gap-4 px-6 py-4">
+          <div
+            style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}
+            className="sticky top-0 z-50 flex items-center gap-4 px-6 py-4"
+          >
             <button onClick={back} className="flex items-center gap-2 text-white/60 hover:text-white transition-colors font-bold text-sm">
               <X size={18} /> डॅशबोर्ड
             </button>
@@ -121,26 +128,26 @@ export default function App() {
           </div>
         )}
         <div className={isExam ? '' : 'max-w-5xl mx-auto px-4 py-6'}>
-          {mode === Mode.PRELIMS        && <QuestionView type={Mode.PRELIMS}        tableName="prelims_questions"   onBack={back} onProgressUpdate={() => setProgress(loadProgress())} />}
-          {mode === Mode.MAINS          && <QuestionView type={Mode.MAINS}          tableName="mains_questions"     onBack={back} onProgressUpdate={() => setProgress(loadProgress())} />}
-          {mode === Mode.SARALSEVA      && <QuestionView type={Mode.SARALSEVA}      tableName="saralseva_questions" onBack={back} onProgressUpdate={() => setProgress(loadProgress())} />}
-          {mode === Mode.MOCK           && <QuestionView type={Mode.MOCK}           tableName="mock_questions"      onBack={back} onProgressUpdate={() => setProgress(loadProgress())} />}
-          {mode === Mode.MOCK_TEST      && <MockTestMode onBack={back} />}
-          {mode === Mode.CURRENT_AFFAIRS && <QuestionView type={Mode.CURRENT_AFFAIRS} tableName="current_affairs"  onBack={back} onProgressUpdate={() => setProgress(loadProgress())} />}
-          {mode === Mode.VOCAB          && <VocabMode onBack={back} />}
-          {mode === Mode.LITERATURE     && <LiteratureMode onBack={back} />}
+          {mode === Mode.PRELIMS         && <QuestionView type={Mode.PRELIMS}         tableName="prelims_questions"   onBack={back} onProgressUpdate={() => setProgress(loadProgress())} />}
+          {mode === Mode.MAINS           && <QuestionView type={Mode.MAINS}           tableName="mains_questions"     onBack={back} onProgressUpdate={() => setProgress(loadProgress())} />}
+          {mode === Mode.SARALSEVA       && <QuestionView type={Mode.SARALSEVA}       tableName="saralseva_questions" onBack={back} onProgressUpdate={() => setProgress(loadProgress())} />}
+          {mode === Mode.MOCK            && <QuestionView type={Mode.MOCK}            tableName="mock_questions"      onBack={back} onProgressUpdate={() => setProgress(loadProgress())} />}
+          {mode === Mode.MOCK_TEST       && <MockTestMode onBack={back} />}
+          {mode === Mode.CURRENT_AFFAIRS && <QuestionView type={Mode.CURRENT_AFFAIRS} tableName="current_affairs"    onBack={back} onProgressUpdate={() => setProgress(loadProgress())} />}
+          {mode === Mode.VOCAB           && <VocabMode onBack={back} />}
+          {mode === Mode.LITERATURE      && <LiteratureMode onBack={back} />}
         </div>
       </div>
     );
   }
 
-  // Dashboard
+  // DASHBOARD
   return (
     <div
       className="min-h-screen relative overflow-x-hidden"
       style={{ background: '#0B0F1A', fontFamily: "'Poppins','Noto Sans Devanagari',sans-serif", color: '#fff' }}
     >
-      {/* Ambient glow */}
+      {/* Ambient glow blobs */}
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
         <div style={{ position: 'absolute', top: '-10%', left: '-5%', width: '45vw', height: '45vw', borderRadius: '50%', background: 'radial-gradient(circle, rgba(249,115,22,0.12) 0%, transparent 70%)', filter: 'blur(40px)' }} />
         <div style={{ position: 'absolute', top: '30%', right: '-10%', width: '50vw', height: '50vw', borderRadius: '50%', background: 'radial-gradient(circle, rgba(139,92,246,0.10) 0%, transparent 70%)', filter: 'blur(60px)' }} />
@@ -219,7 +226,7 @@ export default function App() {
           ))}
         </div>
 
-        {/* Section label */}
+        {/* Divider */}
         <div className="flex items-center gap-4 mb-6">
           <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
           <span style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>
@@ -228,14 +235,56 @@ export default function App() {
           <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
         </div>
 
-        {/* Cards */}
+        {/* Cards Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 300px), 1fr))', gap: 16 }}>
 
-          {/* Featured: Mock Test */}
+          {/* FEATURED 1 — Spardha Yodha (NEW unique feature) */}
+          <div
+            onClick={() => go(Mode.SPARDHA)}
+            className="cursor-pointer group"
+            style={{ gridColumn: 'span 2', background: 'linear-gradient(135deg, #1a0a2e 0%, #0d0718 60%)', border: '1px solid rgba(168,85,247,0.35)', borderRadius: 28, padding: 32, position: 'relative', overflow: 'hidden', minHeight: 180 }}
+          >
+            {/* Animated star field BG */}
+            <div style={{ position: 'absolute', inset: 0, opacity: 0.4 }}>
+              {[...Array(20)].map((_, i) => (
+                <div key={i} style={{ position: 'absolute', width: i % 3 === 0 ? 3 : 2, height: i % 3 === 0 ? 3 : 2, borderRadius: '50%', background: '#fff', left: `${(i * 17 + 5) % 95}%`, top: `${(i * 23 + 10) % 85}%`, opacity: 0.3 + (i % 5) * 0.1 }} />
+              ))}
+            </div>
+            {/* Glow pulse behind sword */}
+            <div style={{ position: 'absolute', right: 32, top: '50%', transform: 'translateY(-50%)', width: 100, height: 100, borderRadius: '50%', background: 'radial-gradient(circle, rgba(168,85,247,0.4) 0%, transparent 70%)', filter: 'blur(20px)' }} />
+
+            <div className="relative z-10 flex items-start justify-between">
+              <div>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(168,85,247,0.2)', border: '1px solid rgba(168,85,247,0.5)', borderRadius: 999, padding: '4px 12px', marginBottom: 16 }}>
+                  <div className="animate-pulse" style={{ width: 7, height: 7, borderRadius: '50%', background: '#A855F7', boxShadow: '0 0 8px #A855F7' }} />
+                  <span style={{ fontSize: 10, fontWeight: 800, color: '#D8B4FE', letterSpacing: '0.15em', textTransform: 'uppercase' }}>NEW FEATURE</span>
+                </div>
+                <h2 style={{ fontSize: 'clamp(1.4rem,3.5vw,2rem)', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.1, marginBottom: 8 }}>
+                  स्पर्धा योद्धा<br />
+                  <span style={{ color: '#D8B4FE', fontSize: '0.7em' }}>10 प्रश्न · 12 sec each · Rank मिळवा</span>
+                </h2>
+                <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', fontWeight: 600 }}>
+                  Speed challenge · Combo system · WhatsApp share
+                </p>
+              </div>
+              <div
+                style={{ background: 'rgba(168,85,247,0.2)', border: '1px solid rgba(168,85,247,0.4)', borderRadius: 18, padding: 14, fontSize: 32 }}
+                className="group-hover:scale-110 group-hover:rotate-12 transition-all duration-300"
+              >
+                ⚔️
+              </div>
+            </div>
+            <div className="mt-6 relative z-10 flex items-center gap-2">
+              <span style={{ fontSize: 13, fontWeight: 800, color: '#D8B4FE' }}>युद्ध सुरू करा</span>
+              <ChevronRight size={16} style={{ color: '#D8B4FE' }} className="group-hover:translate-x-1 transition-transform" />
+            </div>
+          </div>
+
+          {/* FEATURED 2 — Full Mock Test */}
           <div
             onClick={() => go(Mode.MOCK_TEST)}
             className="cursor-pointer group"
-            style={{ gridColumn: 'span 2', background: 'linear-gradient(135deg, #5C1414 0%, #0F0303 100%)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 28, padding: 32, position: 'relative', overflow: 'hidden', minHeight: 180 }}
+            style={{ gridColumn: 'span 2', background: 'linear-gradient(135deg, #5C1414 0%, #0F0303 100%)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 28, padding: 32, position: 'relative', overflow: 'hidden', minHeight: 160 }}
           >
             <div style={{ position: 'absolute', top: 0, right: 0, width: '50%', height: '100%', overflow: 'hidden', opacity: 0.06 }}>
               {[...Array(8)].map((_, i) => (
@@ -244,26 +293,26 @@ export default function App() {
             </div>
             <div className="relative z-10 flex items-start justify-between">
               <div>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: 999, padding: '4px 12px', marginBottom: 16 }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: 999, padding: '4px 12px', marginBottom: 14 }}>
                   <div className="animate-pulse" style={{ width: 7, height: 7, borderRadius: '50%', background: '#EF4444', boxShadow: '0 0 8px #EF4444' }} />
                   <span style={{ fontSize: 10, fontWeight: 800, color: '#FCA5A5', letterSpacing: '0.15em', textTransform: 'uppercase' }}>LIVE TEST</span>
                 </div>
-                <h2 style={{ fontSize: 'clamp(1.4rem,3.5vw,2rem)', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.1, marginBottom: 8 }}>
+                <h2 style={{ fontSize: 'clamp(1.3rem,3vw,1.8rem)', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.1, marginBottom: 6 }}>
                   Full Mock Test<br /><span style={{ color: '#FCA5A5' }}>100 प्रश्न · 2 तास</span>
                 </h2>
-                <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>वास्तविक परीक्षेसारखे वातावरण</p>
+                <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', fontWeight: 600 }}>वास्तविक परीक्षेसारखे वातावरण</p>
               </div>
               <div style={{ background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 18, padding: 14 }} className="group-hover:scale-110 transition-transform duration-300">
                 <Zap size={28} style={{ color: '#EF4444' }} />
               </div>
             </div>
-            <div className="mt-6 relative z-10 flex items-center gap-2">
+            <div className="mt-5 relative z-10 flex items-center gap-2">
               <span style={{ fontSize: 13, fontWeight: 800, color: '#FCA5A5' }}>चाचणी सुरू करा</span>
               <ChevronRight size={16} style={{ color: '#FCA5A5' }} className="group-hover:translate-x-1 transition-transform" />
             </div>
           </div>
 
-          {/* Regular cards */}
+          {/* Regular section cards */}
           {SECTIONS.map(({ mode: m, label, sub, icon: Icon, accent, tag }) => (
             <div
               key={m}
@@ -319,5 +368,4 @@ export default function App() {
       </div>
     </div>
   );
-        }
-      
+}
