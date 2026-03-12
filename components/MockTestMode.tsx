@@ -20,8 +20,8 @@ const SupportModule = ({ title }: { title: string }) => {
       <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
         <Check size={22} color="#fff" />
       </div>
-      <div style={{ fontWeight: 900, color: '#10B981', fontSize: 15, marginBottom: 4 }}>धन्यवाद! ❤️</div>
-      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>₹{amt} च्या सपोर्टबद्दल आभारी आहोत!</div>
+      <div style={{ fontWeight: 900, color: '#10B981', fontSize: 15, marginBottom: 4 }}>धन्यवाद!</div>
+      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>Rs.{amt} च्या सपोर्टबद्दल आभारी आहोत!</div>
       <button onClick={() => { setHasPaid(false); setAmt(''); }}
         style={{ marginTop: 12, fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.4)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
         पुन्हा सपोर्ट करा
@@ -37,10 +37,10 @@ const SupportModule = ({ title }: { title: string }) => {
       </div>
       <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', fontWeight: 600, fontStyle: 'italic', marginBottom: 14, lineHeight: 1.5 }}>"तुमचा सपोर्ट, माझं मोटिव्हेशन!"</p>
       <div style={{ position: 'relative', marginBottom: 12 }}>
-        <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', fontWeight: 700, fontSize: 14 }}>₹</span>
+        <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', fontWeight: 700, fontSize: 14 }}>Rs.</span>
         <input type="number" inputMode="decimal" value={amt} placeholder="रक्कम टाका"
           onChange={e => setAmt(e.target.value)}
-          style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, paddingLeft: 28, paddingRight: 12, paddingTop: 10, paddingBottom: 10, color: '#fff', fontWeight: 700, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+          style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, paddingLeft: 36, paddingRight: 12, paddingTop: 10, paddingBottom: 10, color: '#fff', fontWeight: 700, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
       </div>
       {parseFloat(currentAmt) > 0 ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -49,7 +49,7 @@ const SupportModule = ({ title }: { title: string }) => {
           </a>
           <button onClick={() => setHasPaid(true)}
             style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: 12, padding: '9px', color: '#10B981', fontWeight: 900, fontSize: 11, cursor: 'pointer' }}>
-            मी पेमेंट केले ✅
+            मी पेमेंट केले
           </button>
         </div>
       ) : (
@@ -72,6 +72,7 @@ const CSS = `
   @keyframes mt-pop { 0%{transform:scale(1)}45%{transform:scale(1.05)}100%{transform:scale(1)} }
   .mt-opt:hover:not([data-selected="true"]){background:rgba(255,255,255,0.06)!important;border-color:rgba(255,255,255,0.18)!important;transform:translateX(3px)}
   .mt-start:hover{transform:translateY(-2px);box-shadow:0 18px 48px rgba(249,115,22,0.45)!important}
+  .mt-back:hover{background:rgba(255,255,255,0.1)!important;}
 `;
 
 export function MockTestMode({ onBack }: MockTestModeProps) {
@@ -158,10 +159,16 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
               </div>
             ))}
           </div>
-          <button onClick={onBack}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'linear-gradient(135deg,#F97316,#EF4444)', border: 'none', borderRadius: 14, padding: '14px 28px', color: '#fff', fontWeight: 900, fontSize: 14, cursor: 'pointer', boxShadow: '0 8px 28px rgba(249,115,22,0.3)' }}>
-            <LayoutDashboard size={17} /> डॅशबोर्डवर जा
-          </button>
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+            <button onClick={onBack}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'linear-gradient(135deg,#F97316,#EF4444)', border: 'none', borderRadius: 14, padding: '14px 28px', color: '#fff', fontWeight: 900, fontSize: 14, cursor: 'pointer', boxShadow: '0 8px 28px rgba(249,115,22,0.3)' }}>
+              <LayoutDashboard size={17} /> डॅशबोर्डवर जा
+            </button>
+            <button onClick={() => { setIsFinished(false); setStatus('idle'); setQuestions([]); }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 14, padding: '14px 22px', color: '#fff', fontWeight: 900, fontSize: 14, cursor: 'pointer' }}>
+              पुन्हा द्या
+            </button>
+          </div>
         </div>
         <div style={{ maxWidth: 660, margin: '0 auto 28px' }}>
           <SupportModule title="ही चाचणी आवडली का? सपोर्ट करा" />
@@ -183,7 +190,7 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                       <span style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 8, padding: '3px 11px', fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.08em' }}>प्रश्न {idx + 1}</span>
                       <span style={{ fontSize: 11, fontWeight: 800, color: sc, background: `${sc}18`, border: `1px solid ${sc}30`, borderRadius: 99, padding: '3px 10px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                        {isSkipped ? '— सोडला' : isCorrect ? <><Check size={11} /> बरोबर</> : <><X size={11} /> चुकीचे</>}
+                        {isSkipped ? '- सोडला' : isCorrect ? <><Check size={11} /> बरोबर</> : <><X size={11} /> चुकीचे</>}
                       </span>
                     </div>
                     <p style={{ fontWeight: 700, fontSize: 13, lineHeight: 1.6, color: 'rgba(255,255,255,0.85)', marginBottom: 14 }}>{q.question}</p>
@@ -227,11 +234,10 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
     return (
       <div style={{ ...base }}>
         <style>{CSS}</style>
-        {/* Top bar */}
         <div style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(11,15,26,0.93)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.07)', padding: '11px 18px', display: 'flex', alignItems: 'center', gap: 10 }}>
           <button onClick={() => window.confirm('बाहेर पडायचे? Progress जाईल.') && onBack()}
             style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '7px 13px', color: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
-            <ArrowLeft size={13} /> Exit
+            <ArrowLeft size={13} /> डॅशबोर्ड
           </button>
           <div style={{ flex: 1, background: 'rgba(255,255,255,0.06)', borderRadius: 99, height: 5, overflow: 'hidden' }}>
             <div style={{ height: '100%', background: 'linear-gradient(90deg,#F97316,#FBBF24)', borderRadius: 99, width: `${(done / questions.length) * 100}%`, transition: 'width 0.4s ease' }} />
@@ -248,7 +254,6 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
         </div>
 
         <div style={{ maxWidth: 1080, margin: '0 auto', padding: '22px 14px 80px', display: 'flex', gap: 18, flexWrap: 'wrap' }}>
-          {/* Question */}
           <div style={{ flex: 1, minWidth: 270 }}>
             <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 26, padding: '28px 24px', display: 'flex', flexDirection: 'column', minHeight: 460, animation: 'mt-fade 0.22s ease' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22 }}>
@@ -289,7 +294,6 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
             </div>
           </div>
 
-          {/* Sidebar */}
           <div style={{ width: 250, flexShrink: 0 }}>
             <SupportModule title="आम्हाला सपोर्ट करा" />
             <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 22, padding: '18px 14px', position: 'sticky', top: 74 }}>
@@ -330,9 +334,16 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
       { id: 'Saralseva',        l: 'सरळसेवा',          s: '120 प्रश्न · 2 तास', c: '#F97316' },
     ];
     return (
-      <div style={{ ...base, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 16px' }}>
+      <div style={{ ...base, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 16px' }}>
         <style>{CSS}</style>
         <div style={{ width: '100%', maxWidth: 620, animation: 'mt-scale 0.4s cubic-bezier(.34,1.56,.64,1)' }}>
+
+          {/* Back to Dashboard */}
+          <button onClick={onBack} className="mt-back"
+            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '9px 16px', color: 'rgba(255,255,255,0.55)', fontWeight: 800, fontSize: 12, cursor: 'pointer', marginBottom: 24, transition: 'all 0.15s' }}>
+            <ArrowLeft size={13} /> डॅशबोर्ड
+          </button>
+
           <div style={{ textAlign: 'center', marginBottom: 32 }}>
             <div style={{ width: 70, height: 70, borderRadius: '50%', background: 'rgba(249,115,22,0.14)', border: '1px solid rgba(249,115,22,0.28)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px', animation: 'mt-glow 2s infinite' }}>
               <Target size={30} style={{ color: '#F97316' }} />
@@ -379,10 +390,16 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
       <style>{CSS}</style>
       <AlertCircle size={44} style={{ color: '#EF4444' }} />
       <div style={{ fontWeight: 900, fontSize: 17 }}>डेटा लोड होऊ शकला नाही!</div>
-      <button onClick={() => setStatus('idle')}
-        style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.13)', borderRadius: 11, padding: '9px 22px', color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>
-        परत जा
-      </button>
+      <div style={{ display: 'flex', gap: 10 }}>
+        <button onClick={() => setStatus('idle')}
+          style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.13)', borderRadius: 11, padding: '9px 22px', color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>
+          परत जा
+        </button>
+        <button onClick={onBack}
+          style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.25)', borderRadius: 11, padding: '9px 22px', color: '#F97316', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>
+          <ArrowLeft size={13} /> डॅशबोर्ड
+        </button>
+      </div>
     </div>
   );
 
