@@ -129,7 +129,6 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
     fontFamily: "'Poppins','Noto Sans Devanagari',sans-serif", color: '#fff',
   };
 
-  // RESULT
   if (isFinished && questions.length > 0) {
     const score = userAnswers.filter((a, i) => questions[i] && a === questions[i].correctAnswerIndex).length;
     const attempted = userAnswers.filter(a => a !== -1).length;
@@ -225,7 +224,6 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
     );
   }
 
-  // ACTIVE TEST
   if (status === 'success' && questions.length > 0) {
     const done = userAnswers.filter(a => a !== -1).length;
     const warn = timeLeft < 300;
@@ -325,20 +323,18 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
     );
   }
 
-  // SELECTION
   if (status === 'idle') {
     const TYPES = [
-      { id: 'Rajyaseva',        l: 'राज्यसेवा',        s: '100 प्रश्न · 2 तास', c: '#3B82F6' },
+      { id: 'Rajyaseva',         l: 'राज्यसेवा',         s: '100 प्रश्न · 2 तास', c: '#3B82F6' },
       { id: 'Combined Group B', l: 'Combined Group B', s: '100 प्रश्न · 2 तास', c: '#10B981' },
       { id: 'Combined Group C', l: 'Combined Group C', s: '100 प्रश्न · 2 तास', c: '#06B6D4' },
-      { id: 'Saralseva',        l: 'सरळसेवा',          s: '120 प्रश्न · 2 तास', c: '#F97316' },
+      { id: 'Saralseva',         l: 'सरळसेवा',           s: '120 प्रश्न · 2 तास', c: '#F97316' },
     ];
     return (
       <div style={{ ...base, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 16px' }}>
         <style>{CSS}</style>
         <div style={{ width: '100%', maxWidth: 620, animation: 'mt-scale 0.4s cubic-bezier(.34,1.56,.64,1)' }}>
 
-          {/* Back to Dashboard */}
           <button onClick={onBack} className="mt-back"
             style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '9px 16px', color: 'rgba(255,255,255,0.55)', fontWeight: 800, fontSize: 12, cursor: 'pointer', marginBottom: 24, transition: 'all 0.15s' }}>
             <ArrowLeft size={13} /> डॅशबोर्ड
@@ -375,7 +371,6 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
     );
   }
 
-  // LOADING
   if (status === 'loading') return (
     <div style={{ ...base, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 18 }}>
       <style>{CSS}</style>
@@ -384,7 +379,6 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
     </div>
   );
 
-  // ERROR
   if (status === 'error') return (
     <div style={{ ...base, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, padding: 32 }}>
       <style>{CSS}</style>
