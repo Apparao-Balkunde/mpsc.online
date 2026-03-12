@@ -325,10 +325,10 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
 
   if (status === 'idle') {
     const TYPES = [
-      { id: 'Rajyaseva',         l: 'राज्यसेवा',         s: '100 प्रश्न · 2 तास', c: '#3B82F6' },
+      { id: 'Rajyaseva',         l: 'राज्यसेवा',          s: '100 प्रश्न · 2 तास', c: '#3B82F6' },
       { id: 'Combined Group B', l: 'Combined Group B', s: '100 प्रश्न · 2 तास', c: '#10B981' },
       { id: 'Combined Group C', l: 'Combined Group C', s: '100 प्रश्न · 2 तास', c: '#06B6D4' },
-      { id: 'Saralseva',         l: 'सरळसेवा',           s: '120 प्रश्न · 2 तास', c: '#F97316' },
+      { id: 'Saralseva',         l: 'सरळसेवा',            s: '120 प्रश्न · 2 तास', c: '#F97316' },
     ];
     return (
       <div style={{ ...base, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 16px' }}>
