@@ -1,222 +1,195 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { QuizQuestion, VocabWord, SavedNote } from '../types';
-import { getProgress, toggleQuestionBookmark, toggleVocabBookmark, removeNote, exportLibrary, importLibrary } from '../services/progress';
-import { Bookmark, ArrowLeft, Trash2, Eye, BookA, FileText, GraduationCap, Clock, Download, Upload, Check } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
+import React, { useState, useEffect, useCallback } from 'react';
+import { ArrowLeft, Bookmark, BookmarkX, CheckCircle2, XCircle, Check, X, BookOpen, Trash2, RefreshCcw } from 'lucide-react';
+import { getBookmarks, removeBookmark, type Bookmark as BM } from '../services/bookmarks';
+import { updateProgress } from '../App';
 
-interface BookmarksModeProps {
-  onBack: () => void;
-}
+const CSS = `
+  @keyframes bm-fade { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes bm-pop  { 0%{transform:scale(1)} 45%{transform:scale(1.04)} 100%{transform:scale(1)} }
+  @keyframes bm-out  { from{opacity:1;transform:scale(1)} to{opacity:0;transform:scale(0.9)} }
+  .bm-opt:hover:not([data-locked="true"]){background:rgba(255,255,255,0.07)!important;border-color:rgba(255,255,255,0.2)!important;transform:translateX(3px)}
+  .bm-del:hover{background:rgba(239,68,68,0.15)!important;border-color:rgba(239,68,68,0.4)!important;color:#EF4444!important}
+`;
 
-type BookmarkTab = 'QUESTIONS' | 'VOCAB' | 'NOTES';
+export const BookmarkMode: React.FC<{ onBack: () => void }> = ({ onBack }) => {
+  const [bookmarks, setBookmarks]   = useState<BM[]>([]);
+  const [answers, setAnswers]       = useState<Record<number, number>>({});
+  const [score, setScore]           = useState(0);
+  const [attempted, setAttempted]   = useState(0);
+  const [filter, setFilter]         = useState<'all' | 'unanswered' | 'wrong'>('all');
+  const [removing, setRemoving]     = useState<number | null>(null);
 
-export const BookmarksMode: React.FC<BookmarksModeProps> = ({ onBack }) => {
-  const [activeTab, setActiveTab] = useState<BookmarkTab>('QUESTIONS');
-  const [bookmarks, setBookmarks] = useState(getProgress().bookmarks);
-  const [revealedAnswers, setRevealedAnswers] = useState<number[]>([]);
-  const [showImportSuccess, setShowImportSuccess] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const load = useCallback(() => setBookmarks(getBookmarks()), []);
+  useEffect(() => { load(); }, [load]);
 
-  useEffect(() => {
-    setBookmarks(getProgress().bookmarks);
-  }, []);
-
-  const refresh = () => setBookmarks(getProgress().bookmarks);
-
-  const handleRemoveQuestion = (q: QuizQuestion) => {
-    toggleQuestionBookmark(q);
-    refresh();
+  const handleAnswer = (id: number, optIdx: number, correctIdx: number) => {
+    if (answers[id] !== undefined) return;
+    const correct = optIdx === correctIdx;
+    setAnswers(p => ({ ...p, [id]: optIdx }));
+    if (correct) setScore(p => p + 1);
+    setAttempted(p => p + 1);
+    updateProgress(1, correct ? 1 : 0);
   };
 
-  const handleRemoveVocab = (v: VocabWord) => {
-    toggleVocabBookmark(v);
-    refresh();
+  const handleRemove = (id: number) => {
+    setRemoving(id);
+    setTimeout(() => { removeBookmark(id); setRemoving(null); load(); }, 350);
   };
 
-  const handleRemoveNote = (id: string) => {
-    removeNote(id);
-    refresh();
+  const clearAll = () => {
+    if (!window.confirm(`सर्व ${bookmarks.length} bookmarks delete करायचे?`)) return;
+    bookmarks.forEach(b => removeBookmark(b.id));
+    load();
   };
 
-  const toggleReveal = (index: number) => {
-    setRevealedAnswers(prev => prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]);
-  };
+  const resetSession = () => { setAnswers({}); setScore(0); setAttempted(0); };
 
-  const handleExport = () => exportLibrary();
+  const accuracy = attempted > 0 ? Math.round((score / attempted) * 100) : 0;
 
-  const handleImportClick = () => fileInputRef.current?.click();
+  const filtered = filter === 'unanswered'
+    ? bookmarks.filter(b => answers[b.id] === undefined)
+    : filter === 'wrong'
+    ? bookmarks.filter(b => answers[b.id] !== undefined && answers[b.id] !== b.correct_answer_index)
+    : bookmarks;
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const content = event.target?.result as string;
-      const success = importLibrary(content);
-      if (success) {
-        refresh();
-        setShowImportSuccess(true);
-        setTimeout(() => setShowImportSuccess(false), 3000);
-      } else {
-        alert("Invalid backup file.");
-      }
-    };
-    reader.readAsText(file);
-    e.target.value = ''; 
+  const base: React.CSSProperties = {
+    minHeight:'100vh', background:'#0B0F1A',
+    fontFamily:"'Poppins','Noto Sans Devanagari',sans-serif", color:'#fff',
+    padding:'16px 16px 80px',
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-4 md:p-6 space-y-6">
-      {/* Navigation Header */}
-      <div className="flex justify-between items-center">
-        <button onClick={onBack} className="flex items-center text-slate-500 hover:text-indigo-600 transition-colors font-semibold">
-          <ArrowLeft size={16} className="mr-2" /> Back to Dashboard
-        </button>
-        <div className="flex gap-2">
-            <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".json" className="hidden" />
-            <button onClick={handleImportClick} className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-50 transition-all shadow-sm">
-                <Upload size={14} /> Restore Backup
-            </button>
-            <button onClick={handleExport} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition-all shadow-sm">
-                <Download size={14} /> Download Backup
-            </button>
-        </div>
-      </div>
+    <div style={base}>
+      <style>{CSS}</style>
+      <div style={{ maxWidth:800, margin:'0 auto' }}>
 
-      {showImportSuccess && (
-          <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-2xl flex items-center gap-3 text-emerald-700 animate-in fade-in slide-in-from-top-4">
-              <Check className="bg-emerald-500 text-white rounded-full p-0.5" size={18} />
-              <span className="font-bold text-sm">Library restored successfully!</span>
-          </div>
-      )}
-
-      {/* Main Branding Header */}
-      <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden mb-6">
-        <div className="p-8 bg-indigo-700 text-white relative">
-          <div className="absolute top-0 right-0 p-8 opacity-10">
-            <Bookmark size={120} fill="currentColor" />
-          </div>
-          <h2 className="text-3xl font-black mb-2 flex items-center gap-3">
-            <Bookmark fill="currentColor" className="text-yellow-400" />
-            Study Library
-          </h2>
-          <p className="text-indigo-100 font-medium opacity-90">Access your saved questions, vocabulary, and hand-crafted study notes offline.</p>
-        </div>
-        
-        {/* Tab Navigation */}
-        <div className="flex border-b border-slate-100 bg-slate-50/50">
-          {(['QUESTIONS', 'VOCAB', 'NOTES'] as BookmarkTab[]).map(tab => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`flex-1 py-4 text-xs font-black uppercase tracking-widest border-b-4 transition-all ${activeTab === tab ? 'border-indigo-600 text-indigo-700 bg-white' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
-            >
-              {tab === 'QUESTIONS' && `Questions (${bookmarks.questions.length})`}
-              {tab === 'VOCAB' && `Vocabulary (${bookmarks.vocab.length})`}
-              {tab === 'NOTES' && `Study Notes (${bookmarks.notes.length})`}
+        {/* Header */}
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20, flexWrap:'wrap', gap:10 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+            <button onClick={onBack}
+              style={{ display:'flex', alignItems:'center', gap:6, background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:10, padding:'8px 14px', color:'rgba(255,255,255,0.55)', fontWeight:800, fontSize:12, cursor:'pointer' }}>
+              <ArrowLeft size={14} /> परत
             </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Content Area */}
-      <div className="space-y-6 animate-in fade-in duration-500">
-        {activeTab === 'QUESTIONS' && (
-          bookmarks.questions.length === 0 ? (
-            <EmptyState icon={<Bookmark size={48} />} title="No saved questions" desc="Bookmark important PYQs to see them here." />
-          ) : (
-            bookmarks.questions.map((q, idx) => (
-              <div key={idx} className="bg-white rounded-3xl shadow-lg border border-slate-100 p-8 group relative hover:border-indigo-200 transition-colors">
-                 <div className="flex justify-between items-start mb-6">
-                    <div className="flex gap-4">
-                        <span className="bg-indigo-50 text-indigo-600 w-8 h-8 rounded-xl flex items-center justify-center font-black text-sm shrink-0">{idx + 1}</span>
-                        <h4 className="text-xl font-bold text-slate-900 leading-relaxed">{q.question}</h4>
-                    </div>
-                    <button onClick={() => handleRemoveQuestion(q)} className="text-slate-300 hover:text-red-500 transition-colors"><Trash2 size={20}/></button>
-                 </div>
-                 <div className="ml-12 grid md:grid-cols-2 gap-3 mb-6">
-                    {q.options.map((opt, oIdx) => (
-                      <div key={oIdx} className={`p-4 rounded-2xl border-2 text-sm font-medium ${oIdx === q.correctAnswerIndex ? 'border-emerald-100 bg-emerald-50 text-emerald-800' : 'border-slate-50 text-slate-400'}`}>
-                        <span className="font-black mr-2 opacity-30">{String.fromCharCode(65 + oIdx)}</span>
-                        {opt}
-                      </div>
-                    ))}
-                 </div>
-                 <div className="ml-12">
-                    <button onClick={() => toggleReveal(idx)} className="text-indigo-600 font-bold text-sm flex items-center gap-2 hover:underline">
-                      <Eye size={16} /> {revealedAnswers.includes(idx) ? 'Hide Explanation' : 'Show Explanation'}
-                    </button>
-                    {revealedAnswers.includes(idx) && (
-                      <div className="mt-4 p-6 bg-slate-50 rounded-2xl border border-slate-200 animate-in slide-in-from-top-2">
-                        <div className="prose prose-sm font-medium text-slate-700">
-                          <ReactMarkdown>{q.explanation}</ReactMarkdown>
-                        </div>
-                      </div>
-                    )}
-                 </div>
+            <div>
+              <div style={{ fontWeight:900, fontSize:18, letterSpacing:'-0.03em', display:'flex', alignItems:'center', gap:7 }}>
+                <Bookmark size={18} style={{ color:'#F59E0B' }} /> Bookmarks
               </div>
-            ))
-          )
-        )}
-
-        {/* ... Similar clean-up for VOCAB and NOTES sections ... */}
-        {activeTab === 'VOCAB' && (
-           bookmarks.vocab.length === 0 ? (
-            <EmptyState icon={<BookA size={48} />} title="No saved words" desc="Keep track of difficult Marathi or English terms." />
-           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-               {bookmarks.vocab.map((v, idx) => (
-                 <div key={idx} className="bg-white rounded-3xl shadow-lg border border-slate-100 p-8 relative hover:border-indigo-200 transition-colors">
-                   <button onClick={() => handleRemoveVocab(v)} className="absolute top-6 right-6 text-slate-300 hover:text-red-500"><Trash2 size={18}/></button>
-                   <h3 className="text-2xl font-black text-indigo-900 mb-2">{v.word}</h3>
-                   <span className="inline-block px-2 py-0.5 rounded text-[10px] font-black uppercase bg-slate-100 text-slate-500 mb-4">{v.type}</span>
-                   <p className="text-slate-800 font-bold text-lg mb-4">{v.meaning}</p>
-                   <div className="p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100">
-                     <p className="text-sm italic text-slate-600 font-serif leading-relaxed">"{v.usage}"</p>
-                   </div>
-                 </div>
-               ))}
+              <div style={{ fontSize:10, color:'rgba(255,255,255,0.3)', fontWeight:700, marginTop:1 }}>
+                {bookmarks.length} जतन केलेले प्रश्न
+              </div>
             </div>
-           )
+          </div>
+
+          <div style={{ display:'flex', gap:8 }}>
+            {attempted > 0 && (
+              <div style={{ display:'flex', alignItems:'center', gap:6, background:'rgba(16,185,129,0.14)', border:'1px solid rgba(16,185,129,0.28)', borderRadius:10, padding:'7px 12px', fontWeight:900, fontSize:13, color:'#10B981' }}>
+                ✓ {score}/{attempted} · {accuracy}%
+              </div>
+            )}
+            {attempted > 0 && (
+              <button onClick={resetSession}
+                style={{ background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:10, padding:'7px 10px', color:'rgba(255,255,255,0.4)', cursor:'pointer', display:'flex', alignItems:'center' }}>
+                <RefreshCcw size={14} />
+              </button>
+            )}
+            {bookmarks.length > 0 && (
+              <button onClick={clearAll} className="bm-del"
+                style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:10, padding:'7px 12px', color:'rgba(255,255,255,0.35)', cursor:'pointer', display:'flex', alignItems:'center', gap:5, fontSize:11, fontWeight:800, transition:'all 0.15s' }}>
+                <Trash2 size={13} /> Clear All
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Filter tabs */}
+        {bookmarks.length > 0 && (
+          <div style={{ display:'flex', gap:6, marginBottom:16 }}>
+            {(['all', 'unanswered', 'wrong'] as const).map(f => (
+              <button key={f} onClick={() => setFilter(f)}
+                style={{ padding:'6px 14px', borderRadius:99, fontSize:11, fontWeight:800, cursor:'pointer', border:'none', background: filter===f ? 'rgba(245,158,11,0.2)' : 'rgba(255,255,255,0.05)', color: filter===f ? '#F59E0B' : 'rgba(255,255,255,0.35)', transition:'all 0.15s' }}>
+                {f === 'all' ? `सर्व (${bookmarks.length})` : f === 'unanswered' ? `न सोडवलेले (${bookmarks.filter(b => answers[b.id] === undefined).length})` : `चुकीचे (${bookmarks.filter(b => answers[b.id] !== undefined && answers[b.id] !== b.correct_answer_index).length})`}
+              </button>
+            ))}
+          </div>
         )}
 
-        {activeTab === 'NOTES' && (
-          bookmarks.notes.length === 0 ? (
-            <EmptyState icon={<FileText size={48} />} title="No study notes" desc="Save summaries and important topics here." />
-          ) : (
-            bookmarks.notes.map((note) => (
-              <div key={note.id} className="bg-white rounded-3xl shadow-lg border border-slate-100 overflow-hidden group mb-6">
-                <div className="p-6 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
-                   <div className="flex items-center gap-3">
-                      <div className="p-2 bg-indigo-600 text-white rounded-xl"><GraduationCap size={20}/></div>
-                      <div>
-                        <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">{note.subject}</span>
-                        <h4 className="font-black text-lg text-slate-900">{note.topic}</h4>
+        {/* Empty */}
+        {bookmarks.length === 0 && (
+          <div style={{ textAlign:'center', padding:'80px 20px', background:'rgba(255,255,255,0.02)', border:'1px dashed rgba(255,255,255,0.07)', borderRadius:22 }}>
+            <div style={{ fontSize:48, marginBottom:12 }}>🔖</div>
+            <div style={{ fontWeight:800, fontSize:15, marginBottom:6 }}>अजून Bookmark नाही</div>
+            <div style={{ fontSize:12, color:'rgba(255,255,255,0.35)', fontWeight:600 }}>प्रश्न सोडवताना 🔖 बटण दाबा</div>
+          </div>
+        )}
+
+        {/* Question list */}
+        <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+          {filtered.map((item, idx) => {
+            const hasAnswered = answers[item.id] !== undefined;
+            const isCorrect = hasAnswered && answers[item.id] === item.correct_answer_index;
+            const isRemoving = removing === item.id;
+
+            return (
+              <div key={item.id}
+                style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:22, overflow:'hidden', animation: isRemoving ? 'bm-out 0.35s ease forwards' : `bm-fade 0.2s ease ${idx * 0.02}s both` }}>
+
+                <div style={{ height:2, background: !hasAnswered ? 'rgba(245,158,11,0.5)' : isCorrect ? '#10B981' : '#EF4444' }} />
+
+                <div style={{ padding:'18px 20px' }}>
+                  {/* Meta row */}
+                  <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:12, flexWrap:'wrap' }}>
+                    {item.year && <span style={{ fontSize:9, fontWeight:800, background:'rgba(249,115,22,0.12)', border:'1px solid rgba(249,115,22,0.22)', borderRadius:99, padding:'3px 9px', color:'#F97316', textTransform:'uppercase' }}>{item.year}</span>}
+                    {item.exam_name && <span style={{ fontSize:9, fontWeight:800, background:'rgba(59,130,246,0.12)', border:'1px solid rgba(59,130,246,0.22)', borderRadius:99, padding:'3px 9px', color:'#60A5FA', textTransform:'uppercase' }}>{item.exam_name}</span>}
+                    {item.subject && <span style={{ fontSize:9, fontWeight:800, background:'rgba(139,92,246,0.12)', border:'1px solid rgba(139,92,246,0.22)', borderRadius:99, padding:'3px 9px', color:'#A78BFA', textTransform:'uppercase' }}>{item.subject}</span>}
+                    <span style={{ marginLeft:'auto', fontSize:9, fontWeight:700, color:'rgba(255,255,255,0.2)', display:'flex', alignItems:'center', gap:4 }}>
+                      <Bookmark size={10} style={{ color:'#F59E0B' }} />
+                      {new Date(item.savedAt).toLocaleDateString('mr-IN')}
+                    </span>
+                    <button onClick={() => handleRemove(item.id)} className="bm-del"
+                      style={{ background:'transparent', border:'none', padding:'3px 5px', cursor:'pointer', color:'rgba(255,255,255,0.2)', display:'flex', alignItems:'center', transition:'all 0.15s', borderRadius:6 }}>
+                      <BookmarkX size={14} />
+                    </button>
+                  </div>
+
+                  <p style={{ fontWeight:700, fontSize:13, lineHeight:1.6, color:'rgba(255,255,255,0.85)', marginBottom:14 }}>{item.question}</p>
+
+                  {/* Options */}
+                  <div style={{ display:'flex', flexDirection:'column', gap:7, marginBottom: hasAnswered && item.explanation ? 12 : 0 }}>
+                    {(item.options || []).map((opt, i) => {
+                      const isSel = answers[item.id] === i;
+                      const isAns = i === item.correct_answer_index;
+                      let bg='rgba(255,255,255,0.03)',border='rgba(255,255,255,0.07)',color='rgba(255,255,255,0.65)',bdgBg='rgba(255,255,255,0.07)',bdgCol='rgba(255,255,255,0.35)';
+                      if (hasAnswered && isAns)              { bg='rgba(16,185,129,0.12)'; border='rgba(16,185,129,0.35)'; color='#fff'; bdgBg='#10B981'; bdgCol='#fff'; }
+                      else if (hasAnswered && isSel && !isAns){ bg='rgba(239,68,68,0.1)'; border='rgba(239,68,68,0.3)'; color='rgba(255,255,255,0.5)'; bdgBg='#EF4444'; bdgCol='#fff'; }
+                      else if (hasAnswered)                  { color='rgba(255,255,255,0.22)'; }
+                      return (
+                        <button key={i} className="bm-opt" data-locked={hasAnswered ? 'true' : 'false'}
+                          onClick={() => handleAnswer(item.id, i, item.correct_answer_index)}
+                          style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 13px', borderRadius:11, border:`1.5px solid ${border}`, background:bg, color, fontWeight:700, fontSize:12, textAlign:'left', cursor:hasAnswered?'default':'pointer', transition:'all 0.15s ease' }}>
+                          <span style={{ width:24, height:24, borderRadius:7, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:900, background:bdgBg, color:bdgCol }}>
+                            {hasAnswered && isAns ? <Check size={12} /> : hasAnswered && isSel && !isAns ? <X size={12} /> : String.fromCharCode(65+i)}
+                          </span>
+                          <span style={{ flex:1 }}>{opt}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Explanation */}
+                  {hasAnswered && item.explanation && (
+                    <div style={{ background:'rgba(249,115,22,0.07)', border:'1px solid rgba(249,115,22,0.18)', borderRadius:13, padding:'11px 13px', animation:'bm-fade 0.25s ease' }}>
+                      <div style={{ fontSize:9, fontWeight:800, color:'#F97316', textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:5, display:'flex', alignItems:'center', gap:4 }}>
+                        <BookOpen size={10} /> स्पष्टीकरण
                       </div>
-                   </div>
-                   <div className="flex items-center gap-4">
-                      <span className="text-[10px] text-slate-400 font-bold flex items-center gap-1 uppercase"><Clock size={12}/> {new Date(note.createdAt).toLocaleDateString()}</span>
-                      <button onClick={() => handleRemoveNote(note.id)} className="text-slate-300 hover:text-red-500 transition-colors"><Trash2 size={20}/></button>
-                   </div>
-                </div>
-                <div className="p-10 prose prose-slate max-w-none">
-                  <ReactMarkdown>{note.content}</ReactMarkdown>
+                      <p style={{ fontSize:11, color:'rgba(255,255,255,0.5)', lineHeight:1.65, fontWeight:500, fontStyle:'italic', margin:0 }}>{item.explanation}</p>
+                    </div>
+                  )}
                 </div>
               </div>
-            ))
-          )
-        )}
+            );
+          })}
+        </div>
       </div>
     </div>
   );
 };
-
-/* Helper Component for Empty States */
-const EmptyState = ({ icon, title, desc }: { icon: React.ReactNode, title: string, desc: string }) => (
-    <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200">
-        <div className="mx-auto text-slate-200 mb-4 flex justify-center">{icon}</div>
-        <p className="text-slate-500 font-bold">{title}</p>
-        <p className="text-slate-400 text-sm mt-1">{desc}</p>
-    </div>
-);
