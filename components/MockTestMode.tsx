@@ -267,4 +267,128 @@ export function MockTestMode({ onBack }: MockTestModeProps) {
                     <button key={i} className="mt-opt" data-selected={sel ? 'true' : 'false'}
                       onClick={() => { const n = [...userAnswers]; n[currentIdx] = i; setUserAnswers(n); }}
                       style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '13px 16px', borderRadius: 13, border: `1.5px solid ${sel ? 'rgba(249,115,22,0.55)' : 'rgba(255,255,255,0.07)'}`, background: sel ? 'rgba(249,115,22,0.11)' : 'rgba(255,255,255,0.03)', color: sel ? '#fff' : 'rgba(255,255,255,0.62)', fontWeight: 700, fontSize: 13, textAlign: 'left', cursor: 'pointer', transition: 'all 0.16s ease', animation: sel ? 'mt-pop 0.22s ease' : 'none' }}>
-                      <span style={{ width: 28, height: 28, borderRadius: 8, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900, background: sel ? '#F97316' : 'rgba(255,255,255,0.07)', color: sel ? '#fff
+                      <span style={{ width: 28, height: 28, borderRadius: 8, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900, background: sel ? '#F97316' : 'rgba(255,255,255,0.07)', color: sel ? '#fff' : 'rgba(255,255,255,0.38)', transition: 'all 0.16s' }}>
+                        {String.fromCharCode(65 + i)}
+                      </span>
+                      <span style={{ flex: 1 }}>{opt}</span>
+                      {sel && <CheckCircle2 size={15} style={{ color: '#F97316', flexShrink: 0 }} />}
+                    </button>
+                  );
+                })}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 24, paddingTop: 18, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                <button disabled={currentIdx === 0} onClick={() => setCurrentIdx(p => p - 1)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 11, padding: '9px 16px', color: 'rgba(255,255,255,0.38)', fontWeight: 800, fontSize: 12, cursor: currentIdx === 0 ? 'not-allowed' : 'pointer', opacity: currentIdx === 0 ? 0.3 : 1 }}>
+                  <ChevronLeft size={15} /> मागे
+                </button>
+                <button onClick={() => currentIdx === questions.length - 1 ? (window.confirm('सबमिट करायची का?') && finishTest()) : setCurrentIdx(p => p + 1)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'linear-gradient(135deg,#F97316,#EF4444)', border: 'none', borderRadius: 11, padding: '11px 22px', color: '#fff', fontWeight: 900, fontSize: 13, cursor: 'pointer', boxShadow: '0 5px 18px rgba(249,115,22,0.22)' }}>
+                  {currentIdx === questions.length - 1 ? <><Send size={14} /> निकाल पहा</> : <>पुढे <ChevronRight size={15} /></>}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Sidebar */}
+          <div style={{ width: 250, flexShrink: 0 }}>
+            <SupportModule title="आम्हाला सपोर्ट करा" />
+            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 22, padding: '18px 14px', position: 'sticky', top: 74 }}>
+              <div style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.28)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>प्रश्नावली · {testType}</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 5, maxHeight: '52vh', overflowY: 'auto' }}>
+                {questions.map((_, i) => {
+                  const isDone = userAnswers[i] !== -1;
+                  const isActive = i === currentIdx;
+                  return (
+                    <button key={i} onClick={() => setCurrentIdx(i)}
+                      style={{ height: 34, borderRadius: 9, fontSize: 10, fontWeight: 800, cursor: 'pointer', border: 'none', transition: 'all 0.14s', background: isActive ? '#F97316' : isDone ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.05)', color: isActive ? '#fff' : isDone ? '#10B981' : 'rgba(255,255,255,0.22)', transform: isActive ? 'scale(1.12)' : 'none', boxShadow: isActive ? '0 4px 12px rgba(249,115,22,0.32)' : 'none' }}>
+                      {i + 1}
+                    </button>
+                  );
+                })}
+              </div>
+              <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 5 }}>
+                {[{ c: '#F97316', l: 'सध्याचा' }, { c: '#10B981', l: 'उत्तर दिले' }, { c: 'rgba(255,255,255,0.1)', l: 'बाकी' }].map(({ c, l }) => (
+                  <div key={l} style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                    <div style={{ width: 9, height: 9, borderRadius: 3, background: c, flexShrink: 0 }} />
+                    <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.28)' }}>{l}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // SELECTION
+  if (status === 'idle') {
+    const TYPES = [
+      { id: 'Rajyaseva',        l: 'राज्यसेवा',        s: '100 प्रश्न · 2 तास', c: '#3B82F6' },
+      { id: 'Combined Group B', l: 'Combined Group B', s: '100 प्रश्न · 2 तास', c: '#10B981' },
+      { id: 'Combined Group C', l: 'Combined Group C', s: '100 प्रश्न · 2 तास', c: '#06B6D4' },
+      { id: 'Saralseva',        l: 'सरळसेवा',          s: '120 प्रश्न · 2 तास', c: '#F97316' },
+    ];
+    return (
+      <div style={{ ...base, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 16px' }}>
+        <style>{CSS}</style>
+        <button onClick={onBack}
+           style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '9px 16px', color: 'rgba(255,255,255,0.5)', fontWeight: 800, fontSize: 12, cursor: 'pointer', marginBottom: 24 }}>
+           <ArrowLeft size={13} /> डॅशबोर्ड
+        </button>
+        <div style={{ width: '100%', maxWidth: 620, animation: 'mt-scale 0.4s cubic-bezier(.34,1.56,.64,1)' }}>
+          <div style={{ textAlign: 'center', marginBottom: 32 }}>
+            <div style={{ width: 70, height: 70, borderRadius: '50%', background: 'rgba(249,115,22,0.14)', border: '1px solid rgba(249,115,22,0.28)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px', animation: 'mt-glow 2s infinite' }}>
+              <Target size={30} style={{ color: '#F97316' }} />
+            </div>
+            <h2 style={{ fontWeight: 900, fontSize: 'clamp(1.5rem,5vw,2.1rem)', letterSpacing: '-0.04em', margin: '0 0 7px' }}>सराव परीक्षा निवडा</h2>
+            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.38)', fontWeight: 600 }}>परीक्षा प्रकार निवडा आणि सुरू करा</p>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 22 }}>
+            {TYPES.map(({ id, l, s, c }) => {
+              const sel = testType === id;
+              return (
+                <button key={id} onClick={() => setTestType(id)}
+                  style={{ padding: '18px 16px', borderRadius: 18, border: `1.5px solid ${sel ? c + '55' : 'rgba(255,255,255,0.07)'}`, background: sel ? `${c}12` : 'rgba(255,255,255,0.03)', textAlign: 'left', cursor: 'pointer', transition: 'all 0.18s', position: 'relative', overflow: 'hidden' }}>
+                  {sel && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: c }} />}
+                  <div style={{ fontWeight: 900, fontSize: 14, color: sel ? '#fff' : 'rgba(255,255,255,0.55)', marginBottom: 3 }}>{l}</div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: sel ? c : 'rgba(255,255,255,0.22)' }}>{s}</div>
+                  {sel && <CheckCircle2 size={16} style={{ color: c, position: 'absolute', top: 12, right: 12 }} />}
+                </button>
+              );
+            })}
+          </div>
+          <SupportModule title="तुम्ही सपोर्ट करू इच्छिता?" />
+          <button onClick={startTest} className="mt-start"
+            style={{ width: '100%', background: 'linear-gradient(135deg,#F97316,#EF4444)', border: 'none', borderRadius: 16, padding: '17px', color: '#fff', fontWeight: 900, fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, boxShadow: '0 10px 36px rgba(249,115,22,0.32)', letterSpacing: '-0.02em', transition: 'all 0.2s ease' }}>
+            <Zap size={19} fill="currentColor" /> चाचणी सुरू करा
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // LOADING
+  if (status === 'loading') return (
+    <div style={{ ...base, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 18 }}>
+      <style>{CSS}</style>
+      <div style={{ width: 52, height: 52, border: '3px solid rgba(249,115,22,0.18)', borderTopColor: '#F97316', borderRadius: '50%', animation: 'mt-spin 0.8s linear infinite' }} />
+      <div style={{ fontSize: 12, fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>प्रश्न तयार होत आहेत...</div>
+    </div>
+  );
+
+  // ERROR
+  if (status === 'error') return (
+    <div style={{ ...base, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, padding: 32 }}>
+      <style>{CSS}</style>
+      <AlertCircle size={44} style={{ color: '#EF4444' }} />
+      <div style={{ fontWeight: 900, fontSize: 17 }}>डेटा लोड होऊ शकला नाही!</div>
+      <button onClick={() => setStatus('idle')}
+        style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.13)', borderRadius: 11, padding: '9px 22px', color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>
+        परत जा
+      </button>
+    </div>
+  );
+
+  return null;
+}
