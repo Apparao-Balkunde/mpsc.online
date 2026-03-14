@@ -124,7 +124,7 @@ export const ProgressDashboard: React.FC<Props> = ({ onClose }) => {
 
   const base: React.CSSProperties = {
     position:'fixed', inset:0, zIndex:100,
-    background:'rgba(0,0,0,0.75)', backdropFilter:'blur(8px)',
+    background:'rgba(30,20,80,0.78)', backdropFilter:'blur(8px)',
     display:'flex', alignItems:'center', justifyContent:'center', padding:'16px',
   };
 
