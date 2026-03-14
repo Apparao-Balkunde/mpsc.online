@@ -174,8 +174,8 @@ export const SpardhaYodha: React.FC<Props> = ({ onBack }) => {
   const shareText = `⚔️ स्पर्धा योद्धा!\n\nमी MPSC सारथी वर ${score}/${TOTAL_Q} गुण मिळवले!\nRank: ${rank.emoji} ${rank.title} (${pct}%)\nMax Combo: ${maxCombo}x\n\n🔗 mpscsarathi.online`;
 
   const base: React.CSSProperties = {
-    minHeight:'100vh', background:'#F8F5F0',
-    fontFamily:"'Poppins','Noto Sans Devanagari',sans-serif", color:'#1C1917',
+    minHeight:'100vh', background:'#F3EFFE',
+    fontFamily:"'Poppins','Noto Sans Devanagari',sans-serif", color:'#2D1E6E',
   };
 
   // INTRO
@@ -193,20 +193,20 @@ export const SpardhaYodha: React.FC<Props> = ({ onBack }) => {
       ))}
 
       <button onClick={onBack}
-        style={{ position:'absolute', top:20, left:20, display:'flex', alignItems:'center', gap:6, background:'rgba(0,0,0,0.06)', border:'1px solid rgba(0,0,0,0.1)', borderRadius:12, padding:'8px 14px', color:'#78716C', fontWeight:800, fontSize:12, cursor:'pointer', zIndex:10 }}>
+        style={{ position:'absolute', top:20, left:20, display:'flex', alignItems:'center', gap:6, background:'rgba(99,79,192,0.08)', border:'1px solid rgba(99,79,192,0.12)', borderRadius:12, padding:'8px 14px', color:'#5B4FCF', fontWeight:800, fontSize:12, cursor:'pointer', zIndex:10 }}>
         <ArrowLeft size={13} /> परत
       </button>
 
       {/* Sword */}
       <div style={{ fontSize:80, animation:'sy-float 3s ease-in-out infinite', position:'relative', zIndex:2, marginBottom:12 }}>⚔️</div>
 
-      <h1 style={{ fontWeight:900, fontSize:'clamp(2.2rem,8vw,3.5rem)', letterSpacing:'-0.05em', textAlign:'center', lineHeight:1, margin:'0 0 8px', position:'relative', zIndex:2, color:'#1C1917' }}>
+      <h1 style={{ fontWeight:900, fontSize:'clamp(2.2rem,8vw,3.5rem)', letterSpacing:'-0.05em', textAlign:'center', lineHeight:1, margin:'0 0 8px', position:'relative', zIndex:2, color:'#2D1E6E' }}>
         स्पर्धा{' '}
         <span style={{ background:'linear-gradient(90deg,#F97316,#FBBF24,#F97316)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundSize:'200%', animation:'sy-shimmer 3s linear infinite' }}>
           योद्धा
         </span>
       </h1>
-      <p style={{ color:'#78716C', fontSize:13, fontWeight:700, margin:'0 0 32px', textAlign:'center', position:'relative', zIndex:2 }}>
+      <p style={{ color:'#5B4FCF', fontSize:13, fontWeight:700, margin:'0 0 32px', textAlign:'center', position:'relative', zIndex:2 }}>
         {TOTAL_Q} प्रश्न · {QUESTION_TIME} sec · Rank मिळवा · WhatsApp Share
       </p>
 
@@ -232,11 +232,11 @@ export const SpardhaYodha: React.FC<Props> = ({ onBack }) => {
           { e:'⚔️', t:'स्पर्धा योद्धा',   c:'#EA580C', bg:'#FFF7ED', border:'#FDBA74', req:'75%+' },
           { e:'📚', t:'अभ्यासू',           c:'#2563EB', bg:'#EFF6FF', border:'#93C5FD', req:'55%+' },
         ].map(({ e,t,c,bg,border,req }) => (
-          <div key={t} style={{ background:bg, border:`1px solid ${border}`, borderRadius:14, padding:'10px 14px', display:'flex', alignItems:'center', gap:8, boxShadow:'0 2px 8px rgba(0,0,0,0.06)' }}>
+          <div key={t} style={{ background:bg, border:`1px solid ${border}`, borderRadius:14, padding:'10px 14px', display:'flex', alignItems:'center', gap:8, boxShadow:'0 2px 8px rgba(99,79,192,0.08)' }}>
             <span style={{ fontSize:18 }}>{e}</span>
             <div>
               <div style={{ fontSize:11, fontWeight:900, color:c }}>{t}</div>
-              <div style={{ fontSize:9, fontWeight:700, color:'#A8A29E' }}>{req}</div>
+              <div style={{ fontSize:9, fontWeight:700, color:'#8B7FD4' }}>{req}</div>
             </div>
           </div>
         ))}
@@ -256,10 +256,10 @@ export const SpardhaYodha: React.FC<Props> = ({ onBack }) => {
         <style>{CSS}</style>
 
         {/* Top HUD */}
-        <div style={{ position:'sticky', top:0, zIndex:50, background:'rgba(248,245,240,0.95)', backdropFilter:'blur(16px)', borderBottom:'1px solid rgba(0,0,0,0.08)', padding:'10px 16px', boxShadow:'0 2px 12px rgba(0,0,0,0.06)' }}>
+        <div style={{ position:'sticky', top:0, zIndex:50, background:'rgba(243,239,254,0.95)', backdropFilter:'blur(16px)', borderBottom:'1px solid rgba(99,79,192,0.10)', padding:'10px 16px', boxShadow:'0 2px 12px rgba(99,79,192,0.08)' }}>
           <div style={{ display:'flex', alignItems:'center', gap:10, maxWidth:580, margin:'0 auto' }}>
             <button onClick={() => window.confirm('बाहेर पडायचे?') && onBack()}
-              style={{ background:'rgba(0,0,0,0.05)', border:'1px solid rgba(0,0,0,0.1)', borderRadius:9, padding:'6px 10px', color:'#78716C', cursor:'pointer', display:'flex', alignItems:'center', fontSize:11, fontWeight:800 }}>
+              style={{ background:'rgba(99,79,192,0.07)', border:'1px solid rgba(99,79,192,0.12)', borderRadius:9, padding:'6px 10px', color:'#5B4FCF', cursor:'pointer', display:'flex', alignItems:'center', fontSize:11, fontWeight:800 }}>
               <Home size={12} />
             </button>
 
@@ -269,7 +269,7 @@ export const SpardhaYodha: React.FC<Props> = ({ onBack }) => {
                 <div key={i} style={{ flex:1, height:5, borderRadius:99,
                   background: i < answers.length
                     ? answers[i].correct ? '#10B981' : answers[i].skipped ? '#D1D5DB' : '#EF4444'
-                    : i === qIdx ? '#F97316' : 'rgba(0,0,0,0.1)',
+                    : i === qIdx ? '#F97316' : 'rgba(99,79,192,0.12)',
                   transition:'background 0.3s ease',
                   boxShadow: i === qIdx ? '0 0 8px rgba(249,115,22,0.4)' : 'none',
                 }} />
@@ -279,9 +279,9 @@ export const SpardhaYodha: React.FC<Props> = ({ onBack }) => {
             {/* Score + Combo */}
             <div style={{ display:'flex', alignItems:'center', gap:6 }}>
               <ComboBadge combo={combo} />
-              <div style={{ background:'#fff', border:'1px solid rgba(0,0,0,0.1)', borderRadius:10, padding:'5px 12px', fontWeight:900, fontSize:14, display:'flex', alignItems:'center', gap:5, boxShadow:'0 2px 8px rgba(0,0,0,0.06)' }}>
+              <div style={{ background:'#fff', border:'1px solid rgba(99,79,192,0.12)', borderRadius:10, padding:'5px 12px', fontWeight:900, fontSize:14, display:'flex', alignItems:'center', gap:5, boxShadow:'0 2px 8px rgba(99,79,192,0.08)' }}>
                 <span style={{ color:'#059669' }}>{score}</span>
-                <span style={{ color:'#A8A29E', fontSize:11 }}>/{TOTAL_Q}</span>
+                <span style={{ color:'#8B7FD4', fontSize:11 }}>/{TOTAL_Q}</span>
               </div>
             </div>
           </div>
@@ -292,14 +292,14 @@ export const SpardhaYodha: React.FC<Props> = ({ onBack }) => {
           {/* Timer */}
           <div style={{ position:'relative', marginBottom:20 }}>
             <svg width={88} height={88} style={{ transform:'rotate(-90deg)', filter: timeLeft <= 3 ? `drop-shadow(0 0 6px ${timerColor})` : 'none' }}>
-              <circle cx={44} cy={44} r={36} fill="none" stroke="rgba(0,0,0,0.08)" strokeWidth={7} />
+              <circle cx={44} cy={44} r={36} fill="none" stroke="rgba(99,79,192,0.10)" strokeWidth={7} />
               <circle cx={44} cy={44} r={36} fill="none" stroke={timerColor} strokeWidth={7}
                 strokeDasharray={226} strokeDashoffset={226-(timePct/100)*226}
                 strokeLinecap="round" style={{ transition:'stroke-dashoffset 0.85s linear, stroke 0.3s ease' }} />
             </svg>
             <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center' }}>
-              <span style={{ fontSize:24, fontWeight:900, color: timeLeft <= 3 ? '#DC2626' : '#1C1917', animation: timeLeft <= 3 ? 'sy-shake 0.3s infinite' : 'none', lineHeight:1 }}>{timeLeft}</span>
-              <span style={{ fontSize:8, color:'#A8A29E', fontWeight:700, letterSpacing:'0.1em' }}>SEC</span>
+              <span style={{ fontSize:24, fontWeight:900, color: timeLeft <= 3 ? '#DC2626' : '#2D1E6E', animation: timeLeft <= 3 ? 'sy-shake 0.3s infinite' : 'none', lineHeight:1 }}>{timeLeft}</span>
+              <span style={{ fontSize:8, color:'#8B7FD4', fontWeight:700, letterSpacing:'0.1em' }}>SEC</span>
             </div>
           </div>
 
@@ -311,10 +311,10 @@ export const SpardhaYodha: React.FC<Props> = ({ onBack }) => {
           </div>
 
           {/* Question card */}
-          <div style={{ width:'100%', background:'#fff', border:'1px solid rgba(0,0,0,0.08)', borderRadius:24, padding:'24px 20px', marginBottom:14, position:'relative', overflow:'hidden', animation:'sy-slide-up 0.25s ease', boxShadow:'0 4px 20px rgba(0,0,0,0.08)' }}>
+          <div style={{ width:'100%', background:'#fff', border:'1px solid rgba(99,79,192,0.10)', borderRadius:24, padding:'24px 20px', marginBottom:14, position:'relative', overflow:'hidden', animation:'sy-slide-up 0.25s ease', boxShadow:'0 4px 20px rgba(99,79,192,0.10)' }}>
             <Confetti active={confetti} />
             <div style={{ position:'absolute', top:0, left:0, right:0, height:3, background:'linear-gradient(90deg,#F97316,#FBBF24,#F97316)', backgroundSize:'200%', animation:'sy-shimmer 3s linear infinite' }} />
-            <p style={{ color:'#1C1917', fontWeight:800, fontSize:'clamp(1rem,4vw,1.2rem)', lineHeight:1.6, margin:0, textAlign:'center' }}>
+            <p style={{ color:'#2D1E6E', fontWeight:800, fontSize:'clamp(1rem,4vw,1.2rem)', lineHeight:1.6, margin:0, textAlign:'center' }}>
               {q?.question}
             </p>
           </div>
@@ -327,20 +327,20 @@ export const SpardhaYodha: React.FC<Props> = ({ onBack }) => {
               const revealed  = selected !== null;
 
               let bg     = '#fff';
-              let border = 'rgba(0,0,0,0.08)';
-              let color  = '#1C1917';
-              let badgeBg  = 'rgba(0,0,0,0.06)';
+              let border = 'rgba(99,79,192,0.10)';
+              let color  = '#2D1E6E';
+              let badgeBg  = 'rgba(99,79,192,0.08)';
               let badgeCol = '#78716C';
               let anim   = `sy-opt-in 0.2s ease ${i*0.06}s both`;
 
-              if (revealed && isCorrect)           { bg='rgba(5,150,105,0.08)';  border='rgba(5,150,105,0.4)';  color='#1C1917'; badgeBg='#059669'; badgeCol='#fff'; anim=`sy-correct 0.3s ease`; }
+              if (revealed && isCorrect)           { bg='rgba(5,150,105,0.08)';  border='rgba(5,150,105,0.4)';  color='#2D1E6E'; badgeBg='#059669'; badgeCol='#fff'; anim=`sy-correct 0.3s ease`; }
               if (revealed && isSel && !isCorrect) { bg='rgba(220,38,38,0.07)';  border='rgba(220,38,38,0.4)';  color='#57534E'; badgeBg='#DC2626'; badgeCol='#fff'; anim=`sy-wrong 0.3s ease`; }
               if (revealed && !isSel && !isCorrect){ color='#A8A29E'; }
 
               return (
                 <button key={i} disabled={!!selected} className="sy-opt-btn"
                   onClick={() => handleAnswer(i)}
-                  style={{ background:bg, border:`1.5px solid ${border}`, borderRadius:14, padding:'14px 16px', color, fontWeight:700, fontSize:'clamp(12px,3vw,14px)', textAlign:'left', cursor:selected?'default':'pointer', display:'flex', alignItems:'center', gap:11, transition:'all 0.18s ease', animation:anim, boxShadow:'0 2px 8px rgba(0,0,0,0.05)' }}>
+                  style={{ background:bg, border:`1.5px solid ${border}`, borderRadius:14, padding:'14px 16px', color, fontWeight:700, fontSize:'clamp(12px,3vw,14px)', textAlign:'left', cursor:selected?'default':'pointer', display:'flex', alignItems:'center', gap:11, transition:'all 0.18s ease', animation:anim, boxShadow:'0 2px 8px rgba(99,79,192,0.07)' }}>
                   <span style={{ width:28, height:28, borderRadius:9, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:900, background:badgeBg, color:badgeCol, transition:'all 0.18s' }}>
                     {revealed && isCorrect ? '✓' : revealed && isSel && !isCorrect ? '✗' : String.fromCharCode(65+i)}
                   </span>
@@ -354,7 +354,7 @@ export const SpardhaYodha: React.FC<Props> = ({ onBack }) => {
           {showExplanation && q?.explanation && (
             <div style={{ width:'100%', marginTop:12, background:'#FFF7ED', border:'1px solid rgba(249,115,22,0.2)', borderRadius:14, padding:'12px 14px', animation:'sy-slide-up 0.25s ease' }}>
               <div style={{ fontSize:9, fontWeight:800, color:'#EA580C', textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:5 }}>💡 स्पष्टीकरण</div>
-              <p style={{ fontSize:12, color:'#78716C', lineHeight:1.6, fontWeight:500, fontStyle:'italic', margin:0 }}>{q.explanation}</p>
+              <p style={{ fontSize:12, color:'#5B4FCF', lineHeight:1.6, fontWeight:500, fontStyle:'italic', margin:0 }}>{q.explanation}</p>
             </div>
           )}
         </div>
@@ -370,7 +370,7 @@ export const SpardhaYodha: React.FC<Props> = ({ onBack }) => {
       {/* Bg decoration */}
       <div style={{ position:'absolute', top:'-5%', right:'-5%', width:'40vw', height:'40vw', borderRadius:'50%', background:`radial-gradient(circle,${rank.bg} 0%,transparent 70%)`, pointerEvents:'none' }} />
 
-      <div style={{ background:'#fff', border:'1px solid rgba(0,0,0,0.08)', borderRadius:32, padding:'32px 24px', maxWidth:420, width:'100%', animation:'sy-result-in 0.6s cubic-bezier(.34,1.56,.64,1)', position:'relative', overflow:'hidden', zIndex:2, boxShadow:'0 12px 48px rgba(0,0,0,0.1)' }}>
+      <div style={{ background:'#fff', border:'1px solid rgba(99,79,192,0.10)', borderRadius:32, padding:'32px 24px', maxWidth:420, width:'100%', animation:'sy-result-in 0.6s cubic-bezier(.34,1.56,.64,1)', position:'relative', overflow:'hidden', zIndex:2, boxShadow:'0 12px 48px rgba(99,79,192,0.12)' }}>
 
         {/* Top bar */}
         <div style={{ position:'absolute', top:0, left:0, right:0, height:4, background:`linear-gradient(90deg,${rank.color},${rank.border},${rank.color})`, backgroundSize:'200%', animation:'sy-shimmer 2s infinite' }} />
@@ -385,9 +385,9 @@ export const SpardhaYodha: React.FC<Props> = ({ onBack }) => {
           </div>
           <div style={{ fontWeight:900, fontSize:'clamp(3rem,10vw,4.5rem)', letterSpacing:'-0.06em', lineHeight:1, animation:'sy-score-in 0.5s cubic-bezier(.34,1.56,.64,1) 0.5s both', color:rank.color }}>
             {score}
-            <span style={{ fontSize:'0.38em', color:'#A8A29E', fontWeight:700 }}>/{TOTAL_Q}</span>
+            <span style={{ fontSize:'0.38em', color:'#8B7FD4', fontWeight:700 }}>/{TOTAL_Q}</span>
           </div>
-          <div style={{ fontSize:13, color:'#78716C', fontWeight:700, marginTop:4 }}>{pct}% अचूकता · {totalTime}s</div>
+          <div style={{ fontSize:13, color:'#5B4FCF', fontWeight:700, marginTop:4 }}>{pct}% अचूकता · {totalTime}s</div>
         </div>
 
         {/* Stats */}
@@ -399,7 +399,7 @@ export const SpardhaYodha: React.FC<Props> = ({ onBack }) => {
           ].map(({ l,v,c,bg,border }) => (
             <div key={l} style={{ background:bg, border:`1px solid ${border}`, borderRadius:14, padding:'12px 6px', textAlign:'center' }}>
               <div style={{ fontSize:'clamp(1.1rem,4vw,1.5rem)', fontWeight:900, color:c, lineHeight:1 }}>{v}</div>
-              <div style={{ fontSize:9, fontWeight:800, color:'#A8A29E', textTransform:'uppercase', letterSpacing:'0.08em', marginTop:3 }}>{l}</div>
+              <div style={{ fontSize:9, fontWeight:800, color:'#8B7FD4', textTransform:'uppercase', letterSpacing:'0.08em', marginTop:3 }}>{l}</div>
             </div>
           ))}
         </div>
@@ -407,7 +407,7 @@ export const SpardhaYodha: React.FC<Props> = ({ onBack }) => {
         {/* Answer dots */}
         <div style={{ display:'flex', gap:5, justifyContent:'center', marginBottom:16, flexWrap:'wrap' }}>
           {answers.map((a,i) => (
-            <div key={i} style={{ width:32, height:32, borderRadius:9, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, fontWeight:900, background:a.correct?'rgba(5,150,105,0.1)':a.skipped?'rgba(0,0,0,0.05)':'rgba(220,38,38,0.1)', border:`1.5px solid ${a.correct?'#059669':a.skipped?'#D1D5DB':'#DC2626'}`, color:a.correct?'#059669':a.skipped?'#9CA3AF':'#DC2626' }}>
+            <div key={i} style={{ width:32, height:32, borderRadius:9, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, fontWeight:900, background:a.correct?'rgba(5,150,105,0.1)':a.skipped?'rgba(99,79,192,0.07)':'rgba(220,38,38,0.1)', border:`1.5px solid ${a.correct?'#059669':a.skipped?'#D1D5DB':'#DC2626'}`, color:a.correct?'#059669':a.skipped?'#9CA3AF':'#DC2626' }}>
               {a.correct ? '✓' : a.skipped ? '-' : '✗'}
             </div>
           ))}
@@ -430,7 +430,7 @@ export const SpardhaYodha: React.FC<Props> = ({ onBack }) => {
             🔄 पुन्हा
           </button>
           <button onClick={onBack}
-            style={{ background:'#F8F5F0', border:'1px solid rgba(0,0,0,0.1)', borderRadius:14, padding:'14px 14px', color:'#78716C', fontWeight:900, fontSize:13, cursor:'pointer' }}>
+            style={{ background:'#F3EFFE', border:'1px solid rgba(99,79,192,0.12)', borderRadius:14, padding:'14px 14px', color:'#5B4FCF', fontWeight:900, fontSize:13, cursor:'pointer' }}>
             <Home size={16} />
           </button>
         </div>
