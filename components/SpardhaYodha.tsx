@@ -88,7 +88,7 @@ function ComboBadge({ combo }: { combo: number }) {
   return (
     <div style={{
       display:'inline-flex', alignItems:'center', gap:5,
-      background:`rgba(0,0,0,0.4)`, border:`1.5px solid ${cfg.color}`,
+      background:`rgba(99,79,192,0.45)`, border:`1.5px solid ${cfg.color}`,
       borderRadius:999, padding:'4px 12px', fontSize:12, fontWeight:900, color:cfg.color,
       boxShadow:`0 0 12px ${cfg.glow}`, animation:'sy-combo-pop 0.3s cubic-bezier(.34,1.56,.64,1)',
     }}>
