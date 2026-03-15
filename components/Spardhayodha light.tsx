@@ -1,3 +1,4 @@
+// Updated with Saffron+Teal light theme
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { ArrowLeft, Home } from 'lucide-react';
@@ -243,7 +244,7 @@ export const SpardhaYodha: React.FC<Props> = ({ onBack }) => {
       </div>
 
       <button onClick={startBattle} className="sy-start-btn"
-        style={{ background:'linear-gradient(135deg,#F97316,#EF4444)', border:'none', borderRadius:999, padding:'18px 52px', color:'#fff', fontWeight:900, fontSize:18, cursor:'pointer', position:'relative', zIndex:2, animation:'sy-glow 2.5s infinite', letterSpacing:'-0.02em', transition:'transform 0.2s ease', boxShadow:'0 12px 40px rgba(249,115,22,0.35)' }}>
+        style={{ background:'linear-gradient(135deg,#F97316,#EF4444)', border:'none', borderRadius:999, padding:'18px 52px', color:'#1C2B2B', fontWeight:900, fontSize:18, cursor:'pointer', position:'relative', zIndex:2, animation:'sy-glow 2.5s infinite', letterSpacing:'-0.02em', transition:'transform 0.2s ease', boxShadow:'0 12px 40px rgba(249,115,22,0.35)' }}>
         युद्ध सुरू करा ⚔️
       </button>
     </div>
@@ -422,11 +423,11 @@ export const SpardhaYodha: React.FC<Props> = ({ onBack }) => {
         {/* Buttons */}
         <div style={{ display:'flex', gap:8 }}>
           <button onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank')}
-            style={{ flex:2, background:'linear-gradient(135deg,#25D366,#128C7E)', border:'none', borderRadius:14, padding:'14px', color:'#fff', fontWeight:900, fontSize:13, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:7, boxShadow:'0 6px 20px rgba(37,211,102,0.3)' }}>
+            style={{ flex:2, background:'linear-gradient(135deg,#25D366,#128C7E)', border:'none', borderRadius:14, padding:'14px', color:'#1C2B2B', fontWeight:900, fontSize:13, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:7, boxShadow:'0 6px 20px rgba(37,211,102,0.3)' }}>
             📤 WhatsApp Share
           </button>
           <button onClick={startBattle}
-            style={{ flex:1, background:'linear-gradient(135deg,#F97316,#EF4444)', border:'none', borderRadius:14, padding:'14px', color:'#fff', fontWeight:900, fontSize:13, cursor:'pointer', boxShadow:'0 6px 20px rgba(249,115,22,0.3)' }}>
+            style={{ flex:1, background:'linear-gradient(135deg,#F97316,#EF4444)', border:'none', borderRadius:14, padding:'14px', color:'#1C2B2B', fontWeight:900, fontSize:13, cursor:'pointer', boxShadow:'0 6px 20px rgba(249,115,22,0.3)' }}>
             🔄 पुन्हा
           </button>
           <button onClick={onBack}
