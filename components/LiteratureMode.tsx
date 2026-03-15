@@ -1,43 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import {
-  ArrowLeft, BookOpen, ChevronDown, Eye, EyeOff,
-  GraduationCap, Search, HelpCircle
-} from 'lucide-react';
+import { ArrowLeft, BookOpen, ChevronDown, Eye, EyeOff, GraduationCap, Search, HelpCircle } from 'lucide-react';
 
 interface LitQuestion {
-  id: number;
-  question: string;
-  model_answer: string;
-  topic: string;
-  author?: string;
-  work?: string;
-  difficulty?: string;
-  exam_name?: string;
-  subject?: string;
-  year?: number;
+  id: number; question: string; model_answer: string; topic: string;
+  author?: string; work?: string; difficulty?: string; exam_name?: string; subject?: string; year?: number;
 }
 
-const LIT_TOPICS = [
-  'कवी परिचय',
-  'लेखक परिचय',
-  'कादंबरी',
-  'नाटक',
-  'कविता',
-  'दलित साहित्य',
-  'स्त्रीवादी साहित्य',
-  'व्याकरण',
-];
+const LIT_TOPICS = ['कवी परिचय','लेखक परिचय','कादंबरी','नाटक','कविता','दलित साहित्य','स्त्रीवादी साहित्य','व्याकरण'];
+const EXAMS = ['Rajyaseva Mains','NET/SET','PhD Entrance','MPSC Combined'];
 
-const EXAMS = ['Rajyaseva Mains', 'NET/SET', 'PhD Entrance', 'MPSC Combined'];
+const CSS = `
+  @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800;900&display=swap');
+  @keyframes lm-fade { from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)} }
+  @keyframes lm-spin { to{transform:rotate(360deg)} }
+  @keyframes lm-in   { from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)} }
+  .lm-card  { transition: all 0.2s ease; }
+  .lm-card:hover { transform:translateY(-2px); box-shadow:0 10px 32px rgba(28,43,43,0.1) !important; }
+  .lm-chip  { transition: all 0.15s ease; }
+  .lm-chip:hover { transform:translateY(-1px); }
+  .lm-toggle:hover { opacity:0.88; transform:scale(1.02); }
+`;
 
 export const LiteratureMode: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [questions, setQuestions] = useState<LitQuestion[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading]     = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selTopic, setSelTopic] = useState('All');
-  const [selExam, setSelExam] = useState('All');
-  const [revealed, setRevealed] = useState<Record<number, boolean>>({});
+  const [selTopic, setSelTopic]   = useState('All');
+  const [selExam, setSelExam]     = useState('All');
+  const [revealed, setRevealed]   = useState<Record<number, boolean>>({});
 
   useEffect(() => {
     const fetchData = async () => {
@@ -45,240 +36,151 @@ export const LiteratureMode: React.FC<{ onBack: () => void }> = ({ onBack }) => 
       try {
         let query = supabase.from('literature_questions').select('*');
         if (selTopic !== 'All') query = query.eq('topic', selTopic);
-        if (selExam !== 'All') query = query.eq('exam_name', selExam);
+        if (selExam  !== 'All') query = query.eq('exam_name', selExam);
         const { data, error } = await query.order('id', { ascending: false });
         if (error) throw error;
         setQuestions(data || []);
         setRevealed({});
-      } catch (err: any) {
-        console.error('Literature लोड करताना चूक:', err.message);
-      } finally {
-        setLoading(false);
-      }
+      } catch (err: any) { console.error('Literature लोड करताना चूक:', err.message); }
+      finally { setLoading(false); }
     };
     fetchData();
   }, [selTopic, selExam]);
 
-  const filtered = questions.filter(
-    q =>
-      q.question?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      q.author?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      q.work?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filtered = questions.filter(q =>
+    q.question?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    q.author?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    q.work?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const toggleReveal = (id: number) =>
-    setRevealed(prev => ({ ...prev, [id]: !prev[id] }));
+  const base: React.CSSProperties = {
+    minHeight: '100vh', background: '#FDF6EC',
+    fontFamily: "'Baloo 2','Noto Sans Devanagari',sans-serif", color: '#1C2B2B',
+    padding: '0 0 80px',
+  };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 animate-in fade-in duration-500">
+    <div style={base}>
+      <style>{CSS}</style>
+
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={onBack}
-            className="p-3 bg-white rounded-2xl shadow-sm border border-slate-100 hover:bg-slate-50 transition-all"
-          >
-            <ArrowLeft size={20} className="text-slate-600" />
+      <div style={{ background:'linear-gradient(135deg,#1C2B2B,#E8671A)', padding:'18px 24px', display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, boxShadow:'0 4px 20px rgba(232,103,26,0.3)' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+          <button onClick={onBack} style={{ display:'flex', alignItems:'center', gap:6, background:'rgba(255,255,255,0.1)', border:'1px solid rgba(255,255,255,0.2)', borderRadius:10, padding:'8px 14px', color:'#FDF6EC', fontWeight:800, fontSize:12, cursor:'pointer' }}>
+            <ArrowLeft size={14} /> मागे
           </button>
           <div>
-            <h2 className="text-2xl font-black text-slate-900 tracking-tighter">मराठी साहित्य</h2>
-            <p className="text-[10px] font-black text-orange-500 uppercase tracking-widest mt-0.5">
-              Mains & NET/SET साठी सखोल अभ्यास
-            </p>
+            <div style={{ fontWeight:900, fontSize:17, color:'#F5C842', letterSpacing:'-0.02em', display:'flex', alignItems:'center', gap:8, lineHeight:1 }}>
+              <GraduationCap size={17} /> मराठी साहित्य
+            </div>
+            <div style={{ fontSize:11, color:'rgba(255,255,255,0.55)', fontWeight:600, marginTop:2 }}>Mains & NET/SET साठी सखोल अभ्यास</div>
           </div>
         </div>
-        <div className="bg-orange-50 p-3 rounded-2xl">
-          <GraduationCap className="text-orange-400" size={28} />
+      </div>
+
+      <div style={{ maxWidth:860, margin:'0 auto', padding:'24px 16px' }}>
+
+        {/* Search */}
+        <div style={{ position:'relative', marginBottom:16 }}>
+          <Search size={16} style={{ position:'absolute', left:14, top:'50%', transform:'translateY(-50%)', color:'#7A9090', pointerEvents:'none' }} />
+          <input type="text" placeholder="लेखक, कृती किंवा विषय शोधा..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
+            style={{ width:'100%', background:'#fff', border:'1.5px solid rgba(28,43,43,0.1)', borderRadius:14, padding:'13px 16px 13px 40px', color:'#1C2B2B', fontWeight:600, fontSize:14, outline:'none', boxSizing:'border-box', fontFamily:"'Baloo 2',sans-serif", transition:'border-color 0.2s' }} />
         </div>
-      </div>
 
-      {/* Search */}
-      <div className="relative mb-4">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-        <input
-          type="text"
-          placeholder="लेखक, कृती किंवा विषय शोधा..."
-          className="w-full pl-12 pr-4 py-4 bg-white rounded-2xl shadow-sm border border-slate-100 outline-none focus:border-orange-400 font-medium transition-all"
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-        />
-      </div>
+        {/* Filters */}
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:16 }}>
+          {[
+            { label:'साहित्य प्रकार', value:selTopic, onChange:setSelTopic, options:LIT_TOPICS, allLabel:'सर्व प्रकार' },
+            { label:'परीक्षा',        value:selExam,  onChange:setSelExam,  options:EXAMS,      allLabel:'सर्व परीक्षा' },
+          ].map(({ label, value, onChange, options, allLabel }) => (
+            <div key={label} style={{ display:'flex', flexDirection:'column', gap:5 }}>
+              <span style={{ fontSize:9, fontWeight:800, color:'#7A9090', textTransform:'uppercase', letterSpacing:'0.12em' }}>{label}</span>
+              <div style={{ position:'relative' }}>
+                <select value={value} onChange={e => onChange(e.target.value)}
+                  style={{ width:'100%', background:'#fff', border:'1.5px solid rgba(28,43,43,0.1)', borderRadius:12, padding:'10px 30px 10px 12px', color:'#1C2B2B', fontWeight:700, fontSize:12, outline:'none', cursor:'pointer', appearance:'none', WebkitAppearance:'none', fontFamily:"'Baloo 2',sans-serif" }}>
+                  <option value="All">{allLabel}</option>
+                  {options.map(o => <option key={o} value={o}>{o}</option>)}
+                </select>
+                <ChevronDown size={13} style={{ position:'absolute', right:9, top:'50%', transform:'translateY(-50%)', color:'#7A9090', pointerEvents:'none' }} />
+              </div>
+            </div>
+          ))}
+        </div>
 
-      {/* Filters */}
-      <div className="grid grid-cols-2 gap-4 mb-8">
-        <SelectFilter
-          label="साहित्य प्रकार"
-          value={selTopic}
-          onChange={setSelTopic}
-          options={LIT_TOPICS}
-          allLabel="सर्व प्रकार"
-          accentColor="orange"
-        />
-        <SelectFilter
-          label="परीक्षा"
-          value={selExam}
-          onChange={setSelExam}
-          options={EXAMS}
-          allLabel="सर्व परीक्षा"
-          accentColor="orange"
-        />
-      </div>
+        {/* Topic chips */}
+        <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginBottom:20 }}>
+          {['All',...LIT_TOPICS].slice(0,7).map(t => (
+            <button key={t} className="lm-chip" onClick={() => setSelTopic(t)}
+              style={{ padding:'6px 14px', borderRadius:99, fontSize:11, fontWeight:800, cursor:'pointer', border:`1.5px solid ${selTopic===t ? '#E8671A' : 'rgba(28,43,43,0.1)'}`, background: selTopic===t ? 'rgba(232,103,26,0.1)' : '#fff', color: selTopic===t ? '#C4510E' : '#4A6060', transition:'all 0.15s', fontFamily:"'Baloo 2',sans-serif", boxShadow: selTopic===t ? '0 2px 8px rgba(232,103,26,0.2)' : 'none' }}>
+              {t==='All'?'सर्व':t}
+            </button>
+          ))}
+        </div>
 
-      {/* Quick Topic Chips */}
-      <div className="flex flex-wrap gap-2 mb-8">
-        {['All', ...LIT_TOPICS].slice(0, 6).map(t => (
-          <button
-            key={t}
-            onClick={() => setSelTopic(t)}
-            className={`px-4 py-2 rounded-full text-xs font-black transition-all ${
-              selTopic === t
-                ? 'bg-orange-600 text-white shadow-md shadow-orange-100'
-                : 'bg-white text-slate-500 border border-slate-200 hover:border-orange-400'
-            }`}
-          >
-            {t === 'All' ? 'सर्व' : t}
-          </button>
-        ))}
-      </div>
+        {!loading && <p style={{ fontSize:11, color:'#7A9090', fontWeight:700, marginBottom:16 }}>{filtered.length} प्रश्न / विषय सापडले</p>}
 
-      {/* Count */}
-      {!loading && (
-        <p className="text-xs text-slate-400 font-bold mb-4 px-1">
-          {filtered.length} प्रश्न / विषय सापडले
-        </p>
-      )}
-
-      {/* Questions */}
-      <div className="space-y-6">
+        {/* Content */}
         {loading ? (
-          <div className="text-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4" />
-            <p className="font-black text-slate-400 animate-pulse">साहित्य डाटा लोड होत आहे...</p>
+          <div style={{ textAlign:'center', padding:'80px 20px', background:'#fff', borderRadius:22, border:'1px solid rgba(28,43,43,0.07)' }}>
+            <div style={{ width:48, height:48, border:'4px solid rgba(232,103,26,0.2)', borderTopColor:'#E8671A', borderRadius:'50%', animation:'lm-spin 0.8s linear infinite', margin:'0 auto 16px' }} />
+            <div style={{ fontWeight:800, fontSize:14, color:'#4A6060' }}>साहित्य डाटा लोड होत आहे...</div>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-20 bg-slate-50 rounded-[3rem] border-2 border-dashed border-slate-200">
-            <HelpCircle size={48} className="mx-auto text-slate-300 mb-4" />
-            <p className="font-bold text-slate-400">या निवडीसाठी सध्या प्रश्न उपलब्ध नाहीत.</p>
-            <p className="text-xs text-slate-300 mt-1">वेगळा प्रकार किंवा परीक्षा निवडा</p>
+          <div style={{ textAlign:'center', padding:'80px 20px', background:'#fff', border:'1px dashed rgba(28,43,43,0.12)', borderRadius:22 }}>
+            <HelpCircle size={48} style={{ color:'#B0CCCC', margin:'0 auto 14px' }} />
+            <div style={{ fontWeight:800, fontSize:15, color:'#4A6060', marginBottom:6 }}>या निवडीसाठी सध्या प्रश्न उपलब्ध नाहीत.</div>
+            <div style={{ fontSize:12, color:'#B0CCCC', fontWeight:600 }}>वेगळा प्रकार किंवा परीक्षा निवडा</div>
           </div>
         ) : (
-          filtered.map((q, idx) => {
-            const isRevealed = revealed[q.id];
-            return (
-              <div
-                key={q.id}
-                className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-md transition-all overflow-hidden"
-              >
-                {/* Card Top Strip */}
-                <div className="h-1.5 w-full bg-gradient-to-r from-orange-500 to-amber-400" />
+          <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+            {filtered.map((q, idx) => {
+              const isRevealed = revealed[q.id];
+              return (
+                <div key={q.id} className="lm-card"
+                  style={{ background:'#fff', border:'1px solid rgba(28,43,43,0.07)', borderRadius:22, overflow:'hidden', boxShadow:'0 2px 12px rgba(28,43,43,0.06)', animation:`lm-fade 0.2s ease ${idx*0.04}s both` }}>
+                  <div style={{ height:3, background:'linear-gradient(90deg,#E8671A,#F5C842)' }} />
 
-                <div className="p-8">
-                  {/* Metadata badges */}
-                  <div className="flex flex-wrap gap-2 mb-5">
-                    {q.topic && (
-                      <span className="bg-orange-50 text-orange-600 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-tight">
-                        {q.topic}
-                      </span>
-                    )}
-                    {q.exam_name && (
-                      <span className="bg-slate-100 text-slate-500 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-tight">
-                        {q.exam_name}
-                      </span>
-                    )}
-                    {q.author && (
-                      <span className="bg-amber-50 text-amber-600 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-tight">
-                        ✍️ {q.author}
-                      </span>
-                    )}
-                    {q.work && (
-                      <span className="bg-purple-50 text-purple-600 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-tight">
-                        📖 {q.work}
-                      </span>
-                    )}
-                    {q.year && (
-                      <span className="bg-indigo-50 text-indigo-500 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-tight">
-                        {q.year}
-                      </span>
+                  <div style={{ padding:'20px 24px' }}>
+                    {/* Badges */}
+                    <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginBottom:14 }}>
+                      {q.topic     && <span style={{ fontSize:9, fontWeight:800, background:'rgba(232,103,26,0.1)', border:'1px solid rgba(232,103,26,0.2)', borderRadius:99, padding:'3px 10px', color:'#C4510E', textTransform:'uppercase' }}>{q.topic}</span>}
+                      {q.exam_name && <span style={{ fontSize:9, fontWeight:800, background:'rgba(13,107,110,0.1)', border:'1px solid rgba(13,107,110,0.2)', borderRadius:99, padding:'3px 10px', color:'#0D6B6E', textTransform:'uppercase' }}>{q.exam_name}</span>}
+                      {q.author    && <span style={{ fontSize:9, fontWeight:800, background:'rgba(217,119,6,0.1)',  border:'1px solid rgba(217,119,6,0.2)',  borderRadius:99, padding:'3px 10px', color:'#D97706', textTransform:'uppercase' }}>✍️ {q.author}</span>}
+                      {q.work      && <span style={{ fontSize:9, fontWeight:800, background:'rgba(124,58,237,0.1)',border:'1px solid rgba(124,58,237,0.2)',borderRadius:99, padding:'3px 10px', color:'#7C3AED', textTransform:'uppercase' }}>📖 {q.work}</span>}
+                      {q.year      && <span style={{ fontSize:9, fontWeight:800, background:'rgba(13,107,110,0.1)', border:'1px solid rgba(13,107,110,0.2)', borderRadius:99, padding:'3px 10px', color:'#0D6B6E' }}>{q.year}</span>}
+                    </div>
+
+                    {/* Question */}
+                    <h3 style={{ fontWeight:800, fontSize:15, color:'#1C2B2B', lineHeight:1.65, marginBottom:18 }}>
+                      <span style={{ color:'#E8671A', fontWeight:900, marginRight:6 }}>प्र. {idx+1}</span>{q.question}
+                    </h3>
+
+                    {/* Toggle button */}
+                    <button className="lm-toggle" onClick={() => setRevealed(p => ({ ...p, [q.id]: !p[q.id] }))}
+                      style={{ display:'flex', alignItems:'center', gap:7, padding:'10px 20px', borderRadius:13, fontSize:11, fontWeight:900, cursor:'pointer', border:'none', background: isRevealed ? '#FDF6EC' : 'linear-gradient(135deg,#E8671A,#C4510E)', color: isRevealed ? '#7A9090' : '#fff', boxShadow: isRevealed ? 'none' : '0 6px 20px rgba(232,103,26,0.3)', transition:'all 0.18s ease', fontFamily:"'Baloo 2',sans-serif", textTransform:'uppercase', letterSpacing:'0.06em' }}>
+                      {isRevealed ? <><EyeOff size={14} /> उत्तर लपवा</> : <><Eye size={14} /> आदर्श उत्तर पहा</>}
+                    </button>
+
+                    {/* Model Answer */}
+                    {isRevealed && (
+                      <div style={{ marginTop:16, animation:'lm-in 0.28s ease' }}>
+                        <div style={{ background:'linear-gradient(135deg,#1C2B2B,#0D6B6E)', borderRadius:18, padding:'20px 22px' }}>
+                          <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:12, fontSize:9, fontWeight:800, color:'#F5C842', textTransform:'uppercase', letterSpacing:'0.12em' }}>
+                            <BookOpen size={13} /> संशोधन आधारित आदर्श उत्तर
+                          </div>
+                          <p style={{ fontSize:13, color:'rgba(255,255,255,0.85)', lineHeight:1.75, fontWeight:500, whiteSpace:'pre-line', margin:0 }}>
+                            {q.model_answer || 'उत्तर लवकरच उपलब्ध केले जाईल.'}
+                          </p>
+                        </div>
+                      </div>
                     )}
                   </div>
-
-                  {/* Question */}
-                  <h3 className="text-xl font-bold text-slate-800 leading-relaxed mb-6">
-                    <span className="text-orange-500 mr-2 font-black">प्र. {idx + 1}</span>
-                    {q.question}
-                  </h3>
-
-                  {/* Toggle Button */}
-                  <button
-                    onClick={() => toggleReveal(q.id)}
-                    className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${
-                      isRevealed
-                        ? 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                        : 'bg-orange-600 text-white shadow-lg shadow-orange-100 hover:scale-[1.02]'
-                    }`}
-                  >
-                    {isRevealed ? (
-                      <><EyeOff size={14} /> उत्तर लपवा</>
-                    ) : (
-                      <><Eye size={14} /> आदर्श उत्तर पहा</>
-                    )}
-                  </button>
-
-                  {/* Model Answer */}
-                  {isRevealed && (
-                    <div className="mt-6 animate-in fade-in slide-in-from-top-2 duration-300">
-                      <div className="bg-slate-900 rounded-[1.5rem] p-6">
-                        <div className="flex items-center gap-2 mb-4 text-orange-400 font-black uppercase tracking-widest text-[10px]">
-                          <BookOpen size={14} />
-                          संशोधन आधारित आदर्श उत्तर
-                        </div>
-                        <p className="text-slate-200 leading-relaxed font-medium whitespace-pre-line text-sm">
-                          {q.model_answer || 'उत्तर लवकरच उपलब्ध केले जाईल.'}
-                        </p>
-                      </div>
-                    </div>
-                  )}
                 </div>
-              </div>
-            );
-          })
+              );
+            })}
+          </div>
         )}
       </div>
     </div>
   );
 };
-
-const SelectFilter = ({
-  label,
-  value,
-  onChange,
-  options,
-  allLabel,
-  accentColor,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  options: string[];
-  allLabel: string;
-  accentColor: string;
-}) => (
-  <div className="flex flex-col gap-1">
-    <label className="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">{label}</label>
-    <div className="relative">
-      <select
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        className={`w-full p-4 bg-white rounded-2xl font-bold outline-none border-2 border-transparent focus:border-${accentColor}-500 transition-all appearance-none cursor-pointer text-slate-700 shadow-sm`}
-      >
-        <option value="All">{allLabel}</option>
-        {options.map(opt => (
-          <option key={opt} value={opt}>
-            {opt}
-          </option>
-        ))}
-      </select>
-      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
-    </div>
-  </div>
-);
