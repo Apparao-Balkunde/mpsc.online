@@ -15,7 +15,7 @@ import { SupportModal } from './components/SupportModal';
 import { useAuth, signOut } from './hooks/useAuth';
 import { pushProgressToCloud, pullProgressFromCloud, startAutoSync } from './services/cloudSync';
 import { LogIn, LogOut, Users, Heart } from 'lucide-react';
-import { BookmarkMode } from './components/BookmarkMode';
+import { BookmarskMode } from './components/BookmarksMode';
 import {
   History, BookOpen, Trophy, Newspaper, ShieldCheck,
   Zap, BookMarked, X, Target, Flame, Languages,
