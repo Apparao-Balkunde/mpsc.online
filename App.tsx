@@ -277,7 +277,7 @@ export default function App() {
             <div style={{ fontSize:28, animation:'sp-heart 2s ease infinite' }}>❤️</div>
             <div>
               <div style={{ fontWeight:900, fontSize:13, color:'#92400E' }}>MPSC सारथी सपोर्ट करा!</div>
-              <div style={{ fontSize:11, color:'#B45309', fontWeight:600 }}>₹29 पासून · GPay / PhonePe / UPI</div>
+              <div style={{ fontSize:11, color:'#B45309', fontWeight:600 }}>₹2 पासून · GPay / PhonePe / UPI</div>
             </div>
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:6, background:'linear-gradient(135deg,#E8671A,#C4510E)', borderRadius:10, padding:'8px 14px', color:'#fff', fontWeight:900, fontSize:12 }}>
@@ -399,7 +399,7 @@ export default function App() {
           </p>
           <button onClick={() => setShowSupport(true)}
             style={{ marginTop:12, display:'inline-flex', alignItems:'center', gap:6, background:'none', border:'1px solid rgba(232,103,26,0.3)', borderRadius:99, padding:'8px 18px', color:'#C2410C', fontWeight:700, fontSize:11, cursor:'pointer' }}>
-            <Heart size={11} fill="#C2410C" /> सपोर्ट करा — ₹29 पासून
+            <Heart size={11} fill="#C2410C" /> सपोर्ट करा — ₹2 पासून
           </button>
         </div>
       </div>
