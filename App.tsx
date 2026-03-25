@@ -7,7 +7,7 @@ import { VocabMode } from './components/VocabMode';
 import { LiteratureMode } from './components/LiteratureMode';
 import { SpardhaYodha } from './components/SpardhaYodha';
 import { PYQMode } from './components/PYQMode';
-import { ProgressDashboard } from './components/ProgressDashboard';
+import { Progressdashboard } from './components/Progressdashboard';
 import { AIDoubtSolver } from './components/AIDoubtSolver';
 import { AuthModal } from './components/AuthModal';
 import { Leaderboard } from './components/Leaderboard';
