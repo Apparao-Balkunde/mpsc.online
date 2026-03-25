@@ -11,9 +11,10 @@ import { ProgressDashboard } from './components/ProgressDashboard';
 import { AIDoubtSolver } from './components/AIDoubtSolver';
 import { AuthModal } from './components/AuthModal';
 import { Leaderboard } from './components/Leaderboard';
+import { SupportModal } from './components/SupportModal';
 import { useAuth, signOut } from './hooks/useAuth';
 import { pushProgressToCloud, pullProgressFromCloud, startAutoSync } from './services/cloudSync';
-import { LogIn, LogOut, Users } from 'lucide-react';
+import { LogIn, LogOut, Users, Heart } from 'lucide-react';
 import { BookmarkMode } from './components/BookmarkMode';
 import {
   History, BookOpen, Trophy, Newspaper, ShieldCheck,
@@ -77,10 +78,12 @@ function Ring({ pct, color, size=80, stroke=7 }: { pct:number; color:string; siz
 const CSS = `
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
   @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes sp-heart { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
   body { background: #F5F0E8 !important; }
   .card-hover { transition: all 0.22s ease; }
   .card-hover:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.12) !important; }
   .nav-btn:hover { background: rgba(0,0,0,0.06) !important; }
+  .support-btn:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 24px rgba(232,103,26,0.35) !important; }
 `;
 
 export default function App() {
@@ -91,6 +94,7 @@ export default function App() {
   const [showProgress, setShowProgress]       = useState(false);
   const [showAuth, setShowAuth]               = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showSupport, setShowSupport]         = useState(false);
   const { user, loading: authLoading }        = useAuth();
 
   const isExam     = mode === Mode.MOCK_TEST;
@@ -126,7 +130,6 @@ export default function App() {
   const go = (m: any) => setMode(m);
   const back = () => { setMode(Mode.HOME); setProgress(loadProgress()); };
 
-  // Light theme for sub-pages wrapper
   const lightWrapper = {
     minHeight:'100vh',
     background:'#F5F0E8',
@@ -165,16 +168,17 @@ export default function App() {
     </div>
   );
 
-  // DASHBOARD — Light Cream Theme
+  // DASHBOARD
   return (
     <div style={{ minHeight:'100vh', background:'#F5F0E8', fontFamily:"'Poppins','Noto Sans Devanagari',sans-serif", color:'#1a1a1a', position:'relative', overflowX:'hidden' }}>
       <style>{CSS}</style>
-      {showProgress && <ProgressDashboard onClose={() => setShowProgress(false)} />}
+      {showProgress    && <ProgressDashboard onClose={() => setShowProgress(false)} />}
       <AIDoubtSolver />
-      {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+      {showAuth        && <AuthModal onClose={() => setShowAuth(false)} />}
       {showLeaderboard && <Leaderboard onClose={() => setShowLeaderboard(false)} currentUserId={user?.id} />}
+      {showSupport     && <SupportModal onClose={() => setShowSupport(false)} />}
 
-      {/* Subtle decorative blobs */}
+      {/* Decorative blobs */}
       <div style={{ pointerEvents:'none', position:'fixed', inset:0, zIndex:0, overflow:'hidden' }}>
         <div style={{ position:'absolute', top:'-5%', right:'-5%', width:'40vw', height:'40vw', borderRadius:'50%', background:'radial-gradient(circle,rgba(249,115,22,0.08) 0%,transparent 70%)', filter:'blur(50px)' }} />
         <div style={{ position:'absolute', bottom:'10%', left:'-5%', width:'35vw', height:'35vw', borderRadius:'50%', background:'radial-gradient(circle,rgba(59,130,246,0.07) 0%,transparent 70%)', filter:'blur(50px)' }} />
@@ -207,6 +211,11 @@ export default function App() {
             <button onClick={() => setShowLeaderboard(true)} className="nav-btn"
               style={{ display:'flex', alignItems:'center', gap:6, background:'rgba(251,191,36,0.1)', border:'1px solid rgba(251,191,36,0.3)', borderRadius:12, padding:'8px 14px', color:'#92400E', fontWeight:800, fontSize:12, cursor:'pointer' }}>
               <Users size={14} />
+            </button>
+            {/* Support button */}
+            <button onClick={() => setShowSupport(true)} className="support-btn"
+              style={{ display:'flex', alignItems:'center', gap:6, background:'linear-gradient(135deg,#E8671A,#C4510E)', border:'none', borderRadius:12, padding:'9px 16px', color:'#fff', fontWeight:900, fontSize:12, cursor:'pointer', boxShadow:'0 4px 14px rgba(232,103,26,0.3)', transition:'all 0.2s ease' }}>
+              <Heart size={13} fill="#fff" /> सपोर्ट
             </button>
             {!authLoading && (
               user ? (
@@ -247,7 +256,7 @@ export default function App() {
             {user && (
               <div style={{ display:'inline-flex', alignItems:'center', gap:7, background:'rgba(16,185,129,0.1)', border:'1px solid rgba(16,185,129,0.3)', borderRadius:999, padding:'9px 18px', fontWeight:700, fontSize:12 }}>
                 <div style={{ width:7, height:7, borderRadius:'50%', background:'#10B981', boxShadow:'0 0 6px #10B981' }} />
-                <span style={{ color:'#065F46' }}>{user.user_metadata?.full_name?.split(' ')[0] || 'Welcome'} · Cloud Sync ON</span>
+                <span style={{ color:'#065F46' }}>{user.user_metadata?.full_name?.split(' ')[0] || user.email?.split('@')[0] || 'Welcome'} · Cloud Sync ON</span>
               </div>
             )}
             {progress.streak > 0 && (
@@ -259,6 +268,23 @@ export default function App() {
           </div>
         </div>
 
+        {/* Support banner — shows after 3 sessions */}
+        <div onClick={() => setShowSupport(true)}
+          style={{ background:'linear-gradient(135deg,#FFF7ED,#FEF3C7)', border:'1px solid rgba(232,103,26,0.2)', borderRadius:18, padding:'16px 20px', marginBottom:28, display:'flex', alignItems:'center', justifyContent:'space-between', cursor:'pointer', transition:'all 0.2s' }}
+          onMouseEnter={e => (e.currentTarget.style.boxShadow='0 6px 24px rgba(232,103,26,0.15)')}
+          onMouseLeave={e => (e.currentTarget.style.boxShadow='none')}>
+          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+            <div style={{ fontSize:28, animation:'sp-heart 2s ease infinite' }}>❤️</div>
+            <div>
+              <div style={{ fontWeight:900, fontSize:13, color:'#92400E' }}>MPSC सारथी सपोर्ट करा!</div>
+              <div style={{ fontSize:11, color:'#B45309', fontWeight:600 }}>₹29 पासून · GPay / PhonePe / UPI</div>
+            </div>
+          </div>
+          <div style={{ display:'flex', alignItems:'center', gap:6, background:'linear-gradient(135deg,#E8671A,#C4510E)', borderRadius:10, padding:'8px 14px', color:'#fff', fontWeight:900, fontSize:12 }}>
+            सपोर्ट करा <ChevronRight size={13} />
+          </div>
+        </div>
+
         {/* Stats */}
         <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14, marginBottom:36 }}>
           {[
@@ -266,8 +292,7 @@ export default function App() {
             { label:'अचूकता',   value:accuracy+'%',                             icon:TrendingUp, color:'#10B981', pct:accuracy },
             { label:'बरोबर',    value:progress.totalCorrect.toLocaleString(),   icon:Award,      color:'#F97316', pct:accuracy },
           ].map(({ label, value, icon:Icon, color, pct }) => (
-            <div key={label}
-              className="card-hover"
+            <div key={label} className="card-hover"
               style={{ background:'#fff', border:'1px solid rgba(0,0,0,0.07)', borderRadius:22, padding:'20px 14px', display:'flex', flexDirection:'column', alignItems:'center', gap:8, position:'relative', overflow:'hidden', cursor:'pointer', boxShadow:'0 2px 12px rgba(0,0,0,0.05)' }}
               onClick={() => setShowProgress(true)}>
               <div style={{ position:'absolute', inset:0, background:`radial-gradient(circle at 50% 0%,${color}10 0%,transparent 60%)` }} />
@@ -372,6 +397,10 @@ export default function App() {
           <p style={{ fontSize:11, color:'rgba(0,0,0,0.3)', fontWeight:600 }}>
             Maharashtra's #1 Free MPSC Practice Portal · mpscsarathi.online
           </p>
+          <button onClick={() => setShowSupport(true)}
+            style={{ marginTop:12, display:'inline-flex', alignItems:'center', gap:6, background:'none', border:'1px solid rgba(232,103,26,0.3)', borderRadius:99, padding:'8px 18px', color:'#C2410C', fontWeight:700, fontSize:11, cursor:'pointer' }}>
+            <Heart size={11} fill="#C2410C" /> सपोर्ट करा — ₹29 पासून
+          </button>
         </div>
       </div>
     </div>
