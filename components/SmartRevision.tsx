@@ -129,7 +129,7 @@ export const SmartRevision: React.FC<Props> = ({ onBack }) => {
         </div>
         {allData.length > 0 && (
           <button onClick={clearAll} style={{ background:'none', border:'none', cursor:'pointer', color:'#DC2626', display:'flex', alignItems:'center', gap:4, fontSize:11, fontWeight:700 }}>
-            <Trash2 size:13 /> Clear
+            <Trash2 size={13} /> Clear
           </button>
         )}
       </div>
