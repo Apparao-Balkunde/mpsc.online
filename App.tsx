@@ -7,20 +7,24 @@ import { VocabMode } from './components/VocabMode';
 import { LiteratureMode } from './components/LiteratureMode';
 import { SpardhaYodha } from './components/SpardhaYodha';
 import { PYQMode } from './components/PYQMode';
-import { Progressdashboard } from './components/Progressdashboard';
+import { ProgressDashboard } from './components/ProgressDashboard';
 import { AIDoubtSolver } from './components/AIDoubtSolver';
 import { AuthModal } from './components/AuthModal';
 import { Leaderboard } from './components/Leaderboard';
 import { SupportModal } from './components/SupportModal';
+import { ExamCountdown } from './components/ExamCountdown';
+import { FlashcardMode } from './components/FlashcardMode';
+import { SmartRevision } from './components/SmartRevision';
+import { FriendChallenge } from './components/FriendChallenge';
+import { BookmarkMode } from './components/BookmarksMode';
 import { useAuth, signOut } from './hooks/useAuth';
-import { pushProgressToCloud, pullProgressFromCloud, startAutoSync } from './services/cloudSync';
+import { pullProgressFromCloud, startAutoSync } from './services/cloudSync';
 import { LogIn, LogOut, Users, Heart } from 'lucide-react';
-import { BookmarskMode } from './components/BookmarksMode';
 import {
   History, BookOpen, Trophy, Newspaper, ShieldCheck,
   Zap, BookMarked, X, Target, Flame, Languages,
-  GraduationCap, ChevronRight, Star, TrendingUp, Clock,
-  Award, Swords, Bookmark, BarChart2, FileText
+  GraduationCap, ChevronRight, Star, TrendingUp,
+  Award, Bookmark, BarChart2, FileText, Clock, Brain, Layers, Swords
 } from 'lucide-react';
 
 const PROGRESS_KEY = 'mpsc_user_progress';
@@ -87,7 +91,7 @@ const CSS = `
 `;
 
 export default function App() {
-  const [mode, setMode]           = useState<Mode | 'PYQ' | 'BOOKMARKS'>(() => (localStorage.getItem('mpsc_mode') as any) || Mode.HOME);
+  const [mode, setMode] = useState<Mode | 'PYQ' | 'BOOKMARKS' | 'FLASHCARD' | 'REVISION' | 'CHALLENGE'>(() => (localStorage.getItem('mpsc_mode') as any) || Mode.HOME);
   const [count, setCount]         = useState(0);
   const [progress, setProgress]   = useState<UserProgress>(loadProgress());
   const [time, setTime]           = useState(new Date());
@@ -95,12 +99,16 @@ export default function App() {
   const [showAuth, setShowAuth]               = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showSupport, setShowSupport]         = useState(false);
+  const [showCountdown, setShowCountdown]     = useState(false);
   const { user, loading: authLoading }        = useAuth();
 
-  const isExam     = mode === Mode.MOCK_TEST;
-  const isSpardha  = mode === Mode.SPARDHA;
-  const isBookmark = mode === 'BOOKMARKS';
-  const isPYQ      = mode === 'PYQ';
+  const isExam      = mode === Mode.MOCK_TEST;
+  const isSpardha   = mode === Mode.SPARDHA;
+  const isBookmark  = mode === 'BOOKMARKS';
+  const isPYQ       = mode === 'PYQ';
+  const isFlashcard = mode === 'FLASHCARD';
+  const isRevision  = mode === 'REVISION';
+  const isChallenge = mode === 'CHALLENGE';
 
   useEffect(() => {
     localStorage.setItem('mpsc_mode', mode as string);
@@ -125,21 +133,19 @@ export default function App() {
   }, [user]);
 
   const accuracy = progress.totalAttempted > 0 ? Math.round((progress.totalCorrect/progress.totalAttempted)*100) : 0;
-  const hour = time.getHours();
+  const hour     = time.getHours();
   const greeting = hour<12 ? 'शुभ सकाळ' : hour<17 ? 'शुभ दुपार' : 'शुभ संध्याकाळ';
-  const go = (m: any) => setMode(m);
+  const go   = (m: any) => setMode(m);
   const back = () => { setMode(Mode.HOME); setProgress(loadProgress()); };
 
-  const lightWrapper = {
-    minHeight:'100vh',
-    background:'#F5F0E8',
-    fontFamily:"'Poppins','Noto Sans Devanagari',sans-serif",
-    color:'#1a1a1a'
-  };
+  const lightWrapper = { minHeight:'100vh', background:'#F5F0E8', fontFamily:"'Poppins','Noto Sans Devanagari',sans-serif", color:'#1a1a1a' };
 
-  if (isSpardha)  return <SpardhaYodha onBack={back} />;
-  if (isBookmark) return <BookmarkMode onBack={back} />;
-  if (isPYQ)      return <PYQMode onBack={back} />;
+  if (isSpardha)   return <SpardhaYodha onBack={back} />;
+  if (isBookmark)  return <BookmarkMode onBack={back} />;
+  if (isPYQ)       return <PYQMode onBack={back} />;
+  if (isFlashcard) return <FlashcardMode onBack={back} />;
+  if (isRevision)  return <SmartRevision onBack={back} />;
+  if (isChallenge) return <FriendChallenge onBack={back} />;
 
   if (mode !== Mode.HOME) return (
     <div style={lightWrapper}>
@@ -150,9 +156,7 @@ export default function App() {
             <X size={15} /> डॅशबोर्ड
           </button>
           <span style={{ color:'rgba(0,0,0,0.2)', fontSize:16 }}>|</span>
-          <span style={{ color:'#1a1a1a', fontWeight:900, fontSize:13 }}>
-            {SECTIONS.find(s => s.mode === mode)?.label || mode}
-          </span>
+          <span style={{ color:'#1a1a1a', fontWeight:900, fontSize:13 }}>{SECTIONS.find(s => s.mode === mode)?.label || mode}</span>
         </div>
       )}
       <div className={isExam ? '' : 'max-w-5xl mx-auto px-4 py-6'}>
@@ -177,8 +181,8 @@ export default function App() {
       {showAuth        && <AuthModal onClose={() => setShowAuth(false)} />}
       {showLeaderboard && <Leaderboard onClose={() => setShowLeaderboard(false)} currentUserId={user?.id} />}
       {showSupport     && <SupportModal onClose={() => setShowSupport(false)} />}
+      {showCountdown   && <ExamCountdown onClose={() => setShowCountdown(false)} />}
 
-      {/* Decorative blobs */}
       <div style={{ pointerEvents:'none', position:'fixed', inset:0, zIndex:0, overflow:'hidden' }}>
         <div style={{ position:'absolute', top:'-5%', right:'-5%', width:'40vw', height:'40vw', borderRadius:'50%', background:'radial-gradient(circle,rgba(249,115,22,0.08) 0%,transparent 70%)', filter:'blur(50px)' }} />
         <div style={{ position:'absolute', bottom:'10%', left:'-5%', width:'35vw', height:'35vw', borderRadius:'50%', background:'radial-gradient(circle,rgba(59,130,246,0.07) 0%,transparent 70%)', filter:'blur(50px)' }} />
@@ -212,7 +216,6 @@ export default function App() {
               style={{ display:'flex', alignItems:'center', gap:6, background:'rgba(251,191,36,0.1)', border:'1px solid rgba(251,191,36,0.3)', borderRadius:12, padding:'8px 14px', color:'#92400E', fontWeight:800, fontSize:12, cursor:'pointer' }}>
               <Users size={14} />
             </button>
-            {/* Support button */}
             <button onClick={() => setShowSupport(true)} className="support-btn"
               style={{ display:'flex', alignItems:'center', gap:6, background:'linear-gradient(135deg,#E8671A,#C4510E)', border:'none', borderRadius:12, padding:'9px 16px', color:'#fff', fontWeight:900, fontSize:12, cursor:'pointer', boxShadow:'0 4px 14px rgba(232,103,26,0.3)', transition:'all 0.2s ease' }}>
               <Heart size={13} fill="#fff" /> सपोर्ट
@@ -220,9 +223,6 @@ export default function App() {
             {!authLoading && (
               user ? (
                 <div style={{ display:'flex', alignItems:'center', gap:7 }}>
-                  {user.user_metadata?.avatar_url && (
-                    <img src={user.user_metadata.avatar_url} alt="" style={{ width:30, height:30, borderRadius:'50%', border:'2px solid rgba(249,115,22,0.4)' }} />
-                  )}
                   <button onClick={() => signOut()} className="nav-btn"
                     style={{ display:'flex', alignItems:'center', gap:5, background:'rgba(0,0,0,0.05)', border:'1px solid rgba(0,0,0,0.1)', borderRadius:12, padding:'8px 12px', color:'#666', fontWeight:800, fontSize:11, cursor:'pointer' }}>
                     <LogOut size={13} />
@@ -239,9 +239,9 @@ export default function App() {
         </nav>
 
         {/* Hero */}
-        <div style={{ marginBottom:36, animation:'fadeUp 0.5s ease' }}>
+        <div style={{ marginBottom:28, animation:'fadeUp 0.5s ease' }}>
           <div style={{ display:'inline-flex', alignItems:'center', gap:7, background:'rgba(249,115,22,0.1)', border:'1px solid rgba(249,115,22,0.2)', borderRadius:999, padding:'6px 16px', marginBottom:14 }}>
-            <span style={{ fontSize:12, fontWeight:800, color:'#C2410C', letterSpacing:'0.05em' }}>{greeting} 🙏</span>
+            <span style={{ fontSize:12, fontWeight:800, color:'#C2410C' }}>{greeting} 🙏</span>
           </div>
           <h1 style={{ fontSize:'clamp(1.8rem,5vw,3rem)', fontWeight:900, letterSpacing:'-0.04em', lineHeight:1.1, margin:'0 0 18px', color:'#111' }}>
             यश मिळवायचे आहे,<br />
@@ -255,8 +255,8 @@ export default function App() {
             </div>
             {user && (
               <div style={{ display:'inline-flex', alignItems:'center', gap:7, background:'rgba(16,185,129,0.1)', border:'1px solid rgba(16,185,129,0.3)', borderRadius:999, padding:'9px 18px', fontWeight:700, fontSize:12 }}>
-                <div style={{ width:7, height:7, borderRadius:'50%', background:'#10B981', boxShadow:'0 0 6px #10B981' }} />
-                <span style={{ color:'#065F46' }}>{user.user_metadata?.full_name?.split(' ')[0] || user.email?.split('@')[0] || 'Welcome'} · Cloud Sync ON</span>
+                <div style={{ width:7, height:7, borderRadius:'50%', background:'#10B981' }} />
+                <span style={{ color:'#065F46' }}>{user.email?.split('@')[0]} · Sync ON</span>
               </div>
             )}
             {progress.streak > 0 && (
@@ -268,7 +268,31 @@ export default function App() {
           </div>
         </div>
 
-        {/* Support banner — shows after 3 sessions */}
+        {/* NEW FEATURES — 4 cards */}
+        <div style={{ marginBottom:28 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:14 }}>
+            <div style={{ flex:1, height:1, background:'rgba(0,0,0,0.08)' }} />
+            <span style={{ fontSize:10, fontWeight:800, color:'rgba(0,0,0,0.3)', textTransform:'uppercase', letterSpacing:'0.15em' }}>✨ नवीन Features</span>
+            <div style={{ flex:1, height:1, background:'rgba(0,0,0,0.08)' }} />
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:10 }}>
+            {[
+              { emoji:'🎯', title:'Smart Revision',    sub:'चुकलेले → auto-save',  color:'#7C3AED', bg:'rgba(124,58,237,0.07)', border:'rgba(124,58,237,0.2)', onClick:() => go('REVISION') },
+              { emoji:'📊', title:'Exam Countdown',    sub:'परीक्षेचे किती दिवस',  color:'#2563EB', bg:'rgba(37,99,235,0.07)',  border:'rgba(37,99,235,0.2)',  onClick:() => setShowCountdown(true) },
+              { emoji:'🏆', title:'Friend Challenge',  sub:'Link share → compete', color:'#DC2626', bg:'rgba(220,38,38,0.07)',  border:'rgba(220,38,38,0.2)',  onClick:() => go('CHALLENGE') },
+              { emoji:'🎴', title:'Flashcard Mode',    sub:'Swipe → vocabulary',   color:'#059669', bg:'rgba(5,150,105,0.07)', border:'rgba(5,150,105,0.2)',  onClick:() => go('FLASHCARD') },
+            ].map(({ emoji, title, sub, color, bg, border, onClick }) => (
+              <div key={title} className="card-hover" onClick={onClick}
+                style={{ background:bg, border:`1.5px solid ${border}`, borderRadius:18, padding:'16px 14px', cursor:'pointer', boxShadow:'0 2px 10px rgba(0,0,0,0.05)' }}>
+                <div style={{ fontSize:26, marginBottom:8 }}>{emoji}</div>
+                <div style={{ fontWeight:900, fontSize:13, color:'#1C2B2B', marginBottom:3 }}>{title}</div>
+                <div style={{ fontSize:10, fontWeight:700, color }}>{sub}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Support banner */}
         <div onClick={() => setShowSupport(true)}
           style={{ background:'linear-gradient(135deg,#FFF7ED,#FEF3C7)', border:'1px solid rgba(232,103,26,0.2)', borderRadius:18, padding:'16px 20px', marginBottom:28, display:'flex', alignItems:'center', justifyContent:'space-between', cursor:'pointer', transition:'all 0.2s' }}
           onMouseEnter={e => (e.currentTarget.style.boxShadow='0 6px 24px rgba(232,103,26,0.15)')}
@@ -277,7 +301,7 @@ export default function App() {
             <div style={{ fontSize:28, animation:'sp-heart 2s ease infinite' }}>❤️</div>
             <div>
               <div style={{ fontWeight:900, fontSize:13, color:'#92400E' }}>MPSC सारथी सपोर्ट करा!</div>
-              <div style={{ fontSize:11, color:'#B45309', fontWeight:600 }}>₹2 पासून · GPay / PhonePe / UPI</div>
+              <div style={{ fontSize:11, color:'#B45309', fontWeight:600 }}>₹29 पासून · GPay / PhonePe / UPI</div>
             </div>
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:6, background:'linear-gradient(135deg,#E8671A,#C4510E)', borderRadius:10, padding:'8px 14px', color:'#fff', fontWeight:900, fontSize:12 }}>
@@ -310,7 +334,7 @@ export default function App() {
           ))}
         </div>
 
-        {/* Divider */}
+        {/* Section divider */}
         <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:20 }}>
           <div style={{ flex:1, height:1, background:'rgba(0,0,0,0.08)' }} />
           <span style={{ fontSize:10, fontWeight:800, color:'rgba(0,0,0,0.3)', textTransform:'uppercase', letterSpacing:'0.15em' }}>अभ्यास विभाग निवडा</span>
@@ -319,20 +343,16 @@ export default function App() {
 
         {/* Cards */}
         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(min(100%,290px),1fr))', gap:14 }}>
-
-          {/* FEATURED — SpardhaYodha */}
           <div onClick={() => go(Mode.SPARDHA)} className="card-hover"
             style={{ gridColumn:'span 2', background:'linear-gradient(135deg,#1E0A3C 0%,#2D1260 100%)', border:'1px solid rgba(168,85,247,0.4)', borderRadius:26, padding:28, position:'relative', overflow:'hidden', minHeight:170, cursor:'pointer', boxShadow:'0 8px 32px rgba(168,85,247,0.2)' }}>
             <div style={{ position:'absolute', inset:0, opacity:0.3 }}>
-              {[...Array(20)].map((_,i) => (
-                <div key={i} style={{ position:'absolute', width:i%3===0?3:2, height:i%3===0?3:2, borderRadius:'50%', background:'#fff', left:`${(i*17+5)%95}%`, top:`${(i*23+10)%85}%`, opacity:0.3+(i%5)*0.1 }} />
-              ))}
+              {[...Array(20)].map((_,i) => <div key={i} style={{ position:'absolute', width:i%3===0?3:2, height:i%3===0?3:2, borderRadius:'50%', background:'#fff', left:`${(i*17+5)%95}%`, top:`${(i*23+10)%85}%`, opacity:0.3+(i%5)*0.1 }} />)}
             </div>
             <div style={{ position:'absolute', right:28, top:'50%', transform:'translateY(-50%)', width:100, height:100, borderRadius:'50%', background:'radial-gradient(circle,rgba(168,85,247,0.5) 0%,transparent 70%)', filter:'blur(20px)' }} />
             <div style={{ position:'relative', zIndex:1 }}>
               <div style={{ display:'inline-flex', alignItems:'center', gap:6, background:'rgba(168,85,247,0.25)', border:'1px solid rgba(168,85,247,0.5)', borderRadius:999, padding:'5px 13px', marginBottom:14 }}>
                 <div style={{ width:7, height:7, borderRadius:'50%', background:'#A855F7', boxShadow:'0 0 8px #A855F7', animation:'pulse 2s infinite' }} />
-                <span style={{ fontSize:10, fontWeight:800, color:'#E9D5FF', letterSpacing:'0.12em', textTransform:'uppercase' }}>NEW FEATURE</span>
+                <span style={{ fontSize:10, fontWeight:800, color:'#E9D5FF', letterSpacing:'0.12em', textTransform:'uppercase' }}>SPEED BATTLE</span>
               </div>
               <h2 style={{ fontSize:'clamp(1.3rem,3.5vw,1.9rem)', fontWeight:900, letterSpacing:'-0.04em', lineHeight:1.1, marginBottom:6, color:'#fff' }}>
                 स्पर्धा योद्धा<br />
@@ -345,7 +365,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* FEATURED — Mock Test */}
           <div onClick={() => go(Mode.MOCK_TEST)} className="card-hover"
             style={{ gridColumn:'span 2', background:'linear-gradient(135deg,#7F1D1D 0%,#450A0A 100%)', border:'1px solid rgba(239,68,68,0.4)', borderRadius:26, padding:28, position:'relative', overflow:'hidden', minHeight:150, cursor:'pointer', boxShadow:'0 8px 32px rgba(239,68,68,0.2)' }}>
             <div style={{ position:'absolute', top:0, right:0, width:'50%', height:'100%', overflow:'hidden', opacity:0.08 }}>
@@ -354,7 +373,7 @@ export default function App() {
             <div style={{ position:'relative', zIndex:1 }}>
               <div style={{ display:'inline-flex', alignItems:'center', gap:6, background:'rgba(239,68,68,0.2)', border:'1px solid rgba(239,68,68,0.4)', borderRadius:999, padding:'5px 13px', marginBottom:12 }}>
                 <div style={{ width:7, height:7, borderRadius:'50%', background:'#EF4444', animation:'pulse 2s infinite' }} />
-                <span style={{ fontSize:10, fontWeight:800, color:'#FCA5A5', letterSpacing:'0.12em', textTransform:'uppercase' }}>LIVE TEST</span>
+                <span style={{ fontSize:10, fontWeight:800, color:'#FCA5A5', textTransform:'uppercase' }}>LIVE TEST</span>
               </div>
               <h2 style={{ fontSize:'clamp(1.2rem,3vw,1.7rem)', fontWeight:900, letterSpacing:'-0.04em', lineHeight:1.1, marginBottom:5, color:'#fff' }}>
                 Full Mock Test<br /><span style={{ color:'#FCA5A5' }}>100 प्रश्न · 2 तास</span>
@@ -366,7 +385,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* Regular cards */}
           {SECTIONS.map(({ mode:m, label, sub, icon:Icon, accent, tag }) => (
             <div key={String(m)} onClick={() => go(m)} className="card-hover"
               style={{ background:'#fff', border:'1px solid rgba(0,0,0,0.07)', borderRadius:22, padding:22, position:'relative', overflow:'hidden', cursor:'pointer', boxShadow:'0 2px 8px rgba(0,0,0,0.05)' }}>
@@ -375,9 +393,7 @@ export default function App() {
                 <div style={{ background:`${accent}15`, border:`1px solid ${accent}25`, borderRadius:12, padding:9 }}>
                   <Icon size={20} style={{ color:accent }} />
                 </div>
-                <span style={{ fontSize:9, fontWeight:900, letterSpacing:'0.1em', textTransform:'uppercase', background:`${accent}15`, border:`1px solid ${accent}25`, borderRadius:999, padding:'3px 9px', color:accent }}>
-                  {tag}
-                </span>
+                <span style={{ fontSize:9, fontWeight:900, letterSpacing:'0.1em', textTransform:'uppercase', background:`${accent}15`, border:`1px solid ${accent}25`, borderRadius:999, padding:'3px 9px', color:accent }}>{tag}</span>
               </div>
               <h3 style={{ fontSize:'clamp(0.95rem,2.5vw,1.1rem)', fontWeight:900, letterSpacing:'-0.03em', lineHeight:1.2, marginBottom:3, color:'#111' }}>{label}</h3>
               <p style={{ fontSize:11, color:'rgba(0,0,0,0.4)', fontWeight:600 }}>{sub}</p>
@@ -394,12 +410,10 @@ export default function App() {
           <div style={{ display:'flex', justifyContent:'center', gap:3, marginBottom:8 }}>
             {[...Array(5)].map((_,i) => <Star key={i} size={12} fill="#F97316" style={{ color:'#F97316' }} />)}
           </div>
-          <p style={{ fontSize:11, color:'rgba(0,0,0,0.3)', fontWeight:600 }}>
-            Maharashtra's #1 Free MPSC Practice Portal · mpscsarathi.online
-          </p>
+          <p style={{ fontSize:11, color:'rgba(0,0,0,0.3)', fontWeight:600 }}>Maharashtra's #1 Free MPSC Practice Portal · mpscsarathi.online</p>
           <button onClick={() => setShowSupport(true)}
             style={{ marginTop:12, display:'inline-flex', alignItems:'center', gap:6, background:'none', border:'1px solid rgba(232,103,26,0.3)', borderRadius:99, padding:'8px 18px', color:'#C2410C', fontWeight:700, fontSize:11, cursor:'pointer' }}>
-            <Heart size={11} fill="#C2410C" /> सपोर्ट करा — ₹2 पासून
+            <Heart size={11} fill="#C2410C" /> सपोर्ट करा — ₹29 पासून
           </button>
         </div>
       </div>
