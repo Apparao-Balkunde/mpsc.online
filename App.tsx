@@ -301,7 +301,7 @@ export default function App() {
             <div style={{ fontSize:28, animation:'sp-heart 2s ease infinite' }}>❤️</div>
             <div>
               <div style={{ fontWeight:900, fontSize:13, color:'#92400E' }}>MPSC सारथी सपोर्ट करा!</div>
-              <div style={{ fontSize:11, color:'#B45309', fontWeight:600 }}>₹29 पासून · GPay / PhonePe / UPI</div>
+              <div style={{ fontSize:11, color:'#B45309', fontWeight:600 }}>₹5 पासून · GPay / PhonePe / UPI</div>
             </div>
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:6, background:'linear-gradient(135deg,#E8671A,#C4510E)', borderRadius:10, padding:'8px 14px', color:'#fff', fontWeight:900, fontSize:12 }}>
