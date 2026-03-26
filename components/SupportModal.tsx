@@ -4,10 +4,10 @@ import { X, Heart, Coffee, Check, Zap, Star, Gift } from 'lucide-react';
 interface Props { onClose: () => void; }
 
 const AMOUNTS = [
-  { value: 29,  label: '₹29',  tag: 'चहा ☕',       color: '#E8671A', bg: '#FFF7ED', border: '#FDBA74' },
-  { value: 49,  label: '₹49',  tag: 'सपोर्ट 💪',    color: '#0D6B6E', bg: '#F0FDFA', border: '#99F6E4' },
-  { value: 99,  label: '₹99',  tag: 'Hero 🦁',       color: '#7C3AED', bg: '#F5F3FF', border: '#C4B5FD' },
-  { value: 199, label: '₹199', tag: 'Legend 👑',      color: '#DC2626', bg: '#FEF2F2', border: '#FCA5A5' },
+  { value: 5,  label: '₹5',  tag: 'चहा ☕',       color: '#E8671A', bg: '#FFF7ED', border: '#FDBA74' },
+  { value: 10,  label: '₹10',  tag: 'सपोर्ट 💪',    color: '#0D6B6E', bg: '#F0FDFA', border: '#99F6E4' },
+  { value: 20,  label: '₹20',  tag: 'Hero 🦁',       color: '#7C3AED', bg: '#F5F3FF', border: '#C4B5FD' },
+  { value: 50, label: '₹50', tag: 'Legend 👑',      color: '#DC2626', bg: '#FEF2F2', border: '#FCA5A5' },
 ];
 
 const PERKS = [
