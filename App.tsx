@@ -22,7 +22,7 @@ import { BottomNav } from './components/BottomNav';
 import { MoreMenu } from './components/MoreMenu';
 import { PWAPrompt } from './components/PWAPrompt';
 import { useAuth, signOut } from './hooks/useAuth';
-import { pullProgressFromCloud, startAutoSync } from './services/cloudSync';
+import { pullProgressFromCloud, pushProgressToCloud, startAutoSync } from './services/cloudSync';
 import { Heart } from 'lucide-react';
 import {
   History, BookOpen, Trophy, Newspaper, ShieldCheck,
@@ -123,9 +123,11 @@ export default function App() {
     return () => clearInterval(tick);
   }, []);
 
+  // ✅ FIX: Login नंतर pull + push दोन्ही करा
   useEffect(() => {
     if (!user) return;
     pullProgressFromCloud(user).then(() => setProgress(loadProgress()));
+    pushProgressToCloud(user); // ← Leaderboard साठी important!
     const stop = startAutoSync(user);
     return stop;
   }, [user]);
@@ -141,7 +143,7 @@ export default function App() {
   })();
 
   const handleBottomNav = (tab: string) => {
-    if (tab === 'HOME')      setMode(Mode.HOME);
+    if (tab === 'HOME')           setMode(Mode.HOME);
     else if (tab === 'DAILY')     go('DAILY');
     else if (tab === 'FLASHCARD') go('FLASHCARD');
     else if (tab === 'PROGRESS')  setShowProgress(true);
@@ -152,9 +154,6 @@ export default function App() {
     if (m === 'COUNTDOWN') setShowCountdown(true);
     else go(m);
   };
-
-  // Full screen modes — no bottom nav
-  const fullScreen = [Mode.SPARDHA, Mode.MOCK_TEST, 'FLASHCARD','REVISION','CHALLENGE','DAILY'].includes(mode);
 
   if (mode === Mode.SPARDHA)  return <SpardhaYodha onBack={back} />;
   if (mode === 'BOOKMARKS')   return <BookmarkMode onBack={back} />;
@@ -195,7 +194,6 @@ export default function App() {
     <div style={{ minHeight:'100vh', background:'#F5F0E8', fontFamily:"'Poppins','Noto Sans Devanagari',sans-serif", color:'#1a1a1a', overflowX:'hidden' }}>
       <style>{CSS}</style>
 
-      {/* Modals */}
       {showProgress    && <ProgressDashboard onClose={()=>setShowProgress(false)} />}
       <AIDoubtSolver />
       {showAuth        && <AuthModal onClose={()=>setShowAuth(false)} />}
@@ -205,7 +203,6 @@ export default function App() {
       {showMore        && <MoreMenu onClose={()=>setShowMore(false)} onNav={handleMoreNav} onShowSupport={()=>setShowSupport(true)} onShowLeaderboard={()=>setShowLeaderboard(true)} onShowProgress={()=>setShowProgress(true)} onLogin={()=>setShowAuth(true)} onLogout={()=>signOut()} user={user} />}
       <PWAPrompt />
 
-      {/* Blobs */}
       <div style={{ pointerEvents:'none', position:'fixed', inset:0, zIndex:0, overflow:'hidden' }}>
         <div style={{ position:'absolute', top:'-5%', right:'-5%', width:'50vw', height:'50vw', borderRadius:'50%', background:'radial-gradient(circle,rgba(249,115,22,0.08) 0%,transparent 70%)', filter:'blur(50px)' }} />
         <div style={{ position:'absolute', bottom:'15%', left:'-5%', width:'40vw', height:'40vw', borderRadius:'50%', background:'radial-gradient(circle,rgba(59,130,246,0.07) 0%,transparent 70%)', filter:'blur(50px)' }} />
@@ -345,8 +342,8 @@ export default function App() {
           <div style={{ flex:1, height:1, background:'rgba(0,0,0,0.08)' }} />
         </div>
 
-        {/* Featured cards */}
-        <div style={{ display:'grid', gridTemplateColumns:'1fr', gap:12, marginBottom:12 }}>
+        {/* Featured card */}
+        <div style={{ marginBottom:12 }}>
           <div onClick={()=>go(Mode.MOCK_TEST)} className="card-hover"
             style={{ background:'linear-gradient(135deg,#7F1D1D,#450A0A)', border:'1px solid rgba(239,68,68,0.4)', borderRadius:22, padding:'22px 20px', position:'relative', overflow:'hidden', cursor:'pointer', boxShadow:'0 6px 28px rgba(239,68,68,0.2)' }}>
             <div style={{ position:'relative', zIndex:1, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
@@ -363,7 +360,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* Regular cards — 2 column */}
+        {/* Regular cards */}
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:20 }}>
           {SECTIONS.map(({ mode:m, label, sub, icon:Icon, accent, tag }) => (
             <div key={String(m)} onClick={()=>go(m)} className="card-hover"
@@ -390,7 +387,6 @@ export default function App() {
         </div>
       </div>
 
-      {/* Bottom Navigation */}
       <BottomNav active="HOME" onNav={handleBottomNav} dailyDone={dailyDone} />
     </div>
   );
