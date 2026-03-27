@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import type { User, Session } from '@supabase/supabase-js';
 
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser]       = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -30,16 +30,15 @@ export function useAuth() {
 
   const verifyOTP = async (email: string, token: string) => {
     const { error } = await supabase.auth.verifyOtp({
-      email,
-      token,
-      type: 'email'
+      email, token, type: 'email'
     });
     if (error) throw error;
   };
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
-  };
+  return { user, session, loading, sendOTP, verifyOTP };
+}
 
-  return { user, session, loading, sendOTP, verifyOTP, signOut };
+// Named export — App.tsx मध्ये import { signOut } from './hooks/useAuth'
+export async function signOut() {
+  await supabase.auth.signOut();
 }
