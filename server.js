@@ -14,25 +14,26 @@ const PORT = process.env.PORT || 3000;
 app.use(compression());
 app.use(express.json({ limit: '16kb' }));
 
-// सुपॅबेस क्लायंट सेट करा
-const supabase = createClient(
-  process.env.VITE_SUPABASE_URL,
-  process.env.VITE_SUPABASE_ANON_KEY.replace('>', '') // तुमच्या की मधील '>' काढून टाकेल
-);
-// डेटा सेव्ह करण्यासाठी नवीन API Route
-app.post('/api/save-user-data', async (req, res) => {
-  const userData = req.body;
+// सुपॅबेस क्लायंट तयार करा (की मधील '>' काढून टाका)
+const supabaseUrl = process.env.VITE_SUPABASE_URL;
+const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY?.replace('>', '');
+const supabase = createClient(supabaseUrl, supabaseKey);
 
+// युजर डेटा सेव्ह करण्यासाठी नवीन API एंडपॉईंट (Route)
+app.post('/api/save-user', async (req, res) => {
   try {
+    const userData = req.body;
+    
+    // 'users' ऐवजी तुझ्या टेबलचे नाव वापर (उदा. 'profiles' किंवा 'students')
     const { data, error } = await supabase
-      .from('users_data') // तुमच्या टेबलचे नाव इथे टाका
-      .insert([userData]);
+      .from('users') 
+      .upsert(userData, { onConflict: 'email' }); // email मॅच झाल्यास अपडेट करेल
 
     if (error) throw error;
     res.json({ success: true, data });
   } catch (err) {
     console.error('Supabase Save Error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'डेटा सेव्ह करताना अडचण आली.' });
   }
 });
 
