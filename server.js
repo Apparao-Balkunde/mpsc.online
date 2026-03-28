@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import compression from 'compression';
 import 'dotenv/config'; // ही ओळ सर्वात वर हवी!
+import { createClient } from '@supabase/supabase-js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = path.dirname(__filename);
@@ -12,6 +13,28 @@ const PORT = process.env.PORT || 3000;
 
 app.use(compression());
 app.use(express.json({ limit: '16kb' }));
+
+// सुपॅबेस क्लायंट सेट करा
+const supabase = createClient(
+  process.env.VITE_SUPABASE_URL,
+  process.env.VITE_SUPABASE_ANON_KEY.replace('>', '') // तुमच्या की मधील '>' काढून टाकेल
+);
+// डेटा सेव्ह करण्यासाठी नवीन API Route
+app.post('/api/save-user-data', async (req, res) => {
+  const userData = req.body;
+
+  try {
+    const { data, error } = await supabase
+      .from('users_data') // तुमच्या टेबलचे नाव इथे टाका
+      .insert([userData]);
+
+    if (error) throw error;
+    res.json({ success: true, data });
+  } catch (err) {
+    console.error('Supabase Save Error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // Simple in-memory rate limiter
 const rateLimits = new Map();
