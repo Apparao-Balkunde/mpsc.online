@@ -17,6 +17,9 @@ import { FlashcardMode } from './components/FlashcardMode';
 import { SmartRevision } from './components/SmartRevision';
 import { FriendChallenge } from './components/FriendChallenge';
 import { DailyChallenge } from './components/DailyChallenge';
+import { StudyPlanner } from './components/StudyPlanner';
+import { AIQuestionGenerator } from './components/AIQuestionGenerator';
+import { PerformanceAnalytics } from './components/PerformanceAnalytics';
 import { BookmarkMode } from './components/BookmarksMode';
 import { BottomNav } from './components/BottomNav';
 import { MoreMenu } from './components/MoreMenu';
@@ -91,7 +94,6 @@ const CSS = `
   body { background: #F5F0E8 !important; }
   .card-hover { transition: all 0.18s ease; }
   .card-hover:active { transform: scale(0.97) !important; opacity:0.9; }
-  .nav-btn:hover { background: rgba(0,0,0,0.06) !important; }
 `;
 
 export default function App() {
@@ -105,6 +107,7 @@ export default function App() {
   const [showSupport, setShowSupport]         = useState(false);
   const [showCountdown, setShowCountdown]     = useState(false);
   const [showMore, setShowMore]               = useState(false);
+  const [showAnalytics, setShowAnalytics]     = useState(false);
   const { user, loading: authLoading }        = useAuth();
 
   const isExam = mode === Mode.MOCK_TEST;
@@ -123,11 +126,10 @@ export default function App() {
     return () => clearInterval(tick);
   }, []);
 
-  // ✅ FIX: Login नंतर pull + push दोन्ही करा
   useEffect(() => {
     if (!user) return;
     pullProgressFromCloud(user).then(() => setProgress(loadProgress()));
-    pushProgressToCloud(user); // ← Leaderboard साठी important!
+    pushProgressToCloud(user);
     const stop = startAutoSync(user);
     return stop;
   }, [user]);
@@ -146,22 +148,25 @@ export default function App() {
     if (tab === 'HOME')           setMode(Mode.HOME);
     else if (tab === 'DAILY')     go('DAILY');
     else if (tab === 'FLASHCARD') go('FLASHCARD');
-    else if (tab === 'PROGRESS')  setShowProgress(true);
+    else if (tab === 'PROGRESS')  setShowAnalytics(true);
     else if (tab === 'MORE')      setShowMore(true);
   };
 
   const handleMoreNav = (m: string) => {
     if (m === 'COUNTDOWN') setShowCountdown(true);
+    else if (m === 'ANALYTICS') setShowAnalytics(true);
     else go(m);
   };
 
-  if (mode === Mode.SPARDHA)  return <SpardhaYodha onBack={back} />;
-  if (mode === 'BOOKMARKS')   return <BookmarkMode onBack={back} />;
-  if (mode === 'PYQ')         return <PYQMode onBack={back} />;
-  if (mode === 'FLASHCARD')   return <FlashcardMode onBack={back} />;
-  if (mode === 'REVISION')    return <SmartRevision onBack={back} />;
-  if (mode === 'CHALLENGE')   return <FriendChallenge onBack={back} />;
-  if (mode === 'DAILY')       return <DailyChallenge onBack={back} />;
+  if (mode === Mode.SPARDHA)   return <SpardhaYodha onBack={back} />;
+  if (mode === 'BOOKMARKS')    return <BookmarkMode onBack={back} />;
+  if (mode === 'PYQ')          return <PYQMode onBack={back} />;
+  if (mode === 'FLASHCARD')    return <FlashcardMode onBack={back} />;
+  if (mode === 'REVISION')     return <SmartRevision onBack={back} />;
+  if (mode === 'CHALLENGE')    return <FriendChallenge onBack={back} />;
+  if (mode === 'DAILY')        return <DailyChallenge onBack={back} />;
+  if (mode === 'PLANNER')      return <StudyPlanner onBack={back} />;
+  if (mode === 'AI_QUIZ')      return <AIQuestionGenerator onBack={back} />;
 
   if (mode !== Mode.HOME) return (
     <div style={{ minHeight:'100vh', background:'#F5F0E8', fontFamily:"'Poppins','Noto Sans Devanagari',sans-serif", color:'#1a1a1a' }}>
@@ -195,12 +200,13 @@ export default function App() {
       <style>{CSS}</style>
 
       {showProgress    && <ProgressDashboard onClose={()=>setShowProgress(false)} />}
+      {showAnalytics   && <PerformanceAnalytics onClose={()=>setShowAnalytics(false)} />}
       <AIDoubtSolver />
       {showAuth        && <AuthModal onClose={()=>setShowAuth(false)} />}
       {showLeaderboard && <Leaderboard onClose={()=>setShowLeaderboard(false)} currentUserId={user?.id} />}
       {showSupport     && <SupportModal onClose={()=>setShowSupport(false)} />}
       {showCountdown   && <ExamCountdown onClose={()=>setShowCountdown(false)} />}
-      {showMore        && <MoreMenu onClose={()=>setShowMore(false)} onNav={handleMoreNav} onShowSupport={()=>setShowSupport(true)} onShowLeaderboard={()=>setShowLeaderboard(true)} onShowProgress={()=>setShowProgress(true)} onLogin={()=>setShowAuth(true)} onLogout={()=>signOut()} user={user} />}
+      {showMore        && <MoreMenu onClose={()=>setShowMore(false)} onNav={handleMoreNav} onShowSupport={()=>setShowSupport(true)} onShowLeaderboard={()=>setShowLeaderboard(true)} onShowProgress={()=>setShowAnalytics(true)} onLogin={()=>setShowAuth(true)} onLogout={()=>signOut()} user={user} />}
       <PWAPrompt />
 
       <div style={{ pointerEvents:'none', position:'fixed', inset:0, zIndex:0, overflow:'hidden' }}>
@@ -264,7 +270,7 @@ export default function App() {
           ].map(({ label, value, icon:Icon, color, pct }) => (
             <div key={label} className="card-hover"
               style={{ background:'#fff', border:'1px solid rgba(0,0,0,0.07)', borderRadius:18, padding:'14px 10px', display:'flex', flexDirection:'column', alignItems:'center', gap:6, cursor:'pointer', boxShadow:'0 2px 10px rgba(0,0,0,0.05)', position:'relative', overflow:'hidden' }}
-              onClick={()=>setShowProgress(true)}>
+              onClick={()=>setShowAnalytics(true)}>
               <div style={{ position:'absolute', inset:0, background:`radial-gradient(circle at 50% 0%,${color}10 0%,transparent 60%)` }} />
               <div style={{ position:'relative', zIndex:1 }}>
                 <Ring pct={pct} color={color} size={54} stroke={5} />
@@ -280,20 +286,21 @@ export default function App() {
           ))}
         </div>
 
-        {/* Quick Actions */}
+        {/* Quick Actions — 4 cards */}
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:20 }}>
-          <div className="card-hover" onClick={()=>go('DAILY')}
-            style={{ background:dailyDone?'rgba(5,150,105,0.07)':'rgba(232,103,26,0.07)', border:`1.5px solid ${dailyDone?'rgba(5,150,105,0.25)':'rgba(232,103,26,0.25)'}`, borderRadius:16, padding:'14px 12px', cursor:'pointer' }}>
-            <div style={{ fontSize:24, marginBottom:6 }}>{dailyDone?'✅':'📅'}</div>
-            <div style={{ fontWeight:900, fontSize:12, color:'#1C2B2B' }}>Daily Challenge</div>
-            <div style={{ fontSize:9, fontWeight:700, color:dailyDone?'#059669':'#C4510E', marginTop:2 }}>{dailyDone?'आज पूर्ण!':'5 प्रश्न · आज'}</div>
-          </div>
-          <div className="card-hover" onClick={()=>setShowCountdown(true)}
-            style={{ background:'rgba(37,99,235,0.07)', border:'1.5px solid rgba(37,99,235,0.2)', borderRadius:16, padding:'14px 12px', cursor:'pointer' }}>
-            <div style={{ fontSize:24, marginBottom:6 }}>📊</div>
-            <div style={{ fontWeight:900, fontSize:12, color:'#1C2B2B' }}>Exam Countdown</div>
-            <div style={{ fontSize:9, fontWeight:700, color:'#2563EB', marginTop:2 }}>किती दिवस बाकी</div>
-          </div>
+          {[
+            { emoji:dailyDone?'✅':'📅', title:'Daily Challenge', sub:dailyDone?'आज पूर्ण!':'5 प्रश्न · आज', color:dailyDone?'#059669':'#C4510E', bg:dailyDone?'rgba(5,150,105,0.07)':'rgba(232,103,26,0.07)', border:dailyDone?'rgba(5,150,105,0.25)':'rgba(232,103,26,0.25)', onClick:()=>go('DAILY') },
+            { emoji:'📊', title:'Exam Countdown', sub:'किती दिवस बाकी', color:'#2563EB', bg:'rgba(37,99,235,0.07)', border:'rgba(37,99,235,0.2)', onClick:()=>setShowCountdown(true) },
+            { emoji:'📅', title:'Study Planner',  sub:'Syllabus tracker', color:'#7C3AED', bg:'rgba(124,58,237,0.07)', border:'rgba(124,58,237,0.2)', onClick:()=>go('PLANNER') },
+            { emoji:'🤖', title:'AI Quiz',         sub:'AI questions generate', color:'#DC2626', bg:'rgba(220,38,38,0.07)', border:'rgba(220,38,38,0.2)', onClick:()=>go('AI_QUIZ') },
+          ].map(({ emoji, title, sub, color, bg, border, onClick }) => (
+            <div key={title} className="card-hover" onClick={onClick}
+              style={{ background:bg, border:`1.5px solid ${border}`, borderRadius:16, padding:'14px 12px', cursor:'pointer' }}>
+              <div style={{ fontSize:24, marginBottom:6 }}>{emoji}</div>
+              <div style={{ fontWeight:900, fontSize:12, color:'#1C2B2B' }}>{title}</div>
+              <div style={{ fontSize:9, fontWeight:700, color, marginTop:2 }}>{sub}</div>
+            </div>
+          ))}
         </div>
 
         {/* New Features */}
@@ -308,7 +315,7 @@ export default function App() {
               { emoji:'🎯', title:'Smart Revision',   sub:'चुकलेले → auto-save', color:'#7C3AED', bg:'rgba(124,58,237,0.07)', border:'rgba(124,58,237,0.2)', onClick:()=>go('REVISION') },
               { emoji:'🏆', title:'Friend Challenge', sub:'Link share → compete', color:'#DC2626', bg:'rgba(220,38,38,0.07)',  border:'rgba(220,38,38,0.2)',  onClick:()=>go('CHALLENGE') },
               { emoji:'🎴', title:'Flashcard Mode',   sub:'Swipe → vocabulary',  color:'#059669', bg:'rgba(5,150,105,0.07)', border:'rgba(5,150,105,0.2)',  onClick:()=>go('FLASHCARD') },
-              { emoji:'⚔️', title:'स्पर्धा योद्धा',  sub:'10Q · 12sec · Rank',  color:'#7C3AED', bg:'rgba(124,58,237,0.07)',border:'rgba(124,58,237,0.2)',  onClick:()=>go(Mode.SPARDHA) },
+              { emoji:'📈', title:'Analytics',        sub:'Performance graphs',  color:'#E8671A', bg:'rgba(232,103,26,0.07)', border:'rgba(232,103,26,0.2)',  onClick:()=>setShowAnalytics(true) },
             ].map(({ emoji, title, sub, color, bg, border, onClick }) => (
               <div key={title} className="card-hover" onClick={onClick}
                 style={{ background:bg, border:`1.5px solid ${border}`, borderRadius:16, padding:'14px 12px', cursor:'pointer' }}>
@@ -345,14 +352,14 @@ export default function App() {
         {/* Featured card */}
         <div style={{ marginBottom:12 }}>
           <div onClick={()=>go(Mode.MOCK_TEST)} className="card-hover"
-            style={{ background:'linear-gradient(135deg,#7F1D1D,#450A0A)', border:'1px solid rgba(239,68,68,0.4)', borderRadius:22, padding:'22px 20px', position:'relative', overflow:'hidden', cursor:'pointer', boxShadow:'0 6px 28px rgba(239,68,68,0.2)' }}>
-            <div style={{ position:'relative', zIndex:1, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+            style={{ background:'linear-gradient(135deg,#7F1D1D,#450A0A)', border:'1px solid rgba(239,68,68,0.4)', borderRadius:22, padding:'22px 20px', cursor:'pointer', boxShadow:'0 6px 28px rgba(239,68,68,0.2)' }}>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
               <div>
                 <div style={{ display:'inline-flex', alignItems:'center', gap:5, background:'rgba(239,68,68,0.2)', border:'1px solid rgba(239,68,68,0.4)', borderRadius:999, padding:'3px 10px', marginBottom:10 }}>
                   <div style={{ width:5, height:5, borderRadius:'50%', background:'#EF4444', animation:'pulse 2s infinite' }} />
                   <span style={{ fontSize:9, fontWeight:800, color:'#FCA5A5', textTransform:'uppercase' }}>LIVE TEST</span>
                 </div>
-                <div style={{ fontSize:'clamp(1.1rem,4vw,1.4rem)', fontWeight:900, color:'#fff', letterSpacing:'-0.03em' }}>Full Mock Test 📝</div>
+                <div style={{ fontSize:'clamp(1.1rem,4vw,1.4rem)', fontWeight:900, color:'#fff' }}>Full Mock Test 📝</div>
                 <div style={{ fontSize:11, color:'#FCA5A5', fontWeight:700, marginTop:3 }}>100 प्रश्न · 2 तास · Timer</div>
               </div>
               <ChevronRight size={20} style={{ color:'#FCA5A5' }} />
@@ -372,7 +379,7 @@ export default function App() {
                 </div>
                 <span style={{ fontSize:7, fontWeight:900, textTransform:'uppercase', background:`${accent}15`, border:`1px solid ${accent}25`, borderRadius:999, padding:'2px 7px', color:accent }}>{tag}</span>
               </div>
-              <div style={{ fontWeight:900, fontSize:'clamp(0.8rem,3vw,0.95rem)', letterSpacing:'-0.02em', marginBottom:2, color:'#111' }}>{label}</div>
+              <div style={{ fontWeight:900, fontSize:'clamp(0.8rem,3vw,0.95rem)', marginBottom:2, color:'#111' }}>{label}</div>
               <div style={{ fontSize:9, color:'rgba(0,0,0,0.4)', fontWeight:600 }}>{sub}</div>
             </div>
           ))}
