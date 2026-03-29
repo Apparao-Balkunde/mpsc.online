@@ -134,8 +134,7 @@ export default function App() {
   if (mode === Mode.LITERATURE)
     return <LiteratureMode onBack={back} />;
 
-  if (mode === Mode.QuizMode)
-    return <QuizMode onBack={back} />;
+  // 'QUIZ' mode is already handled above at line 96
 
 
   // ================= HOME =================
@@ -180,10 +179,10 @@ export default function App() {
 
         {/* Actions */}
         <div className="grid grid-cols-2 gap-3">
-          <button onClick={() => go('QUIZ')} className="btn">📝 Quiz</button>
-          <button onClick={() => go('DAILY')} className="btn">📅 Daily</button>
-          <button onClick={() => go(Mode.PRELIMS)} className="btn">📚 Prelims</button>
-          <button onClick={() => go('FLASHCARD')} className="btn">🎴 Flashcards</button>
+          <button onClick={() => go('QUIZ')} className="p-4 bg-white rounded-xl font-semibold text-gray-800 shadow-sm border border-gray-100 active:scale-95 transition-transform text-left">📝 Quiz</button>
+          <button onClick={() => go('DAILY')} className="p-4 bg-white rounded-xl font-semibold text-gray-800 shadow-sm border border-gray-100 active:scale-95 transition-transform text-left">📅 Daily</button>
+          <button onClick={() => go(Mode.PRELIMS)} className="p-4 bg-white rounded-xl font-semibold text-gray-800 shadow-sm border border-gray-100 active:scale-95 transition-transform text-left">📚 Prelims</button>
+          <button onClick={() => go('FLASHCARD')} className="p-4 bg-white rounded-xl font-semibold text-gray-800 shadow-sm border border-gray-100 active:scale-95 transition-transform text-left">🎴 Flashcards</button>
         </div>
 
       </main>
