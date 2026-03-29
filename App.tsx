@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from './lib/supabase';
 import { Mode, UserProgress } from './types';
 import { QuestionView } from './components/QuestionView';
+import { QuizeMode } from './components/QuizeMode';
 import { MockTestMode } from './components/MockTestMode';
 import { VocabMode } from './components/VocabMode';
 import { LiteratureMode } from './components/LiteratureMode';
