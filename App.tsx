@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './lib/supabase';
 import { Mode, UserProgress } from './types';
-import { QuizMode } from './QuizMode';
+import { QuizMode } from '.components/QuizMode';
 import { QuestionView } from './components/QuestionView';
 import { MockTestMode } from './components/MockTestMode';
 import { VocabMode } from './components/VocabMode';
@@ -160,8 +160,9 @@ export default function App() {
     else go(m);
   };
 
-  if (mode === 'SPARDHA')   return <SpardhaYodha onBack={back} />;
+  if (mode === Mode.SPARDHA)   return <SpardhaYodha onBack={back} />;
   if (mode === 'BOOKMARKS')    return <BookmarkMode onBack={back} />;
+   if (mode === Mode.QUIZ)      return <QuizMode onBack={back} />;
   if (mode === 'PYQ')          return <PYQMode onBack={back} />;
   if (mode === 'FLASHCARD')    return <FlashcardMode onBack={back} />;
   if (mode === 'REVISION')     return <SmartRevision onBack={back} />;
