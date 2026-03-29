@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './lib/supabase';
 import { Mode, UserProgress } from './types';
+import { QuizMode } from './QuizMode';
 import { QuestionView } from './components/QuestionView';
 import { MockTestMode } from './components/MockTestMode';
 import { VocabMode } from './components/VocabMode';
@@ -72,6 +73,7 @@ const SECTIONS = [
   { mode: Mode.MOCK,            label:'State Board',      sub:'पाठ्यपुस्तक Mock',      icon:Trophy,        accent:'#F59E0B', tag:'MOCK'  },
   { mode: Mode.CURRENT_AFFAIRS, label:'चालू घडामोडी',   sub:'Daily Updates',          icon:Newspaper,     accent:'#EC4899', tag:'DAILY' },
   { mode: 'PYQ' as any,         label:'PYQ संच',          sub:'मागील वर्षांचे प्रश्न', icon:FileText,      accent:'#F59E0B', tag:'PYQ'   },
+  {mode === 'QUIZ' && <QuizMode onBack={back} onComplete={(score) => console.log(score)} />}
 ];
 
 function Ring({ pct, color, size=64, stroke=5 }: { pct:number; color:string; size?:number; stroke?:number }) {
