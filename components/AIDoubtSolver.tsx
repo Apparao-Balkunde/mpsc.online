@@ -116,5 +116,4 @@ export const AIDoubtSolver: React.FC = () => {
     </>
   );
 };
-EOF
-echo "AIDoubtSolver done!"
+
