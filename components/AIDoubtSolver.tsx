@@ -1,4 +1,4 @@
-cat > /home/ubuntu/mpsc.online/components/AIDoubtSolver.tsx << 'EOF'
+
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Send, Sparkles, Trash2 } from 'lucide-react';
 
