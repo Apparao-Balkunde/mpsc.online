@@ -14,20 +14,18 @@ const PORT = process.env.PORT || 3000;
 app.use(compression());
 app.use(express.json({ limit: '16kb' }));
 
-// सुपॅबेस क्लायंट तयार करा (की मधील '>' काढून टाका)
+// सुपॅबेस क्लायंट तयार करा
 const supabaseUrl = process.env.VITE_SUPABASE_URL;
 const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY?.replace('>', '');
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// युजर डेटा सेव्ह करण्यासाठी नवीन API एंडपॉईंट (Route)
+// १. युजर डेटा सेव्ह करण्यासाठी API एंडपॉईंट
 app.post('/api/save-user', async (req, res) => {
   try {
     const userData = req.body;
-    
-    // 'users' ऐवजी तुझ्या टेबलचे नाव वापर (उदा. 'profiles' किंवा 'students')
     const { data, error } = await supabase
       .from('users') 
-      .upsert(userData, { onConflict: 'email' }); // email मॅच झाल्यास अपडेट करेल
+      .upsert(userData, { onConflict: 'email' });
 
     if (error) throw error;
     res.json({ success: true, data });
@@ -37,7 +35,7 @@ app.post('/api/save-user', async (req, res) => {
   }
 });
 
-// Simple in-memory rate limiter
+// २. Rate Limiter (सुरक्षेसाठी)
 const rateLimits = new Map();
 function rateLimit(ip, max = 20, windowMs = 60_000) {
   const now = Date.now();
@@ -52,7 +50,7 @@ setInterval(() => {
   for (const [k, v] of rateLimits) if (v.start < cutoff) rateLimits.delete(k);
 }, 300_000);
 
-// Security + Cache headers
+// ३. Security + Cache headers
 app.use((req, res, next) => {
   if (req.url.startsWith('/assets/')) {
     res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
@@ -65,11 +63,10 @@ app.use((req, res, next) => {
   next();
 });
 
-// /api/ai -- Groq proxy (FREE, no credit card)
+// ४. AI Proxy - Groq (llama-3.3-70b)
 app.post('/api/ai', async (req, res) => {
   const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.socket.remoteAddress || 'unknown';
 
-  // 20 AI calls/min per IP (Groq free limit is generous, but protect server)
   if (!rateLimit(ip, 20, 60_000)) {
     return res.status(429).json({ error: 'जास्त requests. एक मिनिट थांबा. 🙏' });
   }
@@ -81,15 +78,12 @@ app.post('/api/ai', async (req, res) => {
 
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
-    return res.status(503).json({ error: 'AI service not configured. GROQ_API_KEY set करा.' });
+    return res.status(503).json({ error: 'AI service not configured.' });
   }
 
-  // Build messages array with optional system prompt
   const groqMessages = [];
-  if (system) {
-    groqMessages.push({ role: 'system', content: system });
-  }
-  groqMessages.push(...messages.slice(-12)); // last 12 for context window
+  if (system) groqMessages.push({ role: 'system', content: system });
+  groqMessages.push(...messages.slice(-12));
 
   try {
     const upstream = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -99,74 +93,66 @@ app.post('/api/ai', async (req, res) => {
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile', // best free model
+        model: 'llama-3.3-70b-versatile',
         messages: groqMessages,
         max_tokens,
         temperature: 0.7,
-        stream: false,
       }),
     });
 
     if (!upstream.ok) {
       const errText = await upstream.text();
       console.error('[Groq] Error:', upstream.status, errText);
-
-      // Rate limit hit -- Groq returns 429
-      if (upstream.status === 429) {
-        return res.status(429).json({ error: 'AI busy आहे. थोड्या वेळाने पुन्हा प्रयत्न करा.' });
-      }
-      return res.status(502).json({ error: 'AI service temporarily unavailable' });
+      return res.status(upstream.status === 429 ? 429 : 502).json({ error: 'AI busy आहे.' });
     }
 
     const data = await upstream.json();
     const text = data?.choices?.[0]?.message?.content || '';
-
-    // Log token usage (optional -- to monitor free tier)
     const usage = data?.usage;
-    if (usage) {
-      console.log(`[Groq] tokens: ${usage.prompt_tokens} in + ${usage.completion_tokens} out`);
-    }
+    if (usage) console.log(`[Groq] tokens: ${usage.prompt_tokens} in + ${usage.completion_tokens} out`);
 
     res.json({ text });
-
   } catch (err) {
     console.error('[Groq Proxy] Error:', err);
-    res.status(500).json({ error: 'Server error. पुन्हा प्रयत्न करा.' });
+    res.status(500).json({ error: 'Server error.' });
   }
 });
 
-// Health check
+// ५. Health Check API
 app.get('/api/health', (_, res) => {
   res.json({
     status: 'ok',
     ai: process.env.GROQ_API_KEY ? 'groq-enabled' : 'disabled',
+    supabase: supabaseUrl ? 'configured' : 'missing',
     time: new Date().toISOString(),
   });
 });
 
-// Static files
+// ६. Static Files Handling
 app.use(express.static(path.join(__dirname, 'dist')));
 
 app.get('/sitemap.xml', (req, res) => {
-  res.setHeader('Content-Type', 'application/xml');
-  res.setHeader('Cache-Control', 'public, max-age=86400');
-  res.sendFile(path.join(__dirname, 'dist', 'sitemap.xml'));
+  res.sendFile(path.join(__dirname, 'dist', 'sitemap.xml'), (err) => {
+    if (err) res.status(404).end();
+  });
 });
 
 app.get('/robots.txt', (req, res) => {
-  res.setHeader('Content-Type', 'text/plain');
-  res.sendFile(path.join(__dirname, 'dist', 'robots.txt'));
+  res.sendFile(path.join(__dirname, 'dist', 'robots.txt'), (err) => {
+    if (err) res.status(404).send("User-agent: *\nDisallow:");
+  });
 });
-
 
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
+// ७. Server Listener - (Connect Check सह)
 app.listen(PORT, () => {
   console.log('-----------------------------------------');
-  console.log('MPSC Sarathi running!');
-  console.log('Port :', PORT);
-  console.log('AI   :', process.env.GROQ_API_KEY ? 'Groq FREE (llama-3.3-70b)' : 'DISABLED - set GROQ_API_KEY');
+  console.log('🚀 MPSC Sarathi Server Started!');
+  console.log('📍 Port     :', PORT);
+  console.log('🗄️  Supabase :', supabaseUrl ? 'CONNECTED ✅' : 'MISSING URL ❌');
+  console.log('🤖 AI       :', process.env.GROQ_API_KEY ? 'Groq (llama-3.3-70b) ✅' : 'DISABLED ❌');
   console.log('-----------------------------------------');
 });
