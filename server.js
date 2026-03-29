@@ -159,13 +159,6 @@ app.get('/robots.txt', (req, res) => {
 });
 
 
-// Sitemap.xml
-app.get('/sitemap.xml', (req, res) => {
-  res.setHeader('Content-Type', 'application/xml');
-  res.sendFile(path.join(__dirname, 'dist', 'sitemap.xml'));
-});
-
-
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
