@@ -172,6 +172,7 @@ export default function App() {
   if (mode === 'DAILY')        return <DailyChallenge onBack={back} />;
   if (mode === 'PLANNER')      return <StudyPlanner onBack={back} />;
   if (mode === 'AI_QUIZ')      return <AIQuestionGenerator onBack={back} />;
+  
 
   if (mode !== Mode.HOME) return (
     <div style={{ minHeight:'100vh', background:'#F5F0E8', fontFamily:"'Poppins','Noto Sans Devanagari',sans-serif", color:'#1a1a1a' }}>
