@@ -35,6 +35,8 @@ import {
   Award, Bookmark, BarChart2, FileText
 } from 'lucide-react';
 
+const Quiz = QuizMode;
+
 const PROGRESS_KEY = 'mpsc_user_progress';
 const HISTORY_KEY  = 'mpsc_history';
 
