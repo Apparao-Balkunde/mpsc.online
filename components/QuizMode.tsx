@@ -6,6 +6,7 @@ import { CheckCircle2, XCircle, ChevronRight, RotateCcw, ArrowLeft, Loader2, Boo
 interface QuizModeProps {
   questions?: QuizQuestion[];
   onBack: () => void;
+  onComplete: (score: number) => void; // हे नवीन ॲड करा
 }
 
 const CSS = `
