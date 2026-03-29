@@ -32,7 +32,7 @@ app.use((req, res, next) => {
   if (req.url.startsWith('/assets/')) {
     res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
   } else if (req.url === '/' || req.url.endsWith('.html')) {
-    res.setHeader('Cache-Control', 'public, max-age=3600, must-revalidate');
+     res.setHeader('Cache-Control', 'no-store, must-revalidate');
   }
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
