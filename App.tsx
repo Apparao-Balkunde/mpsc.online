@@ -25,7 +25,7 @@ import { BottomNav } from './components/BottomNav';
 import { MoreMenu } from './components/MoreMenu';
 import { PWAPrompt } from './components/PWAPrompt';
 import { useAuth, signOut } from './hooks/useAuth';
-import { pullProgressFromCloud, pushProgressToCloud, startAutoSync } from './services/cloudSync';
+import { pullProgressFromCloud, pushProgressToCloud, startAutoSync } from './lib/Cloudsync';
 import { Heart } from 'lucide-react';
 import {
   History, BookOpen, Trophy, Newspaper, ShieldCheck,
