@@ -134,6 +134,10 @@ export default function App() {
   if (mode === Mode.LITERATURE)
     return <LiteratureMode onBack={back} />;
 
+  if (mode === Mode.QuizMode)
+    return <QuizMode onBack={back} />;
+
+
   // ================= HOME =================
   return (
     <div className="min-h-screen bg-[#F5F0E8] font-sans pb-20">
