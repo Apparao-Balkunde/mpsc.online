@@ -57,6 +57,10 @@
           keys.filter((k) => k.includes('mpsc')).forEach((k) => caches.delete(k));
         }).catch(() => {});
       }
+      // Fallback for very old bundles that still reference a global `Quiz` component
+      if (!('Quiz' in window)) {
+        window.Quiz = () => null;
+      }
       try {
         const savedMode = localStorage.getItem('mpsc_mode');
         if (savedMode === 'Quiz' || savedMode === 'QUIZ') {
