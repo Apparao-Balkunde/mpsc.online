@@ -24,7 +24,7 @@ import { BookmarkMode } from './components/BookmarksMode';
 import { BottomNav } from './components/BottomNav';
 import { MoreMenu } from './components/MoreMenu';
 import { PWAPrompt } from './components/PWAPrompt';
-import { useAuth, signOut } from './hooks/useAuth';
+import { useAuth, signOut } from './useAuth';
 import { Result } from './components/Result';
 import { pullProgressFromCloud, pushProgressToCloud, startAutoSync } from './services/cloudSync';
 import { Heart } from 'lucide-react';
