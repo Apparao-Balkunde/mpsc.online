@@ -174,7 +174,6 @@ export default function App() {
   if (mode === 'DAILY')        return <DailyChallenge onBack={back} />;
   if (mode === 'PLANNER')      return <StudyPlanner onBack={back} />;
   if (mode === 'AI_QUIZ')      return <AIQuestionGenerator onBack={back} />;
-  if (mode === 'QUIZ')          return <QuizMode onBack={back} />;
   if (mode === 'QUIZ') return <QuizMode onBack={back} />;
   
 
