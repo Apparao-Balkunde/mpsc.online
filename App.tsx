@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from './lib/supabase';
 import { Mode, UserProgress } from './types';
 import { QuestionView } from './components/QuestionView';
-import { QuizeMode } from './components/QuizeMode';
+import { QuizeMode } from './components/QuizeMode'; // 'QuizeMode' इंपोर्ट आहे
 import { MockTestMode } from './components/MockTestMode';
 import { VocabMode } from './components/VocabMode';
 import { LiteratureMode } from './components/LiteratureMode';
@@ -60,12 +60,12 @@ export function updateProgress(attempted: number, correct: number) {
 }
 
 const SECTIONS = [
-  { mode: Mode.PRELIMS,         label:'पूर्व परीक्षा',   sub:'PYQ + Practice',         icon:History,      accent:'#3B82F6', tag:'PYQ'   },
-  { mode: Mode.MAINS,           label:'मुख्य परीक्षा',   sub:'GS + भाषा',              icon:BookMarked,    accent:'#10B981', tag:'PYQ'   },
-  { mode: Mode.SARALSEVA,       label:'सरळसेवा',         sub:'TCS / IBPS / ZP',        icon:ShieldCheck,   accent:'#06B6D4', tag:'NEW'   },
-  { mode: Mode.VOCAB,           label:'शब्दसंग्रह',      sub:'Marathi + English',      icon:Languages,      accent:'#8B5CF6', tag:'HOT'   },
-  { mode: Mode.LITERATURE,      label:'मराठी साहित्य',   sub:'Mains + NET/SET',        icon:GraduationCap, accent:'#F97316', tag:'NEW'   },
-  { mode: Mode.MOCK,            label:'State Board',      sub:'पाठ्यपुस्तक Mock',       icon:Trophy,        accent:'#F59E0B', tag:'MOCK'  },
+  { mode: Mode.PRELIMS,         label:'पूर्व परीक्षा',   sub:'PYQ + Practice',          icon:History,      accent:'#3B82F6', tag:'PYQ'   },
+  { mode: Mode.MAINS,            label:'मुख्य परीक्षा',   sub:'GS + भाषा',               icon:BookMarked,    accent:'#10B981', tag:'PYQ'   },
+  { mode: Mode.SARALSEVA,       label:'सरळसेवा',         sub:'TCS / IBPS / ZP',         icon:ShieldCheck,   accent:'#06B6D4', tag:'NEW'   },
+  { mode: Mode.VOCAB,            label:'शब्दसंग्रह',      sub:'Marathi + English',      icon:Languages,      accent:'#8B5CF6', tag:'HOT'   },
+  { mode: Mode.LITERATURE,       label:'मराठी साहित्य',   sub:'Mains + NET/SET',        icon:GraduationCap, accent:'#F97316', tag:'NEW'   },
+  { mode: Mode.MOCK,             label:'State Board',      sub:'पाठ्यपुस्तक Mock',        icon:Trophy,        accent:'#F59E0B', tag:'MOCK'  },
   { mode: Mode.CURRENT_AFFAIRS, label:'चालू घडामोडी',   sub:'Daily Updates',          icon:Newspaper,      accent:'#EC4899', tag:'DAILY' },
   { mode: 'PYQ' as any,         label:'PYQ संच',          sub:'मागील वर्षांचे प्रश्न', icon:FileText,       accent:'#F59E0B', tag:'PYQ'   },
 ];
@@ -96,14 +96,14 @@ export default function App() {
   const [mode, setMode] = useState<any>(() => (localStorage.getItem('mpsc_mode') as any) || Mode.HOME);
   const [count, setCount]         = useState(0);
   const [progress, setProgress]   = useState<UserProgress>(loadProgress());
-  const [time, setTime]           = useState(new Date());
+  const [time, setTime]            = useState(new Date());
   const [showProgress, setShowProgress]       = useState(false);
-  const [showAuth, setShowAuth]               = useState(false);
+  const [showAuth, setShowAuth]                = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
-  const [showSupport, setShowSupport]         = useState(false);
+  const [showSupport, setShowSupport]          = useState(false);
   const [showCountdown, setShowCountdown]     = useState(false);
-  const [showMore, setShowMore]               = useState(false);
-  const [showAnalytics, setShowAnalytics]     = useState(false);
+  const [showMore, setShowMore]                = useState(false);
+  const [showAnalytics, setShowAnalytics]      = useState(false);
   const [score, setScore] = useState(0);
   const [showResult, setShowResult] = useState(false);
   const { user } = useAuth();
@@ -117,7 +117,8 @@ export default function App() {
   }, [mode]);
 
   useEffect(() => {
-    const tables = ['prelims_questions','mains_questions','mock_questions','current_affairs','vocab_questions','literature_questions'];
+    // added saralseva_questions to count
+    const tables = ['prelims_questions','mains_questions','mock_questions','current_affairs','vocab_questions','literature_questions','saralseva_questions'];
     Promise.all(tables.map(t => supabase.from(t).select('*',{count:'exact',head:true})))
       .then(rs => setCount(rs.reduce((a,c) => a+(c.count||0), 0))).catch(()=>{});
     const tick = setInterval(() => setTime(new Date()), 60000);
@@ -149,7 +150,6 @@ export default function App() {
     try { const d = JSON.parse(localStorage.getItem('mpsc_daily_challenge')||'{}'); return d.date===new Date().toDateString()&&d.done; } catch { return false; }
   })();
 
-  // १. जर निकाल (Result) दाखवायचा असेल तर
   if (showResult) {
     return (
       <div style={{ minHeight:'100vh', background:'#F5F0E8' }}>
@@ -163,7 +163,6 @@ export default function App() {
     );
   }
 
-  // २. जर युजर डॅशबोर्डवर नसेल तर (Study Modes)
   if (mode !== Mode.HOME) {
     return (
       <div style={{ minHeight:'100vh', background:'#F5F0E8', fontFamily:"'Poppins','Noto Sans Devanagari',sans-serif", color:'#1a1a1a' }}>
@@ -179,14 +178,14 @@ export default function App() {
         )}
         <div className={isExam ? '' : 'max-w-5xl mx-auto px-4 py-6'}>
           {mode === Mode.PRELIMS       && <QuestionView type={Mode.PRELIMS} tableName="prelims_questions" onBack={back} onProgressUpdate={()=>setProgress(loadProgress())} />}
-          {mode === Mode.MAINS         && <QuestionView type={Mode.MAINS} tableName="mains_questions" onBack={back} onProgressUpdate={()=>setProgress(loadProgress())} />}
+          {mode === Mode.MAINS           && <QuestionView type={Mode.MAINS} tableName="mains_questions" onBack={back} onProgressUpdate={()=>setProgress(loadProgress())} />}
           {mode === Mode.SARALSEVA     && <QuestionView type={Mode.SARALSEVA} tableName="saralseva_questions" onBack={back} onProgressUpdate={()=>setProgress(loadProgress())} />}
-          {mode === Mode.MOCK          && <QuestionView type={Mode.MOCK} tableName="mock_questions" onBack={back} onProgressUpdate={()=>setProgress(loadProgress())} />}
+          {mode === Mode.MOCK            && <QuestionView type={Mode.MOCK} tableName="mock_questions" onBack={back} onProgressUpdate={()=>setProgress(loadProgress())} />}
           {mode === Mode.MOCK_TEST     && <MockTestMode onBack={back} />}
           {mode === Mode.CURRENT_AFFAIRS && <QuestionView type={Mode.CURRENT_AFFAIRS} tableName="current_affairs" onBack={back} onProgressUpdate={()=>setProgress(loadProgress())} />}
-          {mode === Mode.VOCAB         && <VocabMode onBack={back} />}
+          {mode === Mode.VOCAB           && <VocabMode onBack={back} />}
           {mode === Mode.LITERATURE      && <LiteratureMode onBack={back} />}
-          {mode === Mode.SPARDHA       && <SpardhaYodha onBack={back} />}
+          {mode === Mode.SPARDHA         && <SpardhaYodha onBack={back} />}
           {mode === 'BOOKMARKS'        && <BookmarkMode onBack={back} />}
           {mode === 'PYQ'              && <PYQMode onBack={back} />}
           {mode === 'FLASHCARD'        && <FlashcardMode onBack={back} />}
@@ -195,13 +194,14 @@ export default function App() {
           {mode === 'DAILY'            && <DailyChallenge onBack={back} />}
           {mode === 'PLANNER'          && <StudyPlanner onBack={back} />}
           {mode === 'AI_QUIZ'          && <AIQuestionGenerator onBack={back} />}
+          {/* fix for 'Quiz is not defined' - replaced with QuizeMode from import */}
+          {mode === 'QUIZ'             && <QuizeMode onBack={back} />} 
         </div>
         {!isExam && <BottomNav active="HOME" onNav={handleBottomNav} dailyDone={dailyDone} />}
       </div>
     );
   }
 
-  // ३. मुख्य डॅशबोर्ड (DASHBOARD)
   return (
     <div style={{ minHeight:'100vh', background:'#F5F0E8', fontFamily:"'Poppins','Noto Sans Devanagari',sans-serif", color:'#1a1a1a', overflowX:'hidden' }}>
       <style>{CSS}</style>
