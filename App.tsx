@@ -25,6 +25,7 @@ import { BottomNav } from './components/BottomNav';
 import { MoreMenu } from './components/MoreMenu';
 import { PWAPrompt } from './components/PWAPrompt';
 import { useAuth, signOut } from './hooks/useAuth';
+import { Result } from './components/Result';
 import { pullProgressFromCloud, pushProgressToCloud, startAutoSync } from './services/cloudSync';
 import { Heart } from 'lucide-react';
 import {
@@ -158,6 +159,34 @@ export default function App() {
     else go(m);
   };
 
+  const [showResult, setShowResult] = useState(false);
+const [score, setScore] = useState(0);
+
+  return (
+  <div className="app-container">
+    {showResult ? (
+      // जर क्विझ संपली असेल तर हा रिझल्ट दिसेल
+      <Result 
+        score={score} 
+        totalQuestions={10} 
+        onRestart={() => {
+          setScore(0);
+          setShowResult(false);
+        }} 
+      />
+    ) : (
+      // जर क्विझ चालू असेल तर हा भाग दिसेल
+      <Quiz 
+        onComplete={(finalScore) => {
+          setScore(finalScore);
+          setShowResult(true);
+        }} 
+      />
+    )}
+  </div>
+);
+
+  
   if (mode === Mode.SPARDHA)   return <SpardhaYodha onBack={back} />;
   if (mode === 'BOOKMARKS')    return <BookmarkMode onBack={back} />;
   if (mode === 'PYQ')          return <PYQMode onBack={back} />;
