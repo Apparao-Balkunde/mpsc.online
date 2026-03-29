@@ -1,5 +1,6 @@
 export enum Mode {
   HOME = 'HOME',
+  QUIZ = 'QUIZ',
   PRELIMS = 'PRELIMS',
   MAINS = 'MAINS',
   MOCK = 'MOCK',
