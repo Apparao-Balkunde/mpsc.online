@@ -78,6 +78,7 @@ const SECTIONS = [
   { mode: Mode.CURRENT_AFFAIRS, label:'चालू घडामोडी',   sub:'Daily Updates',          icon:Newspaper,     accent:'#EC4899', tag:'DAILY' },
   { mode: 'PYQ' as any,         label:'PYQ संच',          sub:'मागील वर्षांचे प्रश्न', icon:FileText,      accent:'#F59E0B', tag:'PYQ'   },
 ];
+if (mode === 'QUIZ') return <QuizMode onBack={back} />;
 
 function Ring({ pct, color, size=64, stroke=5 }: { pct:number; color:string; size?:number; stroke?:number }) {
   const r = (size-stroke*2)/2, circ = 2*Math.PI*r, offset = circ-(pct/100)*circ;
@@ -172,6 +173,8 @@ export default function App() {
   if (mode === 'DAILY')        return <DailyChallenge onBack={back} />;
   if (mode === 'PLANNER')      return <StudyPlanner onBack={back} />;
   if (mode === 'AI_QUIZ')      return <AIQuestionGenerator onBack={back} />;
+  if (mode === 'QUIZ')          return <QuizMode onBack={back} />;
+  if (mode === 'QUIZ') return <QuizMode onBack={back} />;
   
 
   if (mode !== Mode.HOME) return (
@@ -205,7 +208,7 @@ export default function App() {
     <div style={{ minHeight:'100vh', background:'#F5F0E8', fontFamily:"'Poppins','Noto Sans Devanagari',sans-serif", color:'#1a1a1a', overflowX:'hidden' }}>
       <style>{CSS}</style>
 
-      {showProgress    && <ProgressDashboard onClose={()=>setShowProgress(false)} />}
+      {showProgress    && <Progressdashboard onClose={()=>setShowProgress(false)} />}
       {showAnalytics   && <PerformanceAnalytics onClose={()=>setShowAnalytics(false)} />}
       <AIDoubtSolver />
       {showAuth        && <AuthModal onClose={()=>setShowAuth(false)} />}
