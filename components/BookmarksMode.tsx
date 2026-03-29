@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, Bookmark, BookmarkX, CheckCircle2, XCircle, Check, X, BookOpen, Trash2, RefreshCcw } from 'lucide-react';
-import { getBookmarks, removeBookmark, type Bookmark as BM } from '../services/bookmarks';
+import { getBookmarks, removeBookmark, type Bookmark as BM } from '../components/bookmarks';
 import { updateProgress } from '../App';
 
 const CSS = `
