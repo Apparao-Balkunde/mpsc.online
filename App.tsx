@@ -26,7 +26,7 @@ import { MoreMenu } from './components/MoreMenu';
 import { PWAPrompt } from './components/PWAPrompt';
 import { useAuth, signOut } from './useauth';
 import { Result } from './components/Result';
-import { pullProgressFromCloud, pushProgressToCloud, startAutoSync } from './services/cloudSync';
+import { pullProgressFromCloud, pushProgressToCloud, startAutoSync } from './cloudSync';
 import { Heart } from 'lucide-react';
 import {
   History, BookOpen, Trophy, Newspaper, ShieldCheck,
