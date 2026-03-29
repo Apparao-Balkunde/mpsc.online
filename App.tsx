@@ -99,8 +99,11 @@ const CSS = `
 `;
 
 export default function App() {
-  const [mode, setMode] = useState<any>(() => (localStorage.getItem('mpsc_mode') as any) || Mode.HOME);
-  const [count, setCount]         = useState(0);
+  const [mode, setMode] = useState<any>(() => {
+    const saved = localStorage.getItem('mpsc_mode') as any;
+    if (saved === 'Quiz') return Mode.QUIZ; // legacy value compatibility
+    return saved || Mode.HOME;
+  });  const [count, setCount]         = useState(0);
   const [progress, setProgress]   = useState<UserProgress>(loadProgress());
   const [time, setTime]           = useState(new Date());
   const [showProgress, setShowProgress]       = useState(false);
