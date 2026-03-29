@@ -20,7 +20,7 @@ import { DailyChallenge } from './components/DailyChallenge';
 import { StudyPlanner } from './components/StudyPlanner';
 import { AIQuestionGenerator } from './components/AIQuestionGenerator';
 import { PerformanceAnalytics } from './components/PerformanceAnalytics';
-import { BookmarkMode } from './components/BookmarksMode';
+import { BookmarkMode } from './components/Bookmarksmode';
 import { BottomNav } from './components/BottomNav';
 import { MoreMenu } from './components/MoreMenu';
 import { PWAPrompt } from './components/PWAPrompt';
