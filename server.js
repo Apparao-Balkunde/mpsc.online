@@ -33,7 +33,9 @@ app.use((req, res, next) => {
     res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
   } else if (req.url === '/' || req.url.endsWith('.html')) {
       res.setHeader('Cache-Control', 'no-store, must-revalidate');
-    res.setHeader('Clear-Site-Data', '"cache"');
+      res.setHeader('CDN-Cache-Control', 'no-store');
+      res.setHeader('Surrogate-Control', 'no-store');
+      res.setHeader('Clear-Site-Data', '"cache"');
   }
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
