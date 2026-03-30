@@ -10,8 +10,8 @@ export default defineConfig({
 
   resolve: {
     alias: {
-      // '@' ला 'src' कडे पॉईंट करा, जेणेकरून इम्पॉर्ट्स सोपे होतील
-      "@": path.resolve(__dirname, "./src"),
+      // सर्व files root मध्ये आहेत (src/ folder नाही)
+      "@": path.resolve(__dirname, "."),
     },
   },
 
