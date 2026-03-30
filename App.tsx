@@ -177,7 +177,7 @@ export default function App() {
     else go(m);
   };
 
-  if (mode === Mode.SPARDHA)   return <SpardhaYodha onBack={back} />;
+  if (mode === 'SPARDHA')   return <SpardhaYodha onBack={back} />;
   if (mode === 'BOOKMARKS')    return <BookmarkMode onBack={back} />;
    if (mode === Mode.QUIZ)      return <QuizMode onBack={back} />;
   if (mode === 'PYQ')          return <PYQMode onBack={back} />;
