@@ -2,7 +2,7 @@ import express from 'express';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import compression from 'compression';
-import 'dotenv/config'; ी
+import 'dotenv/config';
 
 
 const __filename = fileURLToPath(import.meta.url);
