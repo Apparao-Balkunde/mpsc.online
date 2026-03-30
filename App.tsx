@@ -24,6 +24,10 @@ import { PerformanceAnalytics } from './components/PerformanceAnalytics';
 import { AIStudySchedule } from './components/AIStudySchedule';
 import { MockTestHistory } from './components/MockTestHistory';
 import { StreakRewards } from './components/StreakRewards';
+import { NotesFeature } from './components/NotesFeature';
+import { VoiceQuestions } from './components/VoiceQuestions';
+import { PDFReport } from './components/PDFReport';
+import { WhatsAppShare } from './components/WhatsAppShare';
 import { BookmarkMode } from './components/BookmarksMode';
 import { BottomNav } from './components/BottomNav';
 import { MoreMenu } from './components/MoreMenu';
@@ -121,6 +125,8 @@ export default function App() {
   const [showAISchedule, setShowAISchedule]   = useState(false);
   const [showMockHistory, setShowMockHistory] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
+  const [showPDFReport, setShowPDFReport]     = useState(false);
+  const [showWAShare, setShowWAShare]         = useState(false);
   const { user, loading: authLoading }        = useAuth();
 
   const isExam = mode === Mode.MOCK_TEST;
@@ -168,9 +174,6 @@ export default function App() {
   const handleMoreNav = (m: string) => {
     if (m === 'COUNTDOWN') setShowCountdown(true);
     else if (m === 'ANALYTICS') setShowAnalytics(true);
-    else if (m === 'MOCK_HISTORY') setShowMockHistory(true);
-    else if (m === 'AI_SCHEDULE') setShowAISchedule(true);
-    else if (m === 'ACHIEVEMENTS') setShowAchievements(true);
     else go(m);
   };
 
@@ -183,6 +186,8 @@ export default function App() {
   if (mode === 'CHALLENGE')    return <FriendChallenge onBack={back} />;
   if (mode === 'DAILY')        return <DailyChallenge onBack={back} />;
   if (mode === 'PLANNER')      return <StudyPlanner onBack={back} />;
+  if (mode === 'NOTES')        return <NotesFeature onBack={back} />;
+  if (mode === 'VOICE')        return <VoiceQuestions onBack={back} />;
   if (mode === 'AI_QUIZ')      return <AIQuestionGenerator onBack={back} />;
 
   if (mode !== Mode.HOME) return (
@@ -218,9 +223,11 @@ export default function App() {
 
       {showProgress    && <ProgressDashboard onClose={()=>setShowProgress(false)} />}
       {showAnalytics   && <PerformanceAnalytics onClose={()=>setShowAnalytics(false)} />}
-      {showAISchedule  && <div style={{position:'fixed',inset:0,zIndex:200,overflowY:'auto'}}><AIStudySchedule onBack={()=>setShowAISchedule(false)} /></div>}
+      {showAISchedule  && <div style={{position:'fixed',inset:0,zIndex:200,overflowY:'auto',background:'#F5F0E8'}}><AIStudySchedule onBack={()=>setShowAISchedule(false)} /></div>}
       {showMockHistory && <MockTestHistory onClose={()=>setShowMockHistory(false)} />}
       {showAchievements && <StreakRewards onClose={()=>setShowAchievements(false)} />}
+      {showPDFReport   && <PDFReport onClose={()=>setShowPDFReport(false)} />}
+      {showWAShare     && <WhatsAppShare onClose={()=>setShowWAShare(false)} />}
       <AIDoubtSolver />
       {showAuth        && <AuthModal onClose={()=>setShowAuth(false)} />}
       {showLeaderboard && <Leaderboard onClose={()=>setShowLeaderboard(false)} currentUserId={user?.id} />}
@@ -313,8 +320,10 @@ export default function App() {
             { emoji:'📊', title:'Exam Countdown', sub:'किती दिवस बाकी', color:'#2563EB', bg:'rgba(37,99,235,0.07)', border:'rgba(37,99,235,0.2)', onClick:()=>setShowCountdown(true) },
             { emoji:'📅', title:'Study Planner',  sub:'Syllabus tracker', color:'#7C3AED', bg:'rgba(124,58,237,0.07)', border:'rgba(124,58,237,0.2)', onClick:()=>go('PLANNER') },
             { emoji:'🤖', title:'AI Quiz',         sub:'AI questions generate', color:'#DC2626', bg:'rgba(220,38,38,0.07)', border:'rgba(220,38,38,0.2)', onClick:()=>go('AI_QUIZ') },
-            { emoji:'🗓️', title:'AI Study Plan',  sub:'Exam date → daily plan', color:'#059669', bg:'rgba(5,150,105,0.07)', border:'rgba(5,150,105,0.2)', onClick:()=>setShowAISchedule(true) },
-            { emoji:'🏆', title:'Achievements',   sub:'Badges + Streak Rewards', color:'#D97706', bg:'rgba(217,119,6,0.07)', border:'rgba(217,119,6,0.2)', onClick:()=>setShowAchievements(true) },
+            { emoji:'🗓️', title:'AI Study Plan',  sub:'7-day schedule', color:'#059669', bg:'rgba(5,150,105,0.07)', border:'rgba(5,150,105,0.2)', onClick:()=>setShowAISchedule(true) },
+            { emoji:'🏆', title:'Achievements',   sub:'Badges + Streak', color:'#D97706', bg:'rgba(217,119,6,0.07)', border:'rgba(217,119,6,0.2)', onClick:()=>setShowAchievements(true) },
+            { emoji:'📝', title:'My Notes',       sub:'Personal notes', color:'#7C3AED', bg:'rgba(124,58,237,0.07)', border:'rgba(124,58,237,0.2)', onClick:()=>go('NOTES') },
+            { emoji:'🎙️', title:'Voice Quiz',     sub:'Questions ऐका', color:'#E8671A', bg:'rgba(232,103,26,0.07)', border:'rgba(232,103,26,0.2)', onClick:()=>go('VOICE') },
           ].map(({ emoji, title, sub, color, bg, border, onClick }) => (
             <div key={title} className="card-hover" onClick={onClick}
               style={{ background:bg, border:`1.5px solid ${border}`, borderRadius:16, padding:'14px 12px', cursor:'pointer' }}>
@@ -338,7 +347,6 @@ export default function App() {
               { emoji:'🏆', title:'Friend Challenge', sub:'Link share → compete', color:'#DC2626', bg:'rgba(220,38,38,0.07)',  border:'rgba(220,38,38,0.2)',  onClick:()=>go('CHALLENGE') },
               { emoji:'🎴', title:'Flashcard Mode',   sub:'Swipe → vocabulary',  color:'#059669', bg:'rgba(5,150,105,0.07)', border:'rgba(5,150,105,0.2)',  onClick:()=>go('FLASHCARD') },
               { emoji:'📈', title:'Analytics',        sub:'Performance graphs',  color:'#E8671A', bg:'rgba(232,103,26,0.07)', border:'rgba(232,103,26,0.2)',  onClick:()=>setShowAnalytics(true) },
-              { emoji:'📋', title:'Test History',   sub:'Past mock results',   color:'#2563EB', bg:'rgba(37,99,235,0.07)', border:'rgba(37,99,235,0.2)',  onClick:()=>setShowMockHistory(true) },
             ].map(({ emoji, title, sub, color, bg, border, onClick }) => (
               <div key={title} className="card-hover" onClick={onClick}
                 style={{ background:bg, border:`1.5px solid ${border}`, borderRadius:16, padding:'14px 12px', cursor:'pointer' }}>
