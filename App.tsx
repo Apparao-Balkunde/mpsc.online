@@ -21,6 +21,9 @@ import { DailyChallenge } from './components/DailyChallenge';
 import { StudyPlanner } from './components/StudyPlanner';
 import { AIQuestionGenerator } from './components/AIQuestionGenerator';
 import { PerformanceAnalytics } from './components/PerformanceAnalytics';
+import { AIStudySchedule } from './components/AIStudySchedule';
+import { MockTestHistory } from './components/MockTestHistory';
+import { StreakRewards } from './components/StreakRewards';
 import { BookmarkMode } from './components/BookmarksMode';
 import { BottomNav } from './components/BottomNav';
 import { MoreMenu } from './components/MoreMenu';
@@ -35,6 +38,7 @@ import {
   Award, Bookmark, BarChart2, FileText
 } from 'lucide-react';
 
+const Quiz = QuizMode;
 
 const PROGRESS_KEY = 'mpsc_user_progress';
 const HISTORY_KEY  = 'mpsc_history';
@@ -114,6 +118,9 @@ export default function App() {
   const [showCountdown, setShowCountdown]     = useState(false);
   const [showMore, setShowMore]               = useState(false);
   const [showAnalytics, setShowAnalytics]     = useState(false);
+  const [showAISchedule, setShowAISchedule]   = useState(false);
+  const [showMockHistory, setShowMockHistory] = useState(false);
+  const [showAchievements, setShowAchievements] = useState(false);
   const { user, loading: authLoading }        = useAuth();
 
   const isExam = mode === Mode.MOCK_TEST;
@@ -161,12 +168,15 @@ export default function App() {
   const handleMoreNav = (m: string) => {
     if (m === 'COUNTDOWN') setShowCountdown(true);
     else if (m === 'ANALYTICS') setShowAnalytics(true);
+    else if (m === 'MOCK_HISTORY') setShowMockHistory(true);
+    else if (m === 'AI_SCHEDULE') setShowAISchedule(true);
+    else if (m === 'ACHIEVEMENTS') setShowAchievements(true);
     else go(m);
   };
 
   if (mode === Mode.SPARDHA)   return <SpardhaYodha onBack={back} />;
   if (mode === 'BOOKMARKS')    return <BookmarkMode onBack={back} />;
-   if (mode === Mode.QUIZ)      return <QuizMode onBack={back} onComplete={() => back()} />;
+   if (mode === Mode.QUIZ)      return <QuizMode onBack={back} />;
   if (mode === 'PYQ')          return <PYQMode onBack={back} />;
   if (mode === 'FLASHCARD')    return <FlashcardMode onBack={back} />;
   if (mode === 'REVISION')     return <SmartRevision onBack={back} />;
@@ -208,6 +218,9 @@ export default function App() {
 
       {showProgress    && <ProgressDashboard onClose={()=>setShowProgress(false)} />}
       {showAnalytics   && <PerformanceAnalytics onClose={()=>setShowAnalytics(false)} />}
+      {showAISchedule  && <div style={{position:'fixed',inset:0,zIndex:200,overflowY:'auto'}}><AIStudySchedule onBack={()=>setShowAISchedule(false)} /></div>}
+      {showMockHistory && <MockTestHistory onClose={()=>setShowMockHistory(false)} />}
+      {showAchievements && <StreakRewards onClose={()=>setShowAchievements(false)} />}
       <AIDoubtSolver />
       {showAuth        && <AuthModal onClose={()=>setShowAuth(false)} />}
       {showLeaderboard && <Leaderboard onClose={()=>setShowLeaderboard(false)} currentUserId={user?.id} />}
@@ -300,6 +313,8 @@ export default function App() {
             { emoji:'📊', title:'Exam Countdown', sub:'किती दिवस बाकी', color:'#2563EB', bg:'rgba(37,99,235,0.07)', border:'rgba(37,99,235,0.2)', onClick:()=>setShowCountdown(true) },
             { emoji:'📅', title:'Study Planner',  sub:'Syllabus tracker', color:'#7C3AED', bg:'rgba(124,58,237,0.07)', border:'rgba(124,58,237,0.2)', onClick:()=>go('PLANNER') },
             { emoji:'🤖', title:'AI Quiz',         sub:'AI questions generate', color:'#DC2626', bg:'rgba(220,38,38,0.07)', border:'rgba(220,38,38,0.2)', onClick:()=>go('AI_QUIZ') },
+            { emoji:'🗓️', title:'AI Study Plan',  sub:'Exam date → daily plan', color:'#059669', bg:'rgba(5,150,105,0.07)', border:'rgba(5,150,105,0.2)', onClick:()=>setShowAISchedule(true) },
+            { emoji:'🏆', title:'Achievements',   sub:'Badges + Streak Rewards', color:'#D97706', bg:'rgba(217,119,6,0.07)', border:'rgba(217,119,6,0.2)', onClick:()=>setShowAchievements(true) },
           ].map(({ emoji, title, sub, color, bg, border, onClick }) => (
             <div key={title} className="card-hover" onClick={onClick}
               style={{ background:bg, border:`1.5px solid ${border}`, borderRadius:16, padding:'14px 12px', cursor:'pointer' }}>
@@ -323,6 +338,7 @@ export default function App() {
               { emoji:'🏆', title:'Friend Challenge', sub:'Link share → compete', color:'#DC2626', bg:'rgba(220,38,38,0.07)',  border:'rgba(220,38,38,0.2)',  onClick:()=>go('CHALLENGE') },
               { emoji:'🎴', title:'Flashcard Mode',   sub:'Swipe → vocabulary',  color:'#059669', bg:'rgba(5,150,105,0.07)', border:'rgba(5,150,105,0.2)',  onClick:()=>go('FLASHCARD') },
               { emoji:'📈', title:'Analytics',        sub:'Performance graphs',  color:'#E8671A', bg:'rgba(232,103,26,0.07)', border:'rgba(232,103,26,0.2)',  onClick:()=>setShowAnalytics(true) },
+              { emoji:'📋', title:'Test History',   sub:'Past mock results',   color:'#2563EB', bg:'rgba(37,99,235,0.07)', border:'rgba(37,99,235,0.2)',  onClick:()=>setShowMockHistory(true) },
             ].map(({ emoji, title, sub, color, bg, border, onClick }) => (
               <div key={title} className="card-hover" onClick={onClick}
                 style={{ background:bg, border:`1.5px solid ${border}`, borderRadius:16, padding:'14px 12px', cursor:'pointer' }}>
