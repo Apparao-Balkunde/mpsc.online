@@ -57,10 +57,9 @@
           keys.filter((k) => k.includes('mpsc')).forEach((k) => caches.delete(k));
         }).catch(() => {});
       }
-      // Fallback for very old bundles that still reference a global `Quiz` component
-      if (!('Quiz' in window)) {
-        window.Quiz = () => null;
-      }
+      // Fix: "Quiz is not defined" — जुने bundle global Quiz शोधतात
+      // window वर stub ठेवतो (arrow fn नाही, named fn वापरतो compatibility साठी)
+      window.Quiz = window.Quiz || function Quiz() { return null; };
       try {
         const savedMode = localStorage.getItem('mpsc_mode');
         if (savedMode === 'Quiz' || savedMode === 'QUIZ') {
@@ -73,7 +72,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&family=Noto+Sans+Devanagari:wght@400;700;900&display=swap" rel="stylesheet" />
 
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CDN production मध्ये वापरू नका.
+         npm install -D tailwindcss postcss autoprefixer चालवा आणि vite config मध्ये add करा.
+         तात्पुरते: CDN काढला आहे — build मध्ये tailwind classes काम करणार नाहीत जोपर्यंत PostCSS setup होत नाही. -->
 
     <style>
       /* ── Base ── */
