@@ -20,7 +20,7 @@
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./*"]
     },
     "strict": true,
     "forceConsistentCasingInFileNames": true,
@@ -30,7 +30,11 @@
     "esModuleInterop": true
   },
   "include": [
-    "src",
+    ".",
+    "components",
+    "hooks",
+    "lib",
+    "services",
     "server.js"
   ],
   "exclude": [
