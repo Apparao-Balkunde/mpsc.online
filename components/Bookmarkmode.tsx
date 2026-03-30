@@ -176,7 +176,10 @@ export const BookmarkMode: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
         {/* Question list */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          {filtered.map((item, idx) => {
+         // नवीन सुरक्षित कोड (बदल करा):
+        {(filtered || []).map((item, idx) => {
+          // इथे एक सेफ्टी चेक ॲड करा जेणेकरून जर item चुकीचा असेल तर तो रेंडर होणार नाही
+            if (!item || !item.id) return null;
             const hasAnswered = answers[item.id] !== undefined;
             const isCorrect   = hasAnswered && answers[item.id] === item.correct_answer_index;
             const isRemoving  = removing === item.id;
