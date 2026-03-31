@@ -16,6 +16,7 @@ const __dirname  = path.dirname(__filename);
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
+app.use(cors());
 app.use(compression());
 app.use(express.json({ limit: '1mb' }));
 
