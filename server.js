@@ -2,6 +2,8 @@ import express from 'express';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import compression from 'compression';
+import cors from 'cors';
+import 'dotenv/config';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = path.dirname(__filename);
@@ -156,7 +158,7 @@ app.listen(PORT, () => {
   console.log('-----------------------------------------');
   console.log('MPSC Sarathi running!');
   console.log('Port  :', PORT);
-  console.log('AI    :', process.env.GROQ_API_KEY ? 'Groq FREE (llama-3.3-70b)' : 'DISABLED');
+  console.log('AI    :', process.env.GROQ_API_KEY ? 'Groq FREE (llama-3.3-70b)' 'ENABLED' : 'DISABLED');
   console.log('Admin :', process.env.ADMIN_KEY ? 'Protected' : 'NO KEY SET!');
   console.log('-----------------------------------------');
 });
