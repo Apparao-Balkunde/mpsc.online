@@ -2,14 +2,9 @@ import express from 'express';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import compression from 'compression';
-<<<<<<< Updated upstream
 import cors from 'cors';
 import 'dotenv/config';
 
-=======
-import 'dotenv/config';
-import cors from 'cors' ;
->>>>>>> Stashed changes
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = path.dirname(__filename);
 
@@ -35,7 +30,7 @@ setInterval(() => {
 }, 300_000);
 
 // Security + Cache headers
-app.use((redotenv/config'q, res, next) => {
+app.use((req, res, next) => {
   if (req.url.startsWith('/assets/')) {
     res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
   } else if (req.url === '/' || req.url.endsWith('.html')) {
