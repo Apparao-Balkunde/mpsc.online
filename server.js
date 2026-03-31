@@ -158,7 +158,8 @@ app.listen(PORT, () => {
   console.log('-----------------------------------------');
   console.log('MPSC Sarathi running!');
   console.log('Port  :', PORT);
-  console.log('AI    :', process.env.GROQ_API_KEY ? 'Groq FREE (llama-3.3-70b)' 'ENABLED' : 'DISABLED');
+  // खालील ओळ दुरुस्त केली आहे:
+  console.log('AI    :', process.env.GROQ_API_KEY ? 'ENABLED (Groq llama-3.3-70b)' : 'DISABLED');
   console.log('Admin :', process.env.ADMIN_KEY ? 'Protected' : 'NO KEY SET!');
   console.log('-----------------------------------------');
 });
