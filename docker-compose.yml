@@ -1,9 +1,22 @@
 version: '3.8'
 
 services:
-  mpsc-frontend:
-    build: .
+  mpsc-app:
+    build:
+      context: .
+      args:
+        # इमेज बिल्ड होताना लागणाऱ्या कीज (Vite साठी)
+        - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+        - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
     container_name: mpsc_online_app
     ports:
-      - "8080:80" # तुझ्या ब्राउझरमध्ये localhost:8080 वर ॲप चालेल
-    restart: always
+      - "8080:3000" # बाहेरून ८०८० पोर्टवर वेबसाईट दिसेल
+    env_file:
+      - .env        # सर्व सिक्रेट कीज (Groq, Admin Key) इथून घेतल्या जातील
+    restart: unless-stopped
+    networks:
+      - mpsc-network
+
+networks:
+  mpsc-network:
+    driver: bridge
