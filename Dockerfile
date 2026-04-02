@@ -3,10 +3,9 @@ FROM node:18-alpine AS builder
 WORKDIR /app
 
 # १. बिल्ड आर्गुमेंट्स - रेंडरच्या 'Environment Variables' मधून व्हॅल्यूज इथे येतील
-ARG VITE_SUPABASE_URL
-ARG VITE_SUPABASE_ANON_KEY
+ARG VITE_SUPABASE_URL=https://vswtorhncwprbxlzewar.supabase.co
+ARG VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZzd3RvcmhuY3dwcmJ4bHpld2FyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzNzI2NDUsImV4cCI6MjA4NTk0ODY0NX0.0V9-6ZX6dZ7bYQ_P8DYJkuFmYaCEQ
 
-# २. Vite ला बिल्ड करताना या व्हेरिएबल्सची गरज असते
 ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
 ENV VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
 
