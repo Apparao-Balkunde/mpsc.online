@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # १. मुख्य ॲप (MPSC Sarathi)
   mpsc-app:
     build:
       context: .
@@ -19,7 +18,6 @@ services:
     networks:
       - mpsc-network
 
-  # २. कॅशिंगसाठी Redis
   redis:
     image: redis:alpine
     container_name: mpsc_redis
@@ -27,7 +25,6 @@ services:
     networks:
       - mpsc-network
 
-  # ३. लोकल डेटाबेस (पर्यायी - जर सुपॅबेस व्यतिरिक्त हवा असेल तर)
   db:
     image: postgres:15-alpine
     container_name: mpsc_db
