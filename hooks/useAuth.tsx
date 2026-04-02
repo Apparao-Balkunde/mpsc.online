@@ -8,37 +8,28 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Current session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
+
+    // Auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
+      setLoading(false);
     });
+
     return () => subscription.unsubscribe();
   }, []);
 
-  const sendOTP = async (email: string) => {
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { shouldCreateUser: true }
-    });
-    if (error) throw error;
-  };
-
-  const verifyOTP = async (email: string, token: string) => {
-    const { error } = await supabase.auth.verifyOtp({
-      email, token, type: 'email'
-    });
-    if (error) throw error;
-  };
-
-  return { user, session, loading, sendOTP, verifyOTP };
+  return { user, session, loading };
 }
 
-// Named export — App.tsx मध्ये import { signOut } from './hooks/useAuth'
+// Named export — App.tsx: import { signOut } from './hooks/useAuth'
 export async function signOut() {
   await supabase.auth.signOut();
+  window.location.reload();
 }
