@@ -105,6 +105,44 @@ app.post('/api/push/subscribe', (req, res) => {
   res.json({ ok: true, message: 'Push subscription saved!' });
 });
 
+const redis = require('redis');
+const { createClient } = require('@supabase/supabase-js');
+
+// १. Redis Client सेटअप
+const redisClient = redis.createClient({
+    url: 'redis://localhost:6379'
+});
+redisClient.connect().then(() => console.log("Redis Connected! ⚡"));
+
+// २. Supabase Client सेटअप
+const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.VITE_SUPABASE_ANON_KEY);
+
+// ३. डेटा मिळवण्याचे लॉजिक (Example: Questions)
+async function getQuestions(category) {
+    const cacheKey = `questions:${category}`;
+
+    // आधी Redis मध्ये चेक करा
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+        console.log("Serving from Redis Cache! ✅");
+        return JSON.parse(cachedData);
+    }
+
+    // जर Redis मध्ये नसेल, तर Supabase कडे जा
+    const { data, error } = await supabase
+        .from('questions')
+        .select('*')
+        .eq('category', category);
+
+    if (data) {
+        // पुढच्या वेळी वापरण्यासाठी Redis मध्ये १ तासासाठी (3600 sec) सेव्ह करा
+        await redisClient.setEx(cacheKey, 3600, JSON.stringify(data));
+        console.log("Serving from Supabase & Saved to Redis! 💾");
+    }
+    
+    return data;
+} 
+
 // ===== /api/push/unsubscribe =====
 app.post('/api/push/unsubscribe', (req, res) => {
   const { userId } = req.body;
