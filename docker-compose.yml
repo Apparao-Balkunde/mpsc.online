@@ -1,34 +1,38 @@
 version: '3.8'
 
 services:
+  # १. मुख्य ॲप (MPSC Sarathi)
   mpsc-app:
     build:
       context: .
       args:
-        # इमेज बिल्ड होताना लागणाऱ्या कीज (Vite साठी)
         - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
         - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
     container_name: mpsc_online_app
     ports:
-      - "8080:3000" # बाहेरून ८०८० पोर्टवर वेबसाईट दिसेल
+      - "8080:3000"
     env_file:
-      - .env        # सर्व सिक्रेट कीज (Groq, Admin Key) इथून घेतल्या जातील
+      - .env
+    depends_on:
+      - redis
     restart: unless-stopped
     networks:
       - mpsc-network
 
-    redis:
+  # २. कॅशिंगसाठी Redis
+  redis:
     image: redis:alpine
     container_name: mpsc_redis
     restart: always
     networks:
       - mpsc-network
 
-    db:
+  # ३. लोकल डेटाबेस (पर्यायी - जर सुपॅबेस व्यतिरिक्त हवा असेल तर)
+  db:
     image: postgres:15-alpine
     container_name: mpsc_db
     environment:
-      POSTGRES_PASSWORD: mysecretpassword
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-mysecretpassword}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -37,3 +41,6 @@ services:
 networks:
   mpsc-network:
     driver: bridge
+
+volumes:
+  postgres_data:
