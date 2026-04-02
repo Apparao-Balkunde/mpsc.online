@@ -6,8 +6,6 @@ services:
       context: .
       args:
         # इमेज बिल्ड होताना लागणाऱ्या कीज (Vite साठी)
-        - ARG VITE_SUPABASE_URL=https://vswtorhncwprbxlzewar.supabase.co
-        - ARG VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZzd3RvcmhuY3dwcmJ4bHpld2FyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzNzI2NDUsImV4cCI6MjA4NTk0ODY0NX0.0V9-6ZX6dZ7bYQ_P8DYJkuFmYaCEQ>
         - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
         - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
     container_name: mpsc_online_app
