@@ -25,10 +25,26 @@ export function useAuth() {
     return () => subscription.unsubscribe();
   }, []);
 
-  return { user, session, loading };
+  // --- नवीन बदल: Google Login फंक्शन ---
+  const signInWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin, // लॉगिन झाल्यावर होम पेजवर येण्यासाठी
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        },
+      },
+    });
+    if (error) throw error;
+  };
+
+  // signInWithGoogle रिटर्नमध्ये ॲड करा
+  return { user, session, loading, signInWithGoogle };
 }
 
-// Named export — App.tsx: import { signOut } from './hooks/useAuth'
+// Named export
 export async function signOut() {
   await supabase.auth.signOut();
   window.location.reload();
