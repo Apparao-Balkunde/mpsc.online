@@ -53,20 +53,32 @@ setInterval(() => {
   for (const [k, v] of rateLimits) if (v.start < cutoff) rateLimits.delete(k);
 }, 300_000);
 
-// Security + Cache headers (Updated for Stable Login & CORS fix)
+// Security + Cache headers (Final Fix for CSP & Auth)
 app.use((req, res, next) => {
-  // Caching Logic
-  if (req.url.startsWith('/assets/')) {
-    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-  } else if (req.url === '/' || req.url.endsWith('.html')) {
-    res.setHeader('Cache-Control', 'no-store, must-revalidate');
-    res.setHeader('CDN-Cache-Control', 'no-store');
-    res.setHeader('Surrogate-Control', 'no-store');
-    res.setHeader('Clear-Site-Data', '"cache"');
-  }
+  // --- CSP FIX ---
+  // ही ओळ सर्वात महत्त्वाची आहे. 'none' ऐवजी आपण Supabase आणि Google ला परवानगी देत आहोत.
+  res.setHeader(
+    "Content-Security-Policy",
+    "default-src 'self'; " +
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com; " +
+    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.groq.com https://mpscsarathi.online; " +
+    "img-src 'self' data: https://*.supabase.co; " +
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+    "font-src 'self' https://fonts.gstatic.com;"
+  );
 
-  // --- STABLE LOGIN & SECURITY FIXES ---
+  // --- COEP/CORP FIX (For Kaspersky & Script Loading) ---
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none'); // हे 'unsafe-none' ठेवा
+
+  // --- OTHER HEADERS ---
   res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'ALLOWALL'); 
+  res.setHeader('Referrer-Policy', 'no-referrer-when-downgrade');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+
+  next();
+});
   
   // Google Popup/Redirect नीट चालण्यासाठी X-Frame-Options शिथिल केले आहे
   res.setHeader('X-Frame-Options', 'ALLOWALL'); 
