@@ -5,7 +5,7 @@ import compression from 'compression';
 import cors from 'cors';
 import 'dotenv/config';
 
-// नवीन Imports (Require ऐवजी)
+// नवीन Imports
 import { createClient } from '@supabase/supabase-js';
 import { createClient as createRedisClient } from 'redis';
 
@@ -15,14 +15,15 @@ const __dirname  = path.dirname(__filename);
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
+// Middleware
 app.use(cors());
 app.use(compression());
 app.use(express.json({ limit: '1mb' }));
 
 // --- Redis Client सेटअप ---
-// Docker मध्ये redis सर्व्हिसचं नाव 'redis' असेल तर 'redis://redis:6379' वापरा
+// Docker मधील सर्विसचे नाव 'mpsc_redis' असल्याने URL अपडेट केली आहे
 const redisClient = createRedisClient({
-    url: process.env.REDIS_URL || 'redis://redis:6379' 
+    url: process.env.REDIS_URL || 'redis://mpsc_redis:6379' 
 });
 
 redisClient.on('error', err => console.log('Redis Client Error', err));
@@ -50,8 +51,9 @@ setInterval(() => {
   for (const [k, v] of rateLimits) if (v.start < cutoff) rateLimits.delete(k);
 }, 300_000);
 
-// Security + Cache headers
+// Security + Cache headers (Updated to fix ERR_BLOCKED_BY_RESPONSE)
 app.use((req, res, next) => {
+  // Caching Logic
   if (req.url.startsWith('/assets/')) {
     res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
   } else if (req.url === '/' || req.url.endsWith('.html')) {
@@ -60,9 +62,16 @@ app.use((req, res, next) => {
     res.setHeader('Surrogate-Control', 'no-store');
     res.setHeader('Clear-Site-Data', '"cache"');
   }
+
+  // Security Headers (Fixes the blank page / script loading issues)
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  
+  // हे दोन हेडर्स ERR_BLOCKED_BY_RESPONSE घालवण्यासाठी महत्त्वाचे आहेत:
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none'); 
+
   next();
 });
 
@@ -72,14 +81,12 @@ app.get('/api/questions/:category', async (req, res) => {
     const cacheKey = `questions:${category}`;
 
     try {
-        // १. Redis मध्ये चेक करा
         const cachedData = await redisClient.get(cacheKey);
         if (cachedData) {
             console.log("Serving from Redis Cache! ✅");
             return res.json(JSON.parse(cachedData));
         }
 
-        // २. Supabase कडून डेटा घ्या
         const { data, error } = await supabase
             .from('questions')
             .select('*')
@@ -87,7 +94,6 @@ app.get('/api/questions/:category', async (req, res) => {
 
         if (error) throw error;
 
-        // ३. Redis मध्ये १ तासासाठी सेव्ह करा
         if (data) {
             await redisClient.setEx(cacheKey, 3600, JSON.stringify(data));
             console.log("Serving from Supabase & Saved to Redis! 💾");
