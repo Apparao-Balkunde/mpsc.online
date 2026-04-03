@@ -21,13 +21,6 @@ import { DailyChallenge } from './components/DailyChallenge';
 import { StudyPlanner } from './components/StudyPlanner';
 import { AIQuestionGenerator } from './components/AIQuestionGenerator';
 import { PerformanceAnalytics } from './components/PerformanceAnalytics';
-import { MnemonicGenerator } from './components/MnemonicGenerator';
-import { ExamReadinessScore } from './components/ExamReadinessScore';
-import { RankPredictor } from './components/RankPredictor';
-import { ConceptExplainer } from './components/ConceptExplainer';
-import { AnswerEvaluator } from './components/AnswerEvaluator';
-import { LiveQuizRoom } from './components/LiveQuizRoom';
-import { ReferralSystem } from './components/ReferralSystem';
 import { ThemeProvider, DarkModeToggle, DARK_CSS } from './components/ThemeContext';
 import { GlobalSearch } from './components/GlobalSearch';
 import { CurrentAffairsFeed } from './components/CurrentAffairsFeed';
@@ -35,6 +28,15 @@ import { FormulaSheet } from './components/FormulaSheet';
 import { UserProfile } from './components/UserProfile';
 import { StudyGroups } from './components/StudyGroups';
 import { BookmarkMode } from './components/BookmarksMode';
+import { MnemonicGenerator } from './components/MnemonicGenerator';
+import { ExamReadinessScore } from './components/ExamReadinessScore';
+import { RankPredictor } from './components/RankPredictor';
+import { ConceptExplainer } from './components/ConceptExplainer';
+import { AnswerEvaluator } from './components/AnswerEvaluator';
+import { LiveQuizRoom } from './components/LiveQuizRoom';
+import { ReferralSystem } from './components/ReferralSystem';
+import { ProgressCertificate } from './components/ProgressCertificate';
+import { BookmarkCollections } from './components/BookmarkCollections';
 import { BottomNav } from './components/BottomNav';
 import { MoreMenu } from './components/MoreMenu';
 import { PWAPrompt } from './components/PWAPrompt';
@@ -135,6 +137,7 @@ export default function App() {
   const [showReadiness, setShowReadiness]     = useState(false);
   const [showRankPredictor, setShowRankPredictor] = useState(false);
   const [showReferral, setShowReferral]       = useState(false);
+  const [showCertificate, setShowCertificate] = useState(false);
   const { user, loading: authLoading }        = useAuth();
 
   const isExam = mode === Mode.MOCK_TEST;
@@ -187,7 +190,7 @@ export default function App() {
 
   if (mode === Mode.SPARDHA)   return <SpardhaYodha onBack={back} />;
   if (mode === 'BOOKMARKS')    return <BookmarkMode onBack={back} />;
-   if (mode === Mode.QUIZ)      return <QuizMode onBack={back} />;
+  if (mode === Mode.QUIZ)      return <QuizMode onBack={back} />;
   if (mode === 'PYQ')          return <PYQMode onBack={back} />;
   if (mode === 'FLASHCARD')    return <FlashcardMode onBack={back} />;
   if (mode === 'REVISION')     return <SmartRevision onBack={back} />;
@@ -206,6 +209,7 @@ export default function App() {
   if (mode === 'CONCEPT')       return <ConceptExplainer onBack={back} />;
   if (mode === 'EVAL_ANSWER')   return <AnswerEvaluator onBack={back} />;
   if (mode === 'LIVE_QUIZ')     return <LiveQuizRoom onBack={back} user={user} />;
+  if (mode === 'BM_COLLECTIONS') return <BookmarkCollections onBack={back} />;
 
   if (mode !== Mode.HOME) return (
     <div style={{ minHeight:'100vh', background:'#F5F0E8', fontFamily:"'Poppins','Noto Sans Devanagari',sans-serif", color:'#1a1a1a' }}>
@@ -245,6 +249,7 @@ export default function App() {
       {showReadiness   && <ExamReadinessScore onClose={()=>setShowReadiness(false)} />}
       {showRankPredictor && <RankPredictor onClose={()=>setShowRankPredictor(false)} />}
       {showReferral    && <ReferralSystem onClose={()=>setShowReferral(false)} user={user} />}
+      {showCertificate && <ProgressCertificate onClose={()=>setShowCertificate(false)} user={user} />}
       <AIDoubtSolver />
       {showAuth        && <AuthModal onClose={()=>setShowAuth(false)} />}
       {showLeaderboard && <Leaderboard onClose={()=>setShowLeaderboard(false)} currentUserId={user?.id} />}
@@ -340,19 +345,15 @@ export default function App() {
 
         {/* Quick Actions — 4 cards */}
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:20 }}>
-          [
+          {[
             { emoji:dailyDone?'✅':'📅', title:'Daily Challenge', sub:dailyDone?'आज पूर्ण!':'5 प्रश्न · आज', color:dailyDone?'#059669':'#C4510E', bg:dailyDone?'rgba(5,150,105,0.07)':'rgba(232,103,26,0.07)', border:dailyDone?'rgba(5,150,105,0.25)':'rgba(232,103,26,0.25)', onClick:()=>go('DAILY') },
             { emoji:'⚔️', title:'Tournament',     sub:'20Q · Rank मिळवा', color:'#D97706', bg:'rgba(217,119,6,0.07)', border:'rgba(217,119,6,0.2)', onClick:()=>go('TOURNAMENT') },
-            { emoji:'🎮', title:'Live Quiz Room',  sub:'Multiplayer quiz',  color:'#7C3AED', bg:'rgba(124,58,237,0.07)', border:'rgba(124,58,237,0.2)', onClick:()=>go('LIVE_QUIZ') },
             { emoji:'📰', title:'Current Affairs', sub:'Daily feed', color:'#EC4899', bg:'rgba(236,72,153,0.07)', border:'rgba(236,72,153,0.2)', onClick:()=>go('CURRENT_FEED') },
-            { emoji:'🧠', title:'Mnemonic AI',    sub:'लक्षात राहायला tricks', color:'#7C3AED', bg:'rgba(124,58,237,0.07)', border:'rgba(124,58,237,0.2)', onClick:()=>go('MNEMONIC') },
-            { emoji:'📊', title:'Exam Readiness', sub:'तुम्ही ready आहात का?', color:'#059669', bg:'rgba(5,150,105,0.07)', border:'rgba(5,150,105,0.2)', onClick:()=>setShowReadiness(true) },
-            { emoji:'🎯', title:'Rank Predictor', sub:'तुमचा possible rank', color:'#2563EB', bg:'rgba(37,99,235,0.07)', border:'rgba(37,99,235,0.2)', onClick:()=>setShowRankPredictor(true) },
-            { emoji:'📖', title:'Concept AI',     sub:'Topics explain करा', color:'#059669', bg:'rgba(5,150,105,0.07)', border:'rgba(5,150,105,0.2)', onClick:()=>go('CONCEPT') },
-            { emoji:'✍️', title:'Answer Check',   sub:'Long answer evaluate', color:'#D97706', bg:'rgba(217,119,6,0.07)', border:'rgba(217,119,6,0.2)', onClick:()=>go('EVAL_ANSWER') },
-            { emoji:'🎁', title:'Referral',       sub:'मित्राला invite करा', color:'#E8671A', bg:'rgba(232,103,26,0.07)', border:'rgba(232,103,26,0.2)', onClick:()=>setShowReferral(true) },
+            { emoji:'📚', title:'Formula Sheet',  sub:'Quick revision', color:'#059669', bg:'rgba(5,150,105,0.07)', border:'rgba(5,150,105,0.2)', onClick:()=>go('FORMULA') },
+            { emoji:'👥', title:'Study Groups',   sub:'मित्रांसोबत शिका', color:'#2563EB', bg:'rgba(37,99,235,0.07)', border:'rgba(37,99,235,0.2)', onClick:()=>go('GROUPS') },
+            { emoji:'🔍', title:'Global Search',  sub:'सर्व questions शोधा', color:'#7C3AED', bg:'rgba(124,58,237,0.07)', border:'rgba(124,58,237,0.2)', onClick:()=>setShowSearch(true) },
             { emoji:'📅', title:'Study Planner',  sub:'Syllabus tracker', color:'#7C3AED', bg:'rgba(124,58,237,0.07)', border:'rgba(124,58,237,0.2)', onClick:()=>go('PLANNER') },
-            { emoji:'🤖', title:'AI Quiz',         sub:'AI questions', color:'#DC2626', bg:'rgba(220,38,38,0.07)', border:'rgba(220,38,38,0.2)', onClick:()=>go('AI_QUIZ') },
+            { emoji:'🤖', title:'AI Quiz',         sub:'AI questions generate', color:'#DC2626', bg:'rgba(220,38,38,0.07)', border:'rgba(220,38,38,0.2)', onClick:()=>go('AI_QUIZ') },
           ].map(({ emoji, title, sub, color, bg, border, onClick }) => (
             <div key={title} className="card-hover" onClick={onClick}
               style={{ background:bg, border:`1.5px solid ${border}`, borderRadius:16, padding:'14px 12px', cursor:'pointer' }}>
