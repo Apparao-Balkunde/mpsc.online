@@ -16,12 +16,14 @@ const app  = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: true, // सर्व origins ला परवानगी द्या किंवा तुमची URL टाका
+    credentials: true // कुकीज आणि सेशन ट्रान्सफरसाठी महत्त्वाचे
+}));
 app.use(compression());
 app.use(express.json({ limit: '1mb' }));
 
 // --- Redis Client सेटअप ---
-// Docker मधील सर्विसचे नाव 'mpsc_redis' असल्याने URL अपडेट केली आहे
 const redisClient = createRedisClient({
     url: process.env.REDIS_URL || 'redis://mpsc_redis:6379' 
 });
@@ -51,7 +53,7 @@ setInterval(() => {
   for (const [k, v] of rateLimits) if (v.start < cutoff) rateLimits.delete(k);
 }, 300_000);
 
-// Security + Cache headers (Updated to fix ERR_BLOCKED_BY_RESPONSE)
+// Security + Cache headers (Updated for Stable Login & CORS fix)
 app.use((req, res, next) => {
   // Caching Logic
   if (req.url.startsWith('/assets/')) {
@@ -63,14 +65,24 @@ app.use((req, res, next) => {
     res.setHeader('Clear-Site-Data', '"cache"');
   }
 
-  // Security Headers (Fixes the blank page / script loading issues)
+  // --- STABLE LOGIN & SECURITY FIXES ---
   res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
-  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   
-  // हे दोन हेडर्स ERR_BLOCKED_BY_RESPONSE घालवण्यासाठी महत्त्वाचे आहेत:
+  // Google Popup/Redirect नीट चालण्यासाठी X-Frame-Options शिथिल केले आहे
+  res.setHeader('X-Frame-Options', 'ALLOWALL'); 
+  
+  // रिडायरेक्ट झाल्यावर सेशन टिकवण्यासाठी
+  res.setHeader('Referrer-Policy', 'no-referrer-when-downgrade');
+  
+  // HTTPS वर कुकीज सुरक्षित ठेवण्यासाठी
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+
+  // ERR_BLOCKED_BY_RESPONSE आणि JS फाईल्स लोड होण्यासाठी
   res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
   res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none'); 
+  
+  // सेशन कुकीजसाठी
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
 
   next();
 });
