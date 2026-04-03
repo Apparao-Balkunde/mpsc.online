@@ -31,7 +31,7 @@ export const getLiveRank = async (currentCorrect) => {
       .select('*', { count: 'exact', head: true });
 
     if (err2) throw err2;
-
+    
     return {
       rank: (count || 0) + 1, // रँक = तुझ्या पुढचे लोक + १
       total: totalCount || 0
