@@ -37,6 +37,9 @@ import { LiveQuizRoom } from './components/LiveQuizRoom';
 import { ReferralSystem } from './components/ReferralSystem';
 import { ProgressCertificate } from './components/ProgressCertificate';
 import { BookmarkCollections } from './components/BookmarkCollections';
+import { PomodoroTimer } from './components/PomodoroTimer';
+import { QuestionBank } from './components/QuestionBank';
+import { HeatmapCalendar } from './components/HeatmapCalendar';
 import { BottomNav } from './components/BottomNav';
 import { MoreMenu } from './components/MoreMenu';
 import { PWAPrompt } from './components/PWAPrompt';
@@ -138,6 +141,7 @@ export default function App() {
   const [showRankPredictor, setShowRankPredictor] = useState(false);
   const [showReferral, setShowReferral]       = useState(false);
   const [showCertificate, setShowCertificate] = useState(false);
+  const [showHeatmap, setShowHeatmap]         = useState(false);
   const { user, loading: authLoading }        = useAuth();
 
   const isExam = mode === Mode.MOCK_TEST;
@@ -209,7 +213,9 @@ export default function App() {
   if (mode === 'CONCEPT')       return <ConceptExplainer onBack={back} />;
   if (mode === 'EVAL_ANSWER')   return <AnswerEvaluator onBack={back} />;
   if (mode === 'LIVE_QUIZ')     return <LiveQuizRoom onBack={back} user={user} />;
-  if (mode === 'BM_COLLECTIONS') return <BookmarkCollections onBack={back} />;
+  if (mode === 'BM_COLLECTIONS')  return <BookmarkCollections onBack={back} />;
+  if (mode === 'POMODORO')       return <PomodoroTimer onBack={back} />;
+  if (mode === 'QUESTION_BANK')  return <QuestionBank onBack={back} />;
 
   if (mode !== Mode.HOME) return (
     <div style={{ minHeight:'100vh', background:'#F5F0E8', fontFamily:"'Poppins','Noto Sans Devanagari',sans-serif", color:'#1a1a1a' }}>
@@ -250,6 +256,7 @@ export default function App() {
       {showRankPredictor && <RankPredictor onClose={()=>setShowRankPredictor(false)} />}
       {showReferral    && <ReferralSystem onClose={()=>setShowReferral(false)} user={user} />}
       {showCertificate && <ProgressCertificate onClose={()=>setShowCertificate(false)} user={user} />}
+      {showHeatmap     && <HeatmapCalendar onClose={()=>setShowHeatmap(false)} />}
       <AIDoubtSolver />
       {showAuth        && <AuthModal onClose={()=>setShowAuth(false)} />}
       {showLeaderboard && <Leaderboard onClose={()=>setShowLeaderboard(false)} currentUserId={user?.id} />}
