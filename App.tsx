@@ -21,6 +21,13 @@ import { DailyChallenge } from './components/DailyChallenge';
 import { StudyPlanner } from './components/StudyPlanner';
 import { AIQuestionGenerator } from './components/AIQuestionGenerator';
 import { PerformanceAnalytics } from './components/PerformanceAnalytics';
+import { MnemonicGenerator } from './components/MnemonicGenerator';
+import { ExamReadinessScore } from './components/ExamReadinessScore';
+import { RankPredictor } from './components/RankPredictor';
+import { ConceptExplainer } from './components/ConceptExplainer';
+import { AnswerEvaluator } from './components/AnswerEvaluator';
+import { LiveQuizRoom } from './components/LiveQuizRoom';
+import { ReferralSystem } from './components/ReferralSystem';
 import { ThemeProvider, DarkModeToggle, DARK_CSS } from './components/ThemeContext';
 import { GlobalSearch } from './components/GlobalSearch';
 import { CurrentAffairsFeed } from './components/CurrentAffairsFeed';
@@ -125,6 +132,9 @@ export default function App() {
   const [showAnalytics, setShowAnalytics]     = useState(false);
   const [showSearch, setShowSearch]           = useState(false);
   const [showProfile, setShowProfile]         = useState(false);
+  const [showReadiness, setShowReadiness]     = useState(false);
+  const [showRankPredictor, setShowRankPredictor] = useState(false);
+  const [showReferral, setShowReferral]       = useState(false);
   const { user, loading: authLoading }        = useAuth();
 
   const isExam = mode === Mode.MOCK_TEST;
@@ -191,7 +201,11 @@ export default function App() {
   if (mode === 'CURRENT_FEED') return <CurrentAffairsFeed onBack={back} />;
   if (mode === 'FORMULA')      return <FormulaSheet onBack={back} />;
   if (mode === 'GROUPS')       return <StudyGroups onBack={back} user={user} />;
-  if (mode === 'AI_QUIZ')      return <AIQuestionGenerator onBack={back} />;
+  if (mode === 'AI_QUIZ')        return <AIQuestionGenerator onBack={back} />;
+  if (mode === 'MNEMONIC')      return <MnemonicGenerator onBack={back} />;
+  if (mode === 'CONCEPT')       return <ConceptExplainer onBack={back} />;
+  if (mode === 'EVAL_ANSWER')   return <AnswerEvaluator onBack={back} />;
+  if (mode === 'LIVE_QUIZ')     return <LiveQuizRoom onBack={back} user={user} />;
 
   if (mode !== Mode.HOME) return (
     <div style={{ minHeight:'100vh', background:'#F5F0E8', fontFamily:"'Poppins','Noto Sans Devanagari',sans-serif", color:'#1a1a1a' }}>
@@ -228,6 +242,9 @@ export default function App() {
       {showAnalytics   && <PerformanceAnalytics onClose={()=>setShowAnalytics(false)} />}
       {showSearch      && <GlobalSearch onClose={()=>setShowSearch(false)} onGoToMode={go} />}
       {showProfile     && user && <UserProfile onClose={()=>setShowProfile(false)} user={user} />}
+      {showReadiness   && <ExamReadinessScore onClose={()=>setShowReadiness(false)} />}
+      {showRankPredictor && <RankPredictor onClose={()=>setShowRankPredictor(false)} />}
+      {showReferral    && <ReferralSystem onClose={()=>setShowReferral(false)} user={user} />}
       <AIDoubtSolver />
       {showAuth        && <AuthModal onClose={()=>setShowAuth(false)} />}
       {showLeaderboard && <Leaderboard onClose={()=>setShowLeaderboard(false)} currentUserId={user?.id} />}
@@ -323,15 +340,19 @@ export default function App() {
 
         {/* Quick Actions — 4 cards */}
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:20 }}>
-          {[
+          [
             { emoji:dailyDone?'✅':'📅', title:'Daily Challenge', sub:dailyDone?'आज पूर्ण!':'5 प्रश्न · आज', color:dailyDone?'#059669':'#C4510E', bg:dailyDone?'rgba(5,150,105,0.07)':'rgba(232,103,26,0.07)', border:dailyDone?'rgba(5,150,105,0.25)':'rgba(232,103,26,0.25)', onClick:()=>go('DAILY') },
             { emoji:'⚔️', title:'Tournament',     sub:'20Q · Rank मिळवा', color:'#D97706', bg:'rgba(217,119,6,0.07)', border:'rgba(217,119,6,0.2)', onClick:()=>go('TOURNAMENT') },
+            { emoji:'🎮', title:'Live Quiz Room',  sub:'Multiplayer quiz',  color:'#7C3AED', bg:'rgba(124,58,237,0.07)', border:'rgba(124,58,237,0.2)', onClick:()=>go('LIVE_QUIZ') },
             { emoji:'📰', title:'Current Affairs', sub:'Daily feed', color:'#EC4899', bg:'rgba(236,72,153,0.07)', border:'rgba(236,72,153,0.2)', onClick:()=>go('CURRENT_FEED') },
-            { emoji:'📚', title:'Formula Sheet',  sub:'Quick revision', color:'#059669', bg:'rgba(5,150,105,0.07)', border:'rgba(5,150,105,0.2)', onClick:()=>go('FORMULA') },
-            { emoji:'👥', title:'Study Groups',   sub:'मित्रांसोबत शिका', color:'#2563EB', bg:'rgba(37,99,235,0.07)', border:'rgba(37,99,235,0.2)', onClick:()=>go('GROUPS') },
-            { emoji:'🔍', title:'Global Search',  sub:'सर्व questions शोधा', color:'#7C3AED', bg:'rgba(124,58,237,0.07)', border:'rgba(124,58,237,0.2)', onClick:()=>setShowSearch(true) },
+            { emoji:'🧠', title:'Mnemonic AI',    sub:'लक्षात राहायला tricks', color:'#7C3AED', bg:'rgba(124,58,237,0.07)', border:'rgba(124,58,237,0.2)', onClick:()=>go('MNEMONIC') },
+            { emoji:'📊', title:'Exam Readiness', sub:'तुम्ही ready आहात का?', color:'#059669', bg:'rgba(5,150,105,0.07)', border:'rgba(5,150,105,0.2)', onClick:()=>setShowReadiness(true) },
+            { emoji:'🎯', title:'Rank Predictor', sub:'तुमचा possible rank', color:'#2563EB', bg:'rgba(37,99,235,0.07)', border:'rgba(37,99,235,0.2)', onClick:()=>setShowRankPredictor(true) },
+            { emoji:'📖', title:'Concept AI',     sub:'Topics explain करा', color:'#059669', bg:'rgba(5,150,105,0.07)', border:'rgba(5,150,105,0.2)', onClick:()=>go('CONCEPT') },
+            { emoji:'✍️', title:'Answer Check',   sub:'Long answer evaluate', color:'#D97706', bg:'rgba(217,119,6,0.07)', border:'rgba(217,119,6,0.2)', onClick:()=>go('EVAL_ANSWER') },
+            { emoji:'🎁', title:'Referral',       sub:'मित्राला invite करा', color:'#E8671A', bg:'rgba(232,103,26,0.07)', border:'rgba(232,103,26,0.2)', onClick:()=>setShowReferral(true) },
             { emoji:'📅', title:'Study Planner',  sub:'Syllabus tracker', color:'#7C3AED', bg:'rgba(124,58,237,0.07)', border:'rgba(124,58,237,0.2)', onClick:()=>go('PLANNER') },
-            { emoji:'🤖', title:'AI Quiz',         sub:'AI questions generate', color:'#DC2626', bg:'rgba(220,38,38,0.07)', border:'rgba(220,38,38,0.2)', onClick:()=>go('AI_QUIZ') },
+            { emoji:'🤖', title:'AI Quiz',         sub:'AI questions', color:'#DC2626', bg:'rgba(220,38,38,0.07)', border:'rgba(220,38,38,0.2)', onClick:()=>go('AI_QUIZ') },
           ].map(({ emoji, title, sub, color, bg, border, onClick }) => (
             <div key={title} className="card-hover" onClick={onClick}
               style={{ background:bg, border:`1.5px solid ${border}`, borderRadius:16, padding:'14px 12px', cursor:'pointer' }}>
