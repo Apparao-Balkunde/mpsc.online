@@ -25,12 +25,11 @@ export function useAuth() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // --- नवीन बदल: Google Login फंक्शन ---
   const signInWithGoogle = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin, // लॉगिन झाल्यावर होम पेजवर येण्यासाठी
+        redirectTo: 'https://mpscsarathi.online', // ✅ Fixed — always production URL
         queryParams: {
           access_type: 'offline',
           prompt: 'consent',
@@ -40,12 +39,10 @@ export function useAuth() {
     if (error) throw error;
   };
 
-  // signInWithGoogle रिटर्नमध्ये ॲड करा
   return { user, session, loading, signInWithGoogle };
 }
 
-// Named export
 export async function signOut() {
   await supabase.auth.signOut();
-  window.location.reload();
+  window.location.href = 'https://mpscsarathi.online';
 }
