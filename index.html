@@ -4,7 +4,12 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-
+    <meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://pagead2.googlesyndication.com https://static.cloudflareinsights.com;
+  connect-src 'self' https://vswtorhncwprbxlzewar.supabase.co wss://vswtorhncwprbxlzewar.supabase.co https://api.groq.com https://mpscsarathi.online https://pagead2.googlesyndication.com https://ep1.adtrafficquality.google;
+  img-src 'self' data: https:;
+">
     <link rel="manifest" href="/manifest.json" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -23,7 +28,6 @@
     <meta property="og:url" content="https://mpscsarathi.online/" />
     <meta property="og:title" content="MPSC सारथी | मोफत सराव परीक्षा आणि PYQs पोर्टल" />
     <meta property="og:description" content="MPSC परीक्षांच्या तयारीसाठी सर्वोत्तम ऑनलाइन सराव केंद्र. विषयानुसार टेस्ट आणि झटपट निकाल पहा!" />
-    <meta property="og:image" content="https://mpscsarathi.online/og-image.jpg" />
     <meta property="og:site_name" content="MPSC सारथी" />
 
     <meta name="twitter:card" content="summary_large_image" />
