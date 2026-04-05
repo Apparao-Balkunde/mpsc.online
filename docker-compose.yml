@@ -1,19 +1,21 @@
-version: '3.8'
-
 services:
   mpsc-app:
     build:
       context: .
+      # Tailwind v4 आणि Native bindings साठी फ्रेश बिल्ड खात्रीशीर करण्यासाठी
+      dockerfile: Dockerfile
       args:
         - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
         - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
     container_name: mpsc_online_app
+    # तुझा सर्वर ३००० पोर्टवर चालतोय ना? (server.js मधील पोर्ट तपासा)
     ports:
       - "3000:3000"
     env_file:
       - .env
     depends_on:
       - redis
+      - db
     restart: unless-stopped
     networks:
       - mpsc-network
@@ -29,9 +31,12 @@ services:
     image: postgres:15-alpine
     container_name: mpsc_db
     environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_DB: ${DB_NAME:-mpsc_db}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-mysecretpassword}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    restart: always
     networks:
       - mpsc-network
 
