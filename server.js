@@ -58,42 +58,51 @@ app.use((req, res, next) => {
         res.setHeader('Cache-Control', 'no-store, must-revalidate');
     }
 
-    // ✅ FIXED CSP — script-src-elem + ep1.adtrafficquality + all Google Ads domains
+    // ✅ FIXED CSP v3 — Google AdSense sodar (ep1/ep2/ep3) + Kaspersky handled
+    // NOTE: Kaspersky browser extension inject करतो — ते block होणे CORRECT आहे.
+    // Google AdSense च्या sodar scripts साठी *.adtrafficquality.google wildcard वापरला.
     const CSP = [
         "default-src 'self' https:",
-        // script-src: जुना fallback (older browsers)
+
+        // script-src: older browser fallback
         "script-src 'self' 'unsafe-inline' 'unsafe-eval' " +
             "https://cdn.tailwindcss.com " +
             "https://pagead2.googlesyndication.com " +
             "https://static.cloudflareinsights.com " +
             "https://googleads.g.doubleclick.net " +
+            "https://tpc.googlesyndication.com " +
             "https://www.googletagservices.com " +
             "https://adservice.google.com " +
-            "https://tpc.googlesyndication.com",
-        // script-src-elem: modern browsers हा वापरतात (हा नसेल तर Kaspersky/AdSense block होतं)
+            "https://*.adtrafficquality.google",
+
+        // script-src-elem: modern browsers — AdSense sodar (ep1/ep2/ep3...) साठी wildcard
         "script-src-elem 'self' 'unsafe-inline' " +
             "https://cdn.tailwindcss.com " +
             "https://pagead2.googlesyndication.com " +
             "https://static.cloudflareinsights.com " +
             "https://googleads.g.doubleclick.net " +
+            "https://tpc.googlesyndication.com " +
             "https://www.googletagservices.com " +
             "https://adservice.google.com " +
-            "https://tpc.googlesyndication.com",
-        // connect-src: API calls + Google Ads tracking
+            "https://*.adtrafficquality.google",
+
+        // connect-src: Supabase, Groq AI, Google Ads quality checks
         "connect-src 'self' " +
             "https://vswtorhncwprbxlzewar.supabase.co " +
             "wss://vswtorhncwprbxlzewar.supabase.co " +
             "https://api.groq.com " +
             "https://mpscsarathi.online " +
             "https://pagead2.googlesyndication.com " +
-            "https://ep1.adtrafficquality.google " +
+            "https://*.adtrafficquality.google " +
             "https://googleads.g.doubleclick.net " +
             "https://adservice.google.com " +
             "https://www.google.com " +
             "https://accounts.google.com",
+
         "img-src 'self' data: blob: https:",
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
         "font-src 'self' https://fonts.gstatic.com",
+
         "frame-src 'self' " +
             "https://googleads.g.doubleclick.net " +
             "https://tpc.googlesyndication.com " +
