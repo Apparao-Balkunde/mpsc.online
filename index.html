@@ -2,6 +2,16 @@
 <html lang="mr">
   <head>
     <meta charset="UTF-8" />
+    <meta http-equiv="Content-Security-Policy" content="
+      default-src 'self' https://vswtorhncwprbxlzewar.supabase.co;
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://pagead2.googlesyndication.com https://static.cloudflareinsights.com https://me.kes.v2.scr.kaspersky-labs.com https://googleads.g.doubleclick.net https://www.googletagservices.com https://adservice.google.com https://ep1.adtrafficquality.google https://ep2.adtrafficquality.google;
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://me.kes.v2.scr.kaspersky-labs.com;
+      font-src 'self' https://fonts.gstatic.com;
+      img-src 'self' data: https:;
+      connect-src 'self' https://vswtorhncwprbxlzewar.supabase.co wss://vswtorhncwprbxlzewar.supabase.co https://api.groq.com https://mpscsarathi.online https://pagead2.googlesyndication.com https://ep1.adtrafficquality.google https://ep2.adtrafficquality.google https://googleads.g.doubleclick.net;
+      frame-src 'self' https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://www.google.com;
+    ">
+
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
@@ -26,6 +36,7 @@
     <meta property="og:title" content="MPSC सारथी | मोफत सराव परीक्षा आणि PYQs पोर्टल" />
     <meta property="og:description" content="MPSC परीक्षांच्या तयारीसाठी सर्वोत्तम ऑनलाइन सराव केंद्र. विषयानुसार टेस्ट आणि झटपट निकाल पहा!" />
     <meta property="og:site_name" content="MPSC सारथी" />
+    <meta property="og:image" content="https://mpscsarathi.online/og-image.jpg" />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="MPSC सारथी | मोफत सराव परीक्षा" />
@@ -57,9 +68,6 @@
           keys.filter((k) => k.includes('mpsc')).forEach((k) => caches.delete(k));
         }).catch(() => {});
       }
-      if (!('Quiz' in window)) {
-        window.Quiz = () => null;
-      }
       try {
         const savedMode = localStorage.getItem('mpsc_mode');
         if (savedMode === 'Quiz' || savedMode === 'QUIZ') {
@@ -73,7 +81,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&family=Noto+Sans+Devanagari:wght@400;700;900&display=swap" rel="stylesheet" />
 
     <style>
-      /* ── Base ── */
+      /* Base Styles */
       *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
       html { scroll-behavior: smooth; }
       body {
@@ -84,7 +92,7 @@
         -webkit-font-smoothing: antialiased;
       }
 
-      /* ── Loading screen ── */
+      /* Loading Screen Styles */
       #root-loading {
         display: flex;
         flex-direction: column;
@@ -176,11 +184,14 @@
           bar.style.opacity = '0';
           setTimeout(() => bar.remove(), 500);
         }
-        // Loader काढून टाकण्यासाठी (गरज पडल्यास)
-        const loader = document.getElementById('root-loading');
-        if (loader && document.getElementById('root').children.length > 1) {
-            loader.style.display = 'none';
-        }
+        // Loader logic
+        setTimeout(() => {
+          const loader = document.getElementById('root-loading');
+          if (loader && document.getElementById('root').children.length > 1) {
+            loader.style.opacity = '0';
+            setTimeout(() => loader.style.display = 'none', 300);
+          }
+        }, 1000);
       });
     </script>
     <script type="module" src="./index.tsx"></script>
