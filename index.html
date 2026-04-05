@@ -4,12 +4,17 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    
     <meta http-equiv="Content-Security-Policy" content="
-  default-src 'self';
-  script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://pagead2.googlesyndication.com https://static.cloudflareinsights.com;
-  connect-src 'self' https://vswtorhncwprbxlzewar.supabase.co wss://vswtorhncwprbxlzewar.supabase.co https://api.groq.com https://mpscsarathi.online https://pagead2.googlesyndication.com https://ep1.adtrafficquality.google;
-  img-src 'self' data: https:;
-">
+      default-src 'self' https://vswtorhncwprbxlzewar.supabase.co;
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://pagead2.googlesyndication.com https://static.cloudflareinsights.com https://me.kes.v2.scr.kaspersky-labs.com;
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://me.kes.v2.scr.kaspersky-labs.com;
+      font-src 'self' https://fonts.gstatic.com;
+      img-src 'self' data: https:;
+      connect-src 'self' https://vswtorhncwprbxlzewar.supabase.co wss://vswtorhncwprbxlzewar.supabase.co https://api.groq.com https://mpscsarathi.online https://pagead2.googlesyndication.com https://ep1.adtrafficquality.google;
+      frame-src 'self' https://googleads.g.doubleclick.net https://tpc.googlesyndication.com;
+    ">
+
     <link rel="manifest" href="/manifest.json" />
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -22,7 +27,8 @@
     <meta name="keywords" content="MPSC Mock Test 2026, MPSC Practice Set Marathi, MPSC PYQ With Explanation, MPSC Online Test Series Free, MPSC Sarathi Online, MPSC Question Bank, MPSC Rajyaseva Practice Paper, Talathi, ZP, Nagarparishad, Marathi Grammar Test MPSC, सरळसेवा सराव" />
     <meta name="author" content="MPSC Sarathi" />
     <meta name="robots" content="index, follow" />
-    <meta name="theme-color" content="#F97316" /> <link rel="canonical" href="https://mpscsarathi.online/" />
+    <meta name="theme-color" content="#F97316" /> 
+    <link rel="canonical" href="https://mpscsarathi.online/" />
 
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://mpscsarathi.online/" />
@@ -50,7 +56,6 @@
     </script>
 
     <script>
-      // Cleanup any legacy service workers/caches that may keep old bundles alive
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistrations().then((regs) => {
           regs.forEach((reg) => reg.unregister());
@@ -61,7 +66,6 @@
           keys.filter((k) => k.includes('mpsc')).forEach((k) => caches.delete(k));
         }).catch(() => {});
       }
-      // Fallback for very old bundles that still reference a global `Quiz` component
       if (!('Quiz' in window)) {
         window.Quiz = () => null;
       }
@@ -86,7 +90,7 @@
       body {
         margin: 0;
         font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif;
-        background: #F5F0E8; /* Changed to match your app's cream background */
+        background: #F5F0E8;
         color: #1a1a1a;
         -webkit-font-smoothing: antialiased;
       }
@@ -100,6 +104,7 @@
         min-height: 100svh;
         background: #F5F0E8;
         z-index: 1000;
+        position: relative;
       }
 
       .mpsc-logo-mark {
@@ -142,7 +147,6 @@
       @keyframes spin { to { transform: rotate(360deg); } }
       @keyframes logo-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
-      /* Progress bar at top */
       .mpsc-progress {
         position: fixed;
         top: 0; left: 0; right: 0;
@@ -154,7 +158,6 @@
       }
       @keyframes load-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
-      /* SEO hidden content */
       #seo-content { position: absolute; visibility: hidden; width: 1px; height: 1px; }
     </style>
   </head>
@@ -175,21 +178,19 @@
     <div id="seo-content" aria-hidden="true">
       <h1>MPSC सारथी - मोफत सराव पोर्टल 2026</h1>
       <p>राज्यसेवा (Rajyaseva), Combined, PSI, STI, ASO आणि सर्व सरळसेवा परीक्षांसाठी महाराष्ट्रातील सर्वोत्तम मोफत मॉक टेस्ट प्लॅटफॉर्म.</p>
-      <ul>
-        <li>पूर्व परीक्षा सराव (Prelims)</li>
-        <li>मुख्य परीक्षा सराव (Mains)</li>
-        <li>दैनिक चालू घडामोडी (Current Affairs)</li>
-        <li>मराठी आणि इंग्रजी शब्दसंग्रह (Vocab)</li>
-      </ul>
     </div>
 
     <script>
-      // Remove loader when page is fully ready
       window.addEventListener('load', function () {
         const bar = document.getElementById('top-progress');
         if (bar) {
           bar.style.opacity = '0';
           setTimeout(() => bar.remove(), 500);
+        }
+        // Loader काढून टाकण्यासाठी (गरज पडल्यास)
+        const loader = document.getElementById('root-loading');
+        if (loader && document.getElementById('root').children.length > 1) {
+            loader.style.display = 'none';
         }
       });
     </script>
