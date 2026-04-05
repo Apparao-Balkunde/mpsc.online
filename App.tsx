@@ -43,6 +43,12 @@ import { HeatmapCalendar } from './components/HeatmapCalendar';
 import { BottomNav } from './components/BottomNav';
 import { MoreMenu } from './components/MoreMenu';
 import { PWAPrompt } from './components/PWAPrompt';
+import { DoubtCommunity } from './components/DoubtCommunity';
+import { VocabBuilder } from './components/VocabBuilder';
+import { NewspaperSummary } from './components/NewspaperSummary';
+import { MapsGeography } from './components/MapsGeography';
+import { MockTestSeries } from './components/MockTestSeries';
+import { AIDailyBriefing } from './components/AIDailyBriefing';
 import { useAuth, signOut } from './hooks/useAuth';
 import { pullProgressFromCloud, pushProgressToCloud, startAutoSync } from './lib/Cloudsync';
 import { Heart } from 'lucide-react';
@@ -142,6 +148,12 @@ export default function App() {
   const [showReferral, setShowReferral]       = useState(false);
   const [showCertificate, setShowCertificate] = useState(false);
   const [showHeatmap, setShowHeatmap]         = useState(false);
+  const [showDoubtCommunity, setShowDoubtCommunity] = useState(false);
+  const [showVocabBuilder, setShowVocabBuilder]     = useState(false);
+  const [showNewspaper, setShowNewspaper]           = useState(false);
+  const [showMapsGeo, setShowMapsGeo]               = useState(false);
+  const [showMockSeries, setShowMockSeries]         = useState(false);
+  const [showAIBriefing, setShowAIBriefing]         = useState(false);
   const { user, loading: authLoading }        = useAuth();
 
   const isExam = mode === Mode.MOCK_TEST;
@@ -257,6 +269,12 @@ export default function App() {
       {showReferral    && <ReferralSystem onClose={()=>setShowReferral(false)} user={user} />}
       {showCertificate && <ProgressCertificate onClose={()=>setShowCertificate(false)} user={user} />}
       {showHeatmap     && <HeatmapCalendar onClose={()=>setShowHeatmap(false)} />}
+      {showDoubtCommunity && <DoubtCommunity onClose={()=>setShowDoubtCommunity(false)} />}
+      {showVocabBuilder   && <VocabBuilder onClose={()=>setShowVocabBuilder(false)} />}
+      {showNewspaper      && <NewspaperSummary onClose={()=>setShowNewspaper(false)} />}
+      {showMapsGeo        && <MapsGeography onClose={()=>setShowMapsGeo(false)} />}
+      {showMockSeries     && <MockTestSeries onClose={()=>setShowMockSeries(false)} />}
+      {showAIBriefing     && <AIDailyBriefing onClose={()=>setShowAIBriefing(false)} />}
       <AIDoubtSolver />
       {showAuth        && <AuthModal onClose={()=>setShowAuth(false)} />}
       {showLeaderboard && <Leaderboard onClose={()=>setShowLeaderboard(false)} currentUserId={user?.id} />}
@@ -451,6 +469,36 @@ export default function App() {
               <div style={{ fontSize:9, color:'rgba(0,0,0,0.4)', fontWeight:600 }}>{sub}</div>
             </div>
           ))}
+        </div>
+
+        {/* ✨ नवीन Features Section */}
+        <div style={{ marginBottom:20 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:12 }}>
+            <div style={{ flex:1, height:1, background:'rgba(0,0,0,0.07)' }}/>
+            <span style={{ fontSize:10, fontWeight:900, color:'#E8671A', textTransform:'uppercase', letterSpacing:'0.08em', whiteSpace:'nowrap' }}>✨ नवीन Features</span>
+            <div style={{ flex:1, height:1, background:'rgba(0,0,0,0.07)' }}/>
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+            {[
+              { label:'Doubt Community', sub:'प्रश्न विचारा · उत्तरे द्या', accent:'#E8671A', emoji:'💬', tag:'NEW', onClick:()=>setShowDoubtCommunity(true) },
+              { label:'Vocabulary Builder', sub:'Daily 10 Words + Quiz', accent:'#8B5CF6', emoji:'📖', tag:'HOT', onClick:()=>setShowVocabBuilder(true) },
+              { label:'Newspaper Summary', sub:'AI Marathi News', accent:'#EC4899', emoji:'📰', tag:'AI', onClick:()=>setShowNewspaper(true) },
+              { label:'Maps & Geography', sub:'Maharashtra Interactive', accent:'#0D6B6E', emoji:'🗺️', tag:'NEW', onClick:()=>setShowMapsGeo(true) },
+              { label:'Mock Test Series', sub:'Complete Prelims Papers', accent:'#F59E0B', emoji:'🏆', tag:'EXAM', onClick:()=>setShowMockSeries(true) },
+              { label:'AI Daily Briefing', sub:'रोज सकाळी Important Facts', accent:'#3B82F6', emoji:'⚡', tag:'AI', onClick:()=>setShowAIBriefing(true) },
+            ].map(({ label, sub, accent, emoji, tag, onClick }) => (
+              <div key={label} onClick={onClick} className="card-hover"
+                style={{ background:'#fff', border:`1px solid ${accent}20`, borderRadius:18, padding:'14px 12px', position:'relative', overflow:'hidden', cursor:'pointer', boxShadow:`0 2px 10px ${accent}10` }}>
+                <div style={{ position:'absolute', top:0, left:0, right:0, height:3, background:`linear-gradient(90deg,transparent,${accent},transparent)`, opacity:0.8 }} />
+                <div style={{ display:'flex', alignItems:'start', justifyContent:'space-between', marginBottom:8 }}>
+                  <span style={{ fontSize:22, lineHeight:1 }}>{emoji}</span>
+                  <span style={{ fontSize:7, fontWeight:900, textTransform:'uppercase', background:`${accent}15`, border:`1px solid ${accent}25`, borderRadius:999, padding:'2px 7px', color:accent }}>{tag}</span>
+                </div>
+                <div style={{ fontWeight:900, fontSize:'clamp(0.75rem,2.8vw,0.9rem)', marginBottom:2, color:'#111' }}>{label}</div>
+                <div style={{ fontSize:9, color:'rgba(0,0,0,0.4)', fontWeight:600 }}>{sub}</div>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Footer */}
