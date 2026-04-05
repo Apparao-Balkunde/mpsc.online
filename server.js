@@ -58,17 +58,50 @@ app.use((req, res, next) => {
         res.setHeader('Cache-Control', 'no-store, must-revalidate');
     }
 
-    // CSP Headers - Updated for Google Ads, Cloudflare & Analytics
-    res.setHeader(
-        "Content-Security-Policy",
-        "default-src 'self'; " +
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://pagead2.googlesyndication.com https://static.cloudflareinsights.com; " +
-        "connect-src 'self' https://vswtorhncwprbxlzewar.supabase.co wss://vswtorhncwprbxlzewar.supabase.co https://api.groq.com https://mpscsarathi.online https://pagead2.googlesyndication.com; " +
-        "img-src 'self' data: https://vswtorhncwprbxlzewar.supabase.co https://*.googleusercontent.com https://pagead2.googlesyndication.com; " +
-        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
-        "font-src 'self' https://fonts.gstatic.com; " +
-        "frame-src 'self' https://googleads.g.doubleclick.net https://tpc.googlesyndication.com;" // Ads साठी आवश्यक
-    );
+    // ✅ FIXED CSP — script-src-elem + ep1.adtrafficquality + all Google Ads domains
+    const CSP = [
+        "default-src 'self' https:",
+        // script-src: जुना fallback (older browsers)
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' " +
+            "https://cdn.tailwindcss.com " +
+            "https://pagead2.googlesyndication.com " +
+            "https://static.cloudflareinsights.com " +
+            "https://googleads.g.doubleclick.net " +
+            "https://www.googletagservices.com " +
+            "https://adservice.google.com " +
+            "https://tpc.googlesyndication.com",
+        // script-src-elem: modern browsers हा वापरतात (हा नसेल तर Kaspersky/AdSense block होतं)
+        "script-src-elem 'self' 'unsafe-inline' " +
+            "https://cdn.tailwindcss.com " +
+            "https://pagead2.googlesyndication.com " +
+            "https://static.cloudflareinsights.com " +
+            "https://googleads.g.doubleclick.net " +
+            "https://www.googletagservices.com " +
+            "https://adservice.google.com " +
+            "https://tpc.googlesyndication.com",
+        // connect-src: API calls + Google Ads tracking
+        "connect-src 'self' " +
+            "https://vswtorhncwprbxlzewar.supabase.co " +
+            "wss://vswtorhncwprbxlzewar.supabase.co " +
+            "https://api.groq.com " +
+            "https://mpscsarathi.online " +
+            "https://pagead2.googlesyndication.com " +
+            "https://ep1.adtrafficquality.google " +
+            "https://googleads.g.doubleclick.net " +
+            "https://adservice.google.com " +
+            "https://www.google.com " +
+            "https://accounts.google.com",
+        "img-src 'self' data: blob: https:",
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+        "font-src 'self' https://fonts.gstatic.com",
+        "frame-src 'self' " +
+            "https://googleads.g.doubleclick.net " +
+            "https://tpc.googlesyndication.com " +
+            "https://www.google.com " +
+            "https://accounts.google.com",
+    ].join("; ");
+
+    res.setHeader("Content-Security-Policy", CSP);
 
     res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none');
