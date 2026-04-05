@@ -1,10 +1,12 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite'; // नवीन प्लगइन ॲड केला
 import path from 'path';
 
 export default defineConfig({
-  plugins: [react()],
-  // रेंडरसाठी '/' वापरणे अधिक सुरक्षित असते
+  // Tailwind v4 साठी tailwindcss() प्लगइन इथे टाकला आहे
+  plugins: [react(), tailwindcss()],
+  
   base: '/', 
   resolve: {
     alias: {
@@ -14,7 +16,6 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
-    // चंक्स मॅन्युअली न बनवता Vite ला हँडल करू द्या, यामुळे विसंगती टळते
     rollupOptions: {
       output: {
         entryFileNames: `assets/[name].[hash].js`,
