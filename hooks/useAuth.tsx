@@ -8,43 +8,37 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // ✅ Page load होताच current session restore करा
+    // Current session restore — page refresh वर login टिकतो
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    // ✅ Auth state changes — login/logout/token refresh
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('[Auth]', event, session?.user?.email);
+    // Auth state listener — login/logout/token refresh
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    // ✅ URL मध्ये OAuth error असेल तर handle करा
-    // e.g. /?error=server_error&error_description=Unable+to+exchange...
-    const urlParams = new URLSearchParams(window.location.search);
-    const authError = urlParams.get('error');
-    const authErrorDesc = urlParams.get('error_description');
-    if (authError) {
-      console.error('[Auth URL Error]', authError, authErrorDesc);
-      // URL clean करा — error params remove करा
-      const cleanUrl = window.location.origin + window.location.pathname;
-      window.history.replaceState({}, document.title, cleanUrl);
+    // OAuth redirect error URL clean करा
+    // e.g. /?error=server_error&error_description=...
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('error')) {
+      console.warn('[Auth Error]', params.get('error'), params.get('error_description'));
+      window.history.replaceState({}, '', window.location.pathname);
     }
 
     return () => subscription.unsubscribe();
   }, []);
 
-  // ✅ Google OAuth — dynamic redirectTo (localhost + production दोन्ही)
+  // ✅ Google OAuth — dynamic redirect (localhost + production दोन्ही)
   const signInWithGoogle = async () => {
-    const redirectTo = `${window.location.origin}/`;
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo,
+        redirectTo: window.location.origin,
         queryParams: {
           access_type: 'offline',
           prompt: 'consent',
@@ -54,26 +48,7 @@ export function useAuth() {
     if (error) throw error;
   };
 
-  // ✅ Email OTP — Step 1: OTP पाठवा
-  const sendOTP = async (email: string) => {
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { shouldCreateUser: true },
-    });
-    if (error) throw new Error(error.message);
-  };
-
-  // ✅ Email OTP — Step 2: verify करा
-  const verifyOTP = async (email: string, token: string) => {
-    const { error } = await supabase.auth.verifyOtp({
-      email,
-      token,
-      type: 'email',
-    });
-    if (error) throw new Error('OTP चुकीचा किंवा expired. पुन्हा OTP पाठवा.');
-  };
-
-  return { user, session, loading, signInWithGoogle, sendOTP, verifyOTP };
+  return { user, session, loading, signInWithGoogle };
 }
 
 export async function signOut() {
