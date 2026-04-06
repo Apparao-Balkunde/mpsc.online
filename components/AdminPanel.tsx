@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import { Mode, UserProgress } from './types';
 
 // Components
-import { QuizMode } from './components/QuizMode';
+import { QuizMode } from '../components/QuizMode';
 import { QuestionView } from './components/QuestionView';
 import { MockTestMode } from './components/MockTestMode';
 import { VocabMode } from './components/VocabMode';
