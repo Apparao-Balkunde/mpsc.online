@@ -57,6 +57,12 @@ import {
 const PROGRESS_KEY = 'mpsc_user_progress';
 const HISTORY_KEY  = 'mpsc_history';
 
+export function AdminPanel() { 
+  return (
+    <div>Admin Dashboard</div>
+  );
+}
+
 // Helper Functions
 function loadProgress(): UserProgress {
   try { 
