@@ -49,6 +49,9 @@ import { NewspaperSummary } from './components/NewspaperSummary';
 import { MapsGeography } from './components/MapsGeography';
 import { MockTestSeries } from './components/MockTestSeries';
 import { AIDailyBriefing } from './components/AIDailyBriefing';
+import { SpeedDrill } from './components/SpeedDrill';
+import { MistakeBook } from './components/MistakeBook';
+import { AIStudyBuddy } from './components/AIStudyBuddy';
 import { AIMockInterview } from './components/AIMockInterview';
 import { AIStudySchedule } from './components/AIStudySchedule';
 import { AdminPanel } from './components/AdminPanel';
@@ -182,6 +185,7 @@ export default function App() {
   const [showCutoff, setShowCutoff]                 = useState(false);
   const [showSubjectProgress, setShowSubjectProgress] = useState(false);
   const [showAIBriefing, setShowAIBriefing]         = useState(false);
+  const [showStudyBuddy, setShowStudyBuddy]         = useState(false);
   const { user, loading: authLoading }        = useAuth();
 
   const isExam = mode === Mode.MOCK_TEST;
@@ -258,6 +262,8 @@ export default function App() {
   if (mode === 'QUESTION_BANK')  return <QuestionBank onBack={back} />;
   if (mode === 'ESSAY')          return <EssayMode onBack={back} />;
   if (mode === 'DISTRICT_QUIZ')  return <DistrictQuiz onBack={back} />;
+  if (mode === 'SPEED_DRILL')   return <SpeedDrill onBack={back} />;
+  if (mode === 'MISTAKE_BOOK')  return <MistakeBook onBack={back} />;
 
   if (mode !== Mode.HOME) return (
     <div style={{ minHeight:'100vh', background:'#F5F0E8', fontFamily:"'Poppins','Noto Sans Devanagari',sans-serif", color:'#1a1a1a' }}>
@@ -305,6 +311,7 @@ export default function App() {
       {showMapsGeo        && <MapsGeography onClose={()=>setShowMapsGeo(false)} />}
       {showMockSeries     && <MockTestSeries onClose={()=>setShowMockSeries(false)} />}
       {showAIBriefing     && <AIDailyBriefing onClose={()=>setShowAIBriefing(false)} />}
+      {showStudyBuddy     && <AIStudyBuddy onClose={()=>setShowStudyBuddy(false)} user={user} />}
       {showAIInterview    && <div style={{position:'fixed',inset:0,zIndex:200,overflowY:'auto'}}><AIMockInterview onBack={()=>setShowAIInterview(false)} /></div>}
       {showAISchedule     && <div style={{position:'fixed',inset:0,zIndex:200,overflowY:'auto'}}><AIStudySchedule onBack={()=>setShowAISchedule(false)} /></div>}
       {showAdmin          && <div style={{position:'fixed',inset:0,zIndex:200,overflowY:'auto'}}><AdminPanel /></div>}
@@ -422,6 +429,9 @@ export default function App() {
             { emoji:'🔍', title:'Global Search',  sub:'सर्व questions शोधा', color:'#7C3AED', bg:'rgba(124,58,237,0.07)', border:'rgba(124,58,237,0.2)', onClick:()=>setShowSearch(true) },
             { emoji:'📅', title:'Study Planner',  sub:'Syllabus tracker', color:'#7C3AED', bg:'rgba(124,58,237,0.07)', border:'rgba(124,58,237,0.2)', onClick:()=>go('PLANNER') },
             { emoji:'🤖', title:'AI Quiz',         sub:'AI questions generate', color:'#DC2626', bg:'rgba(220,38,38,0.07)', border:'rgba(220,38,38,0.2)', onClick:()=>go('AI_QUIZ') },
+            { emoji:'⚡', title:'Speed Drill',     sub:'10Q · 6sec · Ultra fast', color:'#F59E0B', bg:'rgba(245,158,11,0.07)', border:'rgba(245,158,11,0.25)', onClick:()=>go('SPEED_DRILL') },
+            { emoji:'📖', title:'Mistake Book',    sub:'चुकलेले revise करा', color:'#8B5CF6', bg:'rgba(139,92,246,0.07)', border:'rgba(139,92,246,0.2)', onClick:()=>go('MISTAKE_BOOK') },
+            { emoji:'🤖', title:'AI Study Buddy', sub:'Personal AI tutor', color:'#7C3AED', bg:'rgba(124,58,237,0.07)', border:'rgba(124,58,237,0.2)', onClick:()=>setShowStudyBuddy(true) },
           ].map(({ emoji, title, sub, color, bg, border, onClick }) => (
             <div key={title} className="card-hover" onClick={onClick}
               style={{ background:bg, border:`1.5px solid ${border}`, borderRadius:16, padding:'14px 12px', cursor:'pointer' }}>
@@ -553,6 +563,13 @@ export default function App() {
         </div>
       </div>
 
+      {/* Floating AI Buddy button */}
+      {!showStudyBuddy && (
+        <button onClick={()=>setShowStudyBuddy(true)}
+          style={{position:'fixed',bottom:76,right:16,zIndex:99,width:52,height:52,borderRadius:16,background:'linear-gradient(135deg,#7C3AED,#EC4899)',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:24,boxShadow:'0 6px 24px rgba(124,58,237,0.5)',animation:'pulse 2s ease infinite'}}>
+          🤖
+        </button>
+      )}
       <BottomNav active="HOME" onNav={handleBottomNav} dailyDone={dailyDone} />
     </div>
   );
