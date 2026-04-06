@@ -29,6 +29,7 @@ import { StreakRewards } from '../components/StreakRewards';
 import { NotesFeature } from '../components/NotesFeature';
 import { VoiceQuestions } from '../components/VoiceQuestions';
 import { PDFReport } from '../components/PDFReport';
+import { XPDashboard } from '../components/XPDashboard';
 import { WhatsAppShare } from '../components/WhatsAppShare';
 import { AIMarathiTranslator } from '../components/AIMarathiTranslator';
 import { WeakTopicDetector } from '../components/WeakTopicDetector';
