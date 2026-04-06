@@ -54,7 +54,6 @@ import { MistakeBook } from './components/MistakeBook';
 import { AIStudyBuddy } from './components/AIStudyBuddy';
 import { AIMockInterview } from './components/AIMockInterview';
 import { AIStudySchedule } from './components/AIStudySchedule';
-import { AdminPanel } from './components/AdminPanel';
 import { CoinShop } from './components/CoinShop';
 import { MockTestHistory } from './components/MockTestHistory';
 import { PDFReport } from './components/PDFReport';
