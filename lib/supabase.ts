@@ -9,13 +9,11 @@ if (!supabaseUrl || !supabaseKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
-// --- खालील कोड नवीन ॲड कर ---
-
 /**
  * युजरचा लाईव्ह रँक मोजण्यासाठी फंक्शन
- * @param {number} currentCorrect - युजरने आतापर्यंत बरोबर सोडवलेले एकूण प्रश्न
+ * @param currentCorrect - युजरने आतापर्यंत बरोबर सोडवलेले एकूण प्रश्न
  */
-export const getLiveRank = async (currentCorrect) => {
+export const getLiveRank = async (currentCorrect: number) => {
   try {
     // १. ज्यांचे 'total_correct' तुझ्यापेक्षा जास्त आहेत त्यांना मोजा
     const { count, error } = await supabase
@@ -36,7 +34,7 @@ export const getLiveRank = async (currentCorrect) => {
       rank: (count || 0) + 1, // रँक = तुझ्या पुढचे लोक + १
       total: totalCount || 0
     };
-  } catch (err) {
+  } catch (err: any) {
     console.error("Rank Error:", err.message);
     return { rank: '-', total: '-' };
   }
