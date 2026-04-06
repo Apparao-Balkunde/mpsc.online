@@ -49,6 +49,21 @@ import { NewspaperSummary } from './components/NewspaperSummary';
 import { MapsGeography } from './components/MapsGeography';
 import { MockTestSeries } from './components/MockTestSeries';
 import { AIDailyBriefing } from './components/AIDailyBriefing';
+import { AIMockInterview } from './components/AIMockInterview';
+import { AIStudySchedule } from './components/AIStudySchedule';
+import { AdminPanel } from './components/AdminPanel';
+import { CoinShop } from './components/CoinShop';
+import { MockTestHistory } from './components/MockTestHistory';
+import { PDFReport } from './components/PDFReport';
+import { StreakRewards } from './components/StreakRewards';
+import { UserAnalyticsDashboard } from './components/UserAnalyticsDashboard';
+import { WeakTopicDetector } from './components/WeakTopicDetector';
+import { WhatsAppShare } from './components/WhatsAppShare';
+import { XPDashboard } from './components/XPDashboard';
+import { CutoffTracker } from './components/CutoffTracker';
+import { EssayMode } from './components/EssayMode';
+import { SubjectProgress } from './components/SubjectProgress';
+import { DistrictQuiz } from './components/DistrictQuiz';
 import { useAuth, signOut } from './hooks/useAuth';
 import { pullProgressFromCloud, pushProgressToCloud, startAutoSync } from './lib/Cloudsync';
 import { Heart } from 'lucide-react';
@@ -153,6 +168,19 @@ export default function App() {
   const [showNewspaper, setShowNewspaper]           = useState(false);
   const [showMapsGeo, setShowMapsGeo]               = useState(false);
   const [showMockSeries, setShowMockSeries]         = useState(false);
+  const [showAIInterview, setShowAIInterview]       = useState(false);
+  const [showAISchedule, setShowAISchedule]         = useState(false);
+  const [showCoinShop, setShowCoinShop]             = useState(false);
+  const [showMockHistory, setShowMockHistory]       = useState(false);
+  const [showPDFReport, setShowPDFReport]           = useState(false);
+  const [showStreakRewards, setShowStreakRewards]    = useState(false);
+  const [showUserAnalytics, setShowUserAnalytics]   = useState(false);
+  const [showWeakTopics, setShowWeakTopics]         = useState(false);
+  const [showWAShare, setShowWAShare]               = useState(false);
+  const [showXPDash, setShowXPDash]                 = useState(false);
+  const [showAdmin, setShowAdmin]                   = useState(false);
+  const [showCutoff, setShowCutoff]                 = useState(false);
+  const [showSubjectProgress, setShowSubjectProgress] = useState(false);
   const [showAIBriefing, setShowAIBriefing]         = useState(false);
   const { user, loading: authLoading }        = useAuth();
 
@@ -228,6 +256,8 @@ export default function App() {
   if (mode === 'BM_COLLECTIONS')  return <BookmarkCollections onBack={back} />;
   if (mode === 'POMODORO')       return <PomodoroTimer onBack={back} />;
   if (mode === 'QUESTION_BANK')  return <QuestionBank onBack={back} />;
+  if (mode === 'ESSAY')          return <EssayMode onBack={back} />;
+  if (mode === 'DISTRICT_QUIZ')  return <DistrictQuiz onBack={back} />;
 
   if (mode !== Mode.HOME) return (
     <div style={{ minHeight:'100vh', background:'#F5F0E8', fontFamily:"'Poppins','Noto Sans Devanagari',sans-serif", color:'#1a1a1a' }}>
@@ -275,6 +305,19 @@ export default function App() {
       {showMapsGeo        && <MapsGeography onClose={()=>setShowMapsGeo(false)} />}
       {showMockSeries     && <MockTestSeries onClose={()=>setShowMockSeries(false)} />}
       {showAIBriefing     && <AIDailyBriefing onClose={()=>setShowAIBriefing(false)} />}
+      {showAIInterview    && <div style={{position:'fixed',inset:0,zIndex:200,overflowY:'auto'}}><AIMockInterview onBack={()=>setShowAIInterview(false)} /></div>}
+      {showAISchedule     && <div style={{position:'fixed',inset:0,zIndex:200,overflowY:'auto'}}><AIStudySchedule onBack={()=>setShowAISchedule(false)} /></div>}
+      {showAdmin          && <div style={{position:'fixed',inset:0,zIndex:200,overflowY:'auto'}}><AdminPanel /></div>}
+      {showCoinShop       && <CoinShop onClose={()=>setShowCoinShop(false)} />}
+      {showMockHistory    && <MockTestHistory onClose={()=>setShowMockHistory(false)} />}
+      {showPDFReport      && <PDFReport onClose={()=>setShowPDFReport(false)} />}
+      {showStreakRewards   && <StreakRewards onClose={()=>setShowStreakRewards(false)} />}
+      {showUserAnalytics  && <div style={{position:'fixed',inset:0,zIndex:200,overflowY:'auto'}}><UserAnalyticsDashboard onBack={()=>setShowUserAnalytics(false)} /></div>}
+      {showWeakTopics     && <WeakTopicDetector onClose={()=>setShowWeakTopics(false)} />}
+      {showWAShare        && <WhatsAppShare onClose={()=>setShowWAShare(false)} />}
+      {showXPDash         && <XPDashboard onClose={()=>setShowXPDash(false)} />}
+      {showCutoff         && <CutoffTracker onClose={()=>setShowCutoff(false)} />}
+      {showSubjectProgress && <SubjectProgress onClose={()=>setShowSubjectProgress(false)} />}
       <AIDoubtSolver />
       {showAuth        && <AuthModal onClose={()=>setShowAuth(false)} />}
       {showLeaderboard && <Leaderboard onClose={()=>setShowLeaderboard(false)} currentUserId={user?.id} />}
