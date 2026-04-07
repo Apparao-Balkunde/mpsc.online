@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Zap, ChevronRight } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { updateProgress } from '../App';
+import { addXP, checkAndAwardBadges } from './xpSystem';
 
 interface Props { onBack: () => void; }
 interface Q { id:number; question:string; options:string[]; correct_answer_index:number; subject:string; }
@@ -134,9 +135,17 @@ export const SpeedDrill: React.FC<Props> = ({ onBack }) => {
         <div style={{display:'flex',gap:6,marginBottom:28}}>
           {results.map((r,i)=><div key={i} style={{width:28,height:28,borderRadius:8,background:r?'rgba(16,185,129,0.4)':'rgba(220,38,38,0.4)',border:`1px solid ${r?'#10B981':'#EF4444'}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13}}>{r?'✓':'✗'}</div>)}
         </div>
-        <div style={{display:'flex',gap:10,width:'100%',maxWidth:360}}>
-          <button onClick={startDrill} style={{flex:2,background:'linear-gradient(135deg,#F59E0B,#F97316)',border:'none',borderRadius:14,padding:'14px',color:'#fff',fontWeight:900,fontSize:14,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8}}><Zap size={16} fill="#fff"/>पुन्हा खेळा</button>
-          <button onClick={onBack} style={{flex:1,background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.12)',borderRadius:14,padding:'14px',color:'#fff',fontWeight:800,fontSize:14,cursor:'pointer'}}>Home</button>
+        {/* XP earned */}
+        <div style={{background:'rgba(245,158,11,0.15)',border:'1px solid rgba(245,158,11,0.3)',borderRadius:14,padding:'10px 16px',marginBottom:12,textAlign:'center',fontSize:14,fontWeight:900,color:'#F59E0B'}}>
+          +{score*3 + (questions.length - score)} ⚡ XP earned!
+        </div>
+        <div style={{display:'flex',gap:8,width:'100%',maxWidth:360,flexWrap:'wrap'}}>
+          <button onClick={()=>{
+            const txt=`⚡ MPSC Speed Drill!\n\n${score}/${qs.length} · ${Math.round((score/qs.length)*100)}% accuracy\nMax Combo: ${maxStreak}x 🔥\n\nmpscsarathi.online`;
+            window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');
+          }} style={{flex:1,background:'linear-gradient(135deg,#25D366,#128C7E)',border:'none',borderRadius:14,padding:'12px',color:'#fff',fontWeight:900,fontSize:13,cursor:'pointer'}}>📤 Share</button>
+          <button onClick={startDrill} style={{flex:2,background:'linear-gradient(135deg,#F59E0B,#F97316)',border:'none',borderRadius:14,padding:'12px',color:'#fff',fontWeight:900,fontSize:14,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8}}><Zap size={16} fill="#fff"/>पुन्हा</button>
+          <button onClick={onBack} style={{flex:1,background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.12)',borderRadius:14,padding:'12px',color:'#fff',fontWeight:800,fontSize:13,cursor:'pointer'}}>Home</button>
         </div>
       </div>
     );
