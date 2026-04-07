@@ -361,6 +361,11 @@ export default function App() {
           <button onClick={()=>setShowSupport(true)} style={{ display:'flex', alignItems:'center', gap:5, background:'linear-gradient(135deg,#E8671A,#C4510E)', border:'none', borderRadius:11, padding:'8px 13px', color:'#fff', fontWeight:900, fontSize:12, cursor:'pointer', boxShadow:'0 4px 14px rgba(232,103,26,0.3)' }}>
             <Heart size={12} fill="#fff" /> सपोर्ट
           </button>
+          <button onClick={()=>setShowMore(true)} style={{ background:'rgba(0,0,0,0.05)', border:'1px solid rgba(0,0,0,0.08)', borderRadius:11, padding:'8px 10px', cursor:'pointer', color:'#7A9090', display:'flex', flexDirection:'column', gap:3, alignItems:'center' }}>
+            <div style={{width:14,height:1.5,background:'#7A9090',borderRadius:1}}/>
+            <div style={{width:14,height:1.5,background:'#7A9090',borderRadius:1}}/>
+            <div style={{width:14,height:1.5,background:'#7A9090',borderRadius:1}}/>
+          </button>
         </div>
 
         {/* ── HERO CARD ── */}
@@ -390,6 +395,9 @@ export default function App() {
                   ✓ {user.email?.split('@')[0]}
                 </div>
               )}
+              <div onClick={()=>setShowCountdown(true)} style={{ display:'flex', alignItems:'center', gap:5, background:'rgba(37,99,235,0.15)', border:'1px solid rgba(37,99,235,0.3)', borderRadius:99, padding:'7px 13px', fontWeight:700, fontSize:11, color:'#93C5FD', cursor:'pointer' }}>
+                📊 Countdown
+              </div>
             </div>
           </div>
         </div>
@@ -397,11 +405,11 @@ export default function App() {
         {/* ── STATS ROW ── */}
         <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10, marginBottom:16 }}>
           {[
-            { label:'सोडवलेले', value:progress.totalAttempted.toLocaleString(), icon:Target,     color:'#3B82F6', pct:Math.min(progress.totalAttempted/500*100,100) },
-            { label:'अचूकता',   value:accuracy+'%',                             icon:TrendingUp, color:'#10B981', pct:accuracy },
-            { label:'बरोबर',    value:progress.totalCorrect.toLocaleString(),   icon:Award,      color:'#F97316', pct:accuracy },
-          ].map(({ label, value, icon:Icon, color, pct }) => (
-            <div key={label} className="card-hover" onClick={()=>setShowAnalytics(true)}
+            { label:'सोडवलेले', value:progress.totalAttempted.toLocaleString(), icon:Target,     color:'#3B82F6', pct:Math.min(progress.totalAttempted/500*100,100), action:()=>setShowAnalytics(true) },
+            { label:'अचूकता',   value:accuracy+'%',                             icon:TrendingUp, color:'#10B981', pct:accuracy, action:()=>setShowReadiness(true) },
+            { label:'बरोबर',    value:progress.totalCorrect.toLocaleString(),   icon:Award,      color:'#F97316', pct:accuracy, action:()=>setShowHeatmap(true) },
+          ].map(({ label, value, icon:Icon, color, pct, action }) => (
+            <div key={label} className="card-hover" onClick={action}
               style={{ background:'#fff', border:'1px solid rgba(0,0,0,0.06)', borderRadius:18, padding:'14px 10px', display:'flex', flexDirection:'column', alignItems:'center', gap:6, cursor:'pointer', boxShadow:'0 2px 10px rgba(0,0,0,0.05)', position:'relative', overflow:'hidden' }}>
               <div style={{ position:'absolute', inset:0, background:`radial-gradient(circle at 50% 0%,${color}10 0%,transparent 60%)` }} />
               <div style={{ position:'relative', zIndex:1 }}>
@@ -661,6 +669,7 @@ export default function App() {
             {[
               { e:'⚡', t:'XP Dashboard', s:'Level + badges', c:'#D97706', action:()=>setShowXPDash(true) },
               { e:'🔥', t:'Streak Rewards', s:'Milestones', c:'#E8671A', action:()=>setShowStreakRewards(true) },
+              { e:'👥', t:'User Analytics', s:'All students', c:'#2563EB', action:()=>setShowUserAnalytics(true) },
             ].map(({e,t,s,c,action}) => (
               <div key={t} className="card-hover" onClick={action}
                 style={{ background:`${c}08`, border:`1.5px solid ${c}20`, borderRadius:16, padding:'14px', cursor:'pointer', display:'flex', alignItems:'center', gap:10 }}>
@@ -732,6 +741,7 @@ export default function App() {
             {[...Array(5)].map((_,i) => <Star key={i} size={10} fill="#F97316" style={{ color:'#F97316' }} />)}
           </div>
           <p style={{ fontSize:10, color:'rgba(0,0,0,0.3)', fontWeight:600 }}>Maharashtra's #1 Free MPSC Portal · mpscsarathi.online</p>
+          <button onClick={()=>setShowAdmin(true)} style={{background:'none',border:'none',cursor:'pointer',fontSize:8,color:'rgba(0,0,0,0.1)',marginTop:4}}>v2.0</button>
         </div>
       </div>
 
