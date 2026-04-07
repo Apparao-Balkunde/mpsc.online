@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { updateProgress } from '../App';
+import { addXP, checkAndAwardBadges } from './xpSystem';
 import { ArrowLeft, CheckCircle2, X, Check, Flame, Calendar, Star, Trophy, ChevronRight } from 'lucide-react';
 
 interface Question {
@@ -71,6 +72,14 @@ export const DailyChallenge: React.FC<Props> = ({ onBack }) => {
       const finalScore = Object.keys({...answers, [qIdx]: answers[qIdx]}).length > 0 ? score : 0;
       updateProgress(questions.length, finalScore);
       const newData = { date: TODAY, done: true, score: finalScore, total: questions.length, history: [...(stored.history||[]), { date: TODAY, score: finalScore }] };
+      // Award XP + Coins for daily challenge
+      const xpEarned = 20 + (finalScore * 5); // base 20 + 5 per correct
+      const prog = JSON.parse(localStorage.getItem('mpsc_user_progress')||'{}');
+      const badges = checkAndAwardBadges(prog.totalCorrect||0, prog.streak||0, finalScore);
+      addXP(xpEarned, badges);
+      // Award coins
+      const coins = parseInt(localStorage.getItem('mpsc_coins')||'0');
+      localStorage.setItem('mpsc_coins', String(coins + 20 + finalScore*2));
       saveData(newData);
       setPhase('done');
     } else {
@@ -172,10 +181,28 @@ export const DailyChallenge: React.FC<Props> = ({ onBack }) => {
             </div>
           </div>
 
-          <button onClick={onBack}
-            style={{ width:'100%', background:'linear-gradient(135deg,#E8671A,#C4510E)', border:'none', borderRadius:14, padding:'15px', color:'#fff', fontWeight:900, fontSize:15, cursor:'pointer', boxShadow:'0 6px 20px rgba(232,103,26,0.3)' }}>
-            अभ्यास सुरू करा 🚀
-          </button>
+          {/* XP + Coins earned */}
+          {phase === 'done' && (
+            <div style={{ background:'linear-gradient(135deg,rgba(245,200,66,0.15),rgba(232,103,26,0.1))', border:'1px solid rgba(245,200,66,0.3)', borderRadius:16, padding:'14px 18px', marginBottom:14, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+              <div style={{ fontWeight:800, fontSize:13, color:'#92400E' }}>🎉 आज मिळाले:</div>
+              <div style={{ display:'flex', gap:12 }}>
+                <div style={{ fontWeight:900, fontSize:14, color:'#7C3AED' }}>+{20 + (stored2.score||0)*5} ⚡ XP</div>
+                <div style={{ fontWeight:900, fontSize:14, color:'#D97706' }}>+{20 + (stored2.score||0)*2} 🪙</div>
+              </div>
+            </div>
+          )}
+          <div style={{ display:'flex', gap:10 }}>
+            <button onClick={()=>{
+              const txt = `📅 MPSC सारथी Daily Challenge\n\n${stored2.score||0}/5 बरोबर! Streak: ${streak}🔥\n\nतुम्हीही try करा: mpscsarathi.online\n#MPSC #Maharashtra`;
+              window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');
+            }} style={{ flex:1, background:'linear-gradient(135deg,#25D366,#128C7E)', border:'none', borderRadius:14, padding:'13px', color:'#fff', fontWeight:900, fontSize:13, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:7 }}>
+              📤 Share
+            </button>
+            <button onClick={onBack}
+              style={{ flex:2, background:'linear-gradient(135deg,#E8671A,#C4510E)', border:'none', borderRadius:14, padding:'13px', color:'#fff', fontWeight:900, fontSize:15, cursor:'pointer', boxShadow:'0 6px 20px rgba(232,103,26,0.3)' }}>
+              अभ्यास सुरू करा 🚀
+            </button>
+          </div>
         </div>
       </div>
     );
