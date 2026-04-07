@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, ChevronLeft, ChevronRight, RotateCcw, Check, X, Shuffle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { updateProgress } from '../App';
+import { addXP } from './xpSystem';
 
 interface Card { id:number; front:string; back:string; subject:string; hint?:string; }
 
