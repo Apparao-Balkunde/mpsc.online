@@ -543,7 +543,7 @@ export default function App() {
             {[
               { e:'📅', t:'Study Planner', s:'Syllabus tracker', c:'#7C3AED', action:()=>go('PLANNER') },
               { e:'📝', t:'My Notes', s:'Personal notes', c:'#E8671A', action:()=>go('NOTES') },
-              { e:'🏦', t:'Question Bank', s:'Browse all Q/'s', c:'#059669', action:()=>go('QUESTION_BANK') },
+              { e:'🏦', t:'Question Bank', s:"Browse all Q/'s", c:'#059669', action:()=>go('QUESTION_BANK') },
               { e:'📚', t:'Formula Sheet', s:'Quick revision', c:'#059669', action:()=>go('FORMULA') },
               { e:'🔊', t:'Voice Quiz', s:'TTS audio', c:'#E8671A', action:()=>go('VOICE') },
               { e:'🧠', t:'Mnemonics', s:'Memory tricks', c:'#8B5CF6', action:()=>go('MNEMONIC') },
