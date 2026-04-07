@@ -310,7 +310,6 @@ export default function App() {
       {showMapsGeo        && <MapsGeography onClose={()=>setShowMapsGeo(false)} />}
       {showMockSeries     && <MockTestSeries onClose={()=>setShowMockSeries(false)} />}
       {showAIBriefing     && <AIDailyBriefing onClose={()=>setShowAIBriefing(false)} />}
-      {showStudyBuddy     && <AIStudyBuddy onClose={()=>setShowStudyBuddy(false)} user={user} />}
       {showAIInterview    && <div style={{position:'fixed',inset:0,zIndex:200,overflowY:'auto'}}><AIMockInterview onBack={()=>setShowAIInterview(false)} /></div>}
       {showAISchedule     && <div style={{position:'fixed',inset:0,zIndex:200,overflowY:'auto'}}><AIStudySchedule onBack={()=>setShowAISchedule(false)} /></div>}
       {showAdmin          && <div style={{position:'fixed',inset:0,zIndex:200,overflowY:'auto'}}><AdminPanel /></div>}
@@ -324,6 +323,7 @@ export default function App() {
       {showXPDash         && <XPDashboard onClose={()=>setShowXPDash(false)} />}
       {showCutoff         && <CutoffTracker onClose={()=>setShowCutoff(false)} />}
       {showSubjectProgress && <SubjectProgress onClose={()=>setShowSubjectProgress(false)} />}
+      {showStudyBuddy     && <AIStudyBuddy onClose={()=>setShowStudyBuddy(false)} user={user} />}
       <AIDoubtSolver />
       {showAuth        && <AuthModal onClose={()=>setShowAuth(false)} />}
       {showLeaderboard && <Leaderboard onClose={()=>setShowLeaderboard(false)} currentUserId={user?.id} />}
@@ -332,16 +332,17 @@ export default function App() {
       {showMore        && <MoreMenu onClose={()=>setShowMore(false)} onNav={handleMoreNav} onShowSupport={()=>setShowSupport(true)} onShowLeaderboard={()=>setShowLeaderboard(true)} onShowProgress={()=>setShowAnalytics(true)} onLogin={()=>setShowAuth(true)} onLogout={()=>signOut()} user={user} />}
       <PWAPrompt />
 
+      {/* BG Blobs */}
       <div style={{ pointerEvents:'none', position:'fixed', inset:0, zIndex:0, overflow:'hidden' }}>
         <div style={{ position:'absolute', top:'-5%', right:'-5%', width:'50vw', height:'50vw', borderRadius:'50%', background:'radial-gradient(circle,rgba(249,115,22,0.08) 0%,transparent 70%)', filter:'blur(50px)' }} />
         <div style={{ position:'absolute', bottom:'15%', left:'-5%', width:'40vw', height:'40vw', borderRadius:'50%', background:'radial-gradient(circle,rgba(59,130,246,0.07) 0%,transparent 70%)', filter:'blur(50px)' }} />
       </div>
 
-      <div style={{ position:'relative', zIndex:10, maxWidth:680, margin:'0 auto', padding:'0 14px 20px' }}>
+      <div style={{ position:'relative', zIndex:10, maxWidth:680, margin:'0 auto', padding:'0 14px 100px' }}>
 
-        {/* Nav */}
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'16px 0 14px', borderBottom:'1px solid rgba(0,0,0,0.07)', marginBottom:20 }}>
-          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+        {/* ── TOP NAV ── */}
+        <div style={{ display:'flex', alignItems:'center', gap:10, padding:'14px 0 12px', marginBottom:16 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8, flex:1 }}>
             <div style={{ background:'linear-gradient(135deg,#F97316,#EF4444)', borderRadius:12, padding:'8px 9px', boxShadow:'0 4px 14px rgba(249,115,22,0.35)' }}>
               <BookOpen size={20} color="#fff" />
             </div>
@@ -350,58 +351,58 @@ export default function App() {
               <span style={{ fontWeight:900, fontSize:18, letterSpacing:'-0.04em', color:'#F97316' }}> सारथी</span>
             </div>
           </div>
-          <button onClick={()=>setShowSearch(true)}
-            style={{ background:'rgba(0,0,0,0.05)', border:'1px solid rgba(0,0,0,0.1)', borderRadius:11, padding:'8px 10px', cursor:'pointer', color:'#7A9090', display:'flex', alignItems:'center' }}>
-            🔍
-          </button>
-          {user && <button onClick={()=>setShowProfile(true)}
-            style={{ width:34, height:34, borderRadius:11, background:'linear-gradient(135deg,#E8671A,#C4510E)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontWeight:900, fontSize:14, flexShrink:0 }}>
-            {(user.user_metadata?.full_name||user.email||'U')[0].toUpperCase()}
-          </button>}
-          <button onClick={()=>setShowSupport(true)}
-            style={{ display:'flex', alignItems:'center', gap:5, background:'linear-gradient(135deg,#E8671A,#C4510E)', border:'none', borderRadius:11, padding:'8px 14px', color:'#fff', fontWeight:900, fontSize:12, cursor:'pointer', boxShadow:'0 4px 14px rgba(232,103,26,0.3)' }}>
+          <button onClick={()=>setShowSearch(true)} style={{ background:'rgba(0,0,0,0.05)', border:'1px solid rgba(0,0,0,0.08)', borderRadius:11, padding:'8px 10px', cursor:'pointer', color:'#7A9090', display:'flex' }}>🔍</button>
+          {user
+            ? <button onClick={()=>setShowProfile(true)} style={{ width:36, height:36, borderRadius:12, background:'linear-gradient(135deg,#E8671A,#C4510E)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontWeight:900, fontSize:15, flexShrink:0, boxShadow:'0 4px 12px rgba(232,103,26,0.35)' }}>
+                {(user.user_metadata?.full_name||user.email||'U')[0].toUpperCase()}
+              </button>
+            : <button onClick={()=>setShowAuth(true)} style={{ background:'linear-gradient(135deg,#E8671A,#C4510E)', border:'none', borderRadius:11, padding:'8px 14px', color:'#fff', fontWeight:900, fontSize:12, cursor:'pointer', boxShadow:'0 4px 14px rgba(232,103,26,0.3)', whiteSpace:'nowrap' }}>Login</button>
+          }
+          <button onClick={()=>setShowSupport(true)} style={{ display:'flex', alignItems:'center', gap:5, background:'linear-gradient(135deg,#E8671A,#C4510E)', border:'none', borderRadius:11, padding:'8px 13px', color:'#fff', fontWeight:900, fontSize:12, cursor:'pointer', boxShadow:'0 4px 14px rgba(232,103,26,0.3)' }}>
             <Heart size={12} fill="#fff" /> सपोर्ट
           </button>
         </div>
 
-        {/* Hero */}
-        <div style={{ marginBottom:20, animation:'fadeUp 0.4s ease' }}>
-          <div style={{ display:'inline-flex', alignItems:'center', gap:6, background:'rgba(249,115,22,0.1)', border:'1px solid rgba(249,115,22,0.2)', borderRadius:999, padding:'5px 14px', marginBottom:10 }}>
-            <span style={{ fontSize:12, fontWeight:800, color:'#C2410C' }}>{greeting} 🙏</span>
-          </div>
-          <h1 style={{ fontSize:'clamp(1.5rem,5vw,2.5rem)', fontWeight:900, letterSpacing:'-0.04em', lineHeight:1.15, margin:'0 0 12px', color:'#111' }}>
-            यश मिळवायचे,<br />
-            <span style={{ background:'linear-gradient(90deg,#F97316,#EF4444)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>
-              आजच सुरू करा.
-            </span>
-          </h1>
-          <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
-            <div style={{ display:'inline-flex', alignItems:'center', gap:6, background:'linear-gradient(135deg,#F97316,#EF4444)', borderRadius:999, padding:'8px 16px', fontWeight:900, fontSize:13, color:'#fff', boxShadow:'0 4px 18px rgba(249,115,22,0.35)' }}>
-              <Zap size={14} fill="currentColor" /> {count.toLocaleString()} प्रश्न
+        {/* ── HERO CARD ── */}
+        <div style={{ background:'linear-gradient(135deg,#1C2B2B 0%,#2D4040 100%)', borderRadius:24, padding:'20px 22px', marginBottom:16, position:'relative', overflow:'hidden', animation:'fadeUp 0.4s ease' }}>
+          <div style={{ position:'absolute', top:-40, right:-40, width:160, height:160, borderRadius:'50%', background:'rgba(249,115,22,0.12)', filter:'blur(30px)' }}/>
+          <div style={{ position:'absolute', bottom:-30, left:-20, width:120, height:120, borderRadius:'50%', background:'rgba(59,130,246,0.1)', filter:'blur(25px)' }}/>
+          <div style={{ position:'relative', zIndex:1 }}>
+            <div style={{ display:'inline-flex', alignItems:'center', gap:6, background:'rgba(249,115,22,0.2)', border:'1px solid rgba(249,115,22,0.35)', borderRadius:999, padding:'5px 13px', marginBottom:10 }}>
+              <span style={{ fontSize:12, fontWeight:800, color:'#FED7AA' }}>{greeting} 🙏</span>
             </div>
-            {progress.streak > 0 && (
-              <div style={{ display:'inline-flex', alignItems:'center', gap:6, background:'rgba(249,115,22,0.1)', border:'1px solid rgba(249,115,22,0.25)', borderRadius:999, padding:'8px 14px', fontWeight:800, fontSize:12, color:'#EA580C' }}>
-                <Flame size={13} /> {progress.streak} day streak 🔥
+            <h1 style={{ fontSize:'clamp(1.4rem,5vw,2rem)', fontWeight:900, letterSpacing:'-0.04em', lineHeight:1.2, margin:'0 0 14px', color:'#fff' }}>
+              यश मिळवायचे,{' '}
+              <span style={{ background:'linear-gradient(90deg,#F97316,#FBBF24)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>आजच सुरू करा.</span>
+            </h1>
+            {/* Inline stats row */}
+            <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:6, background:'linear-gradient(135deg,#F97316,#EF4444)', borderRadius:99, padding:'7px 14px', fontWeight:900, fontSize:12, color:'#fff', boxShadow:'0 4px 14px rgba(249,115,22,0.4)' }}>
+                <Zap size={13} fill="currentColor"/> {count.toLocaleString()} प्रश्न
               </div>
-            )}
-            {user && (
-              <div style={{ display:'inline-flex', alignItems:'center', gap:6, background:'rgba(16,185,129,0.1)', border:'1px solid rgba(16,185,129,0.3)', borderRadius:999, padding:'8px 14px', fontWeight:700, fontSize:11, color:'#065F46' }}>
-                ✓ {user.email?.split('@')[0]}
-              </div>
-            )}
+              {progress.streak > 0 && (
+                <div style={{ display:'flex', alignItems:'center', gap:6, background:'rgba(249,115,22,0.15)', border:'1px solid rgba(249,115,22,0.3)', borderRadius:99, padding:'7px 13px', fontWeight:800, fontSize:12, color:'#FED7AA' }}>
+                  <Flame size={13}/> {progress.streak} day streak 🔥
+                </div>
+              )}
+              {user && (
+                <div style={{ display:'flex', alignItems:'center', gap:5, background:'rgba(16,185,129,0.15)', border:'1px solid rgba(16,185,129,0.3)', borderRadius:99, padding:'7px 13px', fontWeight:700, fontSize:11, color:'#6EE7B7' }}>
+                  ✓ {user.email?.split('@')[0]}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Stats */}
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10, marginBottom:20 }}>
+        {/* ── STATS ROW ── */}
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10, marginBottom:16 }}>
           {[
             { label:'सोडवलेले', value:progress.totalAttempted.toLocaleString(), icon:Target,     color:'#3B82F6', pct:Math.min(progress.totalAttempted/500*100,100) },
             { label:'अचूकता',   value:accuracy+'%',                             icon:TrendingUp, color:'#10B981', pct:accuracy },
             { label:'बरोबर',    value:progress.totalCorrect.toLocaleString(),   icon:Award,      color:'#F97316', pct:accuracy },
           ].map(({ label, value, icon:Icon, color, pct }) => (
-            <div key={label} className="card-hover"
-              style={{ background:'#fff', border:'1px solid rgba(0,0,0,0.07)', borderRadius:18, padding:'14px 10px', display:'flex', flexDirection:'column', alignItems:'center', gap:6, cursor:'pointer', boxShadow:'0 2px 10px rgba(0,0,0,0.05)', position:'relative', overflow:'hidden' }}
-              onClick={()=>setShowAnalytics(true)}>
+            <div key={label} className="card-hover" onClick={()=>setShowAnalytics(true)}
+              style={{ background:'#fff', border:'1px solid rgba(0,0,0,0.06)', borderRadius:18, padding:'14px 10px', display:'flex', flexDirection:'column', alignItems:'center', gap:6, cursor:'pointer', boxShadow:'0 2px 10px rgba(0,0,0,0.05)', position:'relative', overflow:'hidden' }}>
               <div style={{ position:'absolute', inset:0, background:`radial-gradient(circle at 50% 0%,${color}10 0%,transparent 60%)` }} />
               <div style={{ position:'relative', zIndex:1 }}>
                 <Ring pct={pct} color={color} size={54} stroke={5} />
@@ -417,143 +418,315 @@ export default function App() {
           ))}
         </div>
 
-        {/* Quick Actions — 4 cards */}
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:20 }}>
-          {[
-            { emoji:dailyDone?'✅':'📅', title:'Daily Challenge', sub:dailyDone?'आज पूर्ण!':'5 प्रश्न · आज', color:dailyDone?'#059669':'#C4510E', bg:dailyDone?'rgba(5,150,105,0.07)':'rgba(232,103,26,0.07)', border:dailyDone?'rgba(5,150,105,0.25)':'rgba(232,103,26,0.25)', onClick:()=>go('DAILY') },
-            { emoji:'⚔️', title:'Tournament',     sub:'20Q · Rank मिळवा', color:'#D97706', bg:'rgba(217,119,6,0.07)', border:'rgba(217,119,6,0.2)', onClick:()=>go('TOURNAMENT') },
-            { emoji:'📰', title:'Current Affairs', sub:'Daily feed', color:'#EC4899', bg:'rgba(236,72,153,0.07)', border:'rgba(236,72,153,0.2)', onClick:()=>go('CURRENT_FEED') },
-            { emoji:'📚', title:'Formula Sheet',  sub:'Quick revision', color:'#059669', bg:'rgba(5,150,105,0.07)', border:'rgba(5,150,105,0.2)', onClick:()=>go('FORMULA') },
-            { emoji:'👥', title:'Study Groups',   sub:'मित्रांसोबत शिका', color:'#2563EB', bg:'rgba(37,99,235,0.07)', border:'rgba(37,99,235,0.2)', onClick:()=>go('GROUPS') },
-            { emoji:'🔍', title:'Global Search',  sub:'सर्व questions शोधा', color:'#7C3AED', bg:'rgba(124,58,237,0.07)', border:'rgba(124,58,237,0.2)', onClick:()=>setShowSearch(true) },
-            { emoji:'📅', title:'Study Planner',  sub:'Syllabus tracker', color:'#7C3AED', bg:'rgba(124,58,237,0.07)', border:'rgba(124,58,237,0.2)', onClick:()=>go('PLANNER') },
-            { emoji:'🤖', title:'AI Quiz',         sub:'AI questions generate', color:'#DC2626', bg:'rgba(220,38,38,0.07)', border:'rgba(220,38,38,0.2)', onClick:()=>go('AI_QUIZ') },
-            { emoji:'⚡', title:'Speed Drill',     sub:'10Q · 6sec · Ultra fast', color:'#F59E0B', bg:'rgba(245,158,11,0.07)', border:'rgba(245,158,11,0.25)', onClick:()=>go('SPEED_DRILL') },
-            { emoji:'📖', title:'Mistake Book',    sub:'चुकलेले revise करा', color:'#8B5CF6', bg:'rgba(139,92,246,0.07)', border:'rgba(139,92,246,0.2)', onClick:()=>go('MISTAKE_BOOK') },
-            { emoji:'🤖', title:'AI Study Buddy', sub:'Personal AI tutor', color:'#7C3AED', bg:'rgba(124,58,237,0.07)', border:'rgba(124,58,237,0.2)', onClick:()=>setShowStudyBuddy(true) },
-          ].map(({ emoji, title, sub, color, bg, border, onClick }) => (
-            <div key={title} className="card-hover" onClick={onClick}
-              style={{ background:bg, border:`1.5px solid ${border}`, borderRadius:16, padding:'14px 12px', cursor:'pointer' }}>
-              <div style={{ fontSize:24, marginBottom:6 }}>{emoji}</div>
-              <div style={{ fontWeight:900, fontSize:12, color:'#1C2B2B' }}>{title}</div>
-              <div style={{ fontSize:9, fontWeight:700, color, marginTop:2 }}>{sub}</div>
-            </div>
-          ))}
+        {/* ── TODAY SECTION ── */}
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:16 }}>
+          {/* Daily Challenge — big featured */}
+          <div className="card-hover" onClick={()=>go('DAILY')}
+            style={{ background:dailyDone?'linear-gradient(135deg,#064E3B,#065F46)':'linear-gradient(135deg,#7C2D12,#92400E)', borderRadius:20, padding:'18px 16px', cursor:'pointer', boxShadow:dailyDone?'0 6px 24px rgba(5,150,105,0.25)':'0 6px 24px rgba(232,103,26,0.25)', position:'relative', overflow:'hidden' }}>
+            <div style={{ position:'absolute', top:-20, right:-20, width:80, height:80, borderRadius:'50%', background:'rgba(255,255,255,0.06)' }}/>
+            <div style={{ fontSize:32, marginBottom:8 }}>{dailyDone?'✅':'📅'}</div>
+            <div style={{ fontWeight:900, fontSize:14, color:'#fff', marginBottom:4 }}>Daily Challenge</div>
+            <div style={{ fontSize:11, color:'rgba(255,255,255,0.65)', fontWeight:600 }}>{dailyDone?'आज पूर्ण! 🎉':'5 प्रश्न · आज'}</div>
+            {!dailyDone && <div style={{ marginTop:8, background:'rgba(255,255,255,0.15)', borderRadius:99, padding:'4px 10px', fontSize:9, fontWeight:800, color:'#fff', display:'inline-block' }}>🔥 Streak साठी करा!</div>}
+          </div>
+          {/* AI Daily Briefing */}
+          <div className="card-hover" onClick={()=>setShowAIBriefing(true)}
+            style={{ background:'linear-gradient(135deg,#1E3A5F,#1E40AF)', borderRadius:20, padding:'18px 16px', cursor:'pointer', boxShadow:'0 6px 24px rgba(37,99,235,0.25)', position:'relative', overflow:'hidden' }}>
+            <div style={{ position:'absolute', top:-20, right:-20, width:80, height:80, borderRadius:'50%', background:'rgba(255,255,255,0.06)' }}/>
+            <div style={{ fontSize:32, marginBottom:8 }}>⚡</div>
+            <div style={{ fontWeight:900, fontSize:14, color:'#fff', marginBottom:4 }}>AI Daily Briefing</div>
+            <div style={{ fontSize:11, color:'rgba(255,255,255,0.65)', fontWeight:600 }}>रोज सकाळी · Important facts</div>
+            <div style={{ marginTop:8, background:'rgba(255,255,255,0.15)', borderRadius:99, padding:'4px 10px', fontSize:9, fontWeight:800, color:'#93C5FD', display:'inline-block' }}>✨ AI Powered</div>
+          </div>
         </div>
 
-        {/* New Features */}
-        <div style={{ marginBottom:20 }}>
-          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12 }}>
-            <div style={{ flex:1, height:1, background:'rgba(0,0,0,0.08)' }} />
-            <span style={{ fontSize:9, fontWeight:800, color:'rgba(0,0,0,0.3)', textTransform:'uppercase', letterSpacing:'0.15em' }}>✨ नवीन Features</span>
-            <div style={{ flex:1, height:1, background:'rgba(0,0,0,0.08)' }} />
+        {/* ── QUICK PLAY ── */}
+        <div style={{ marginBottom:16 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>
+            <div style={{ flex:1, height:1, background:'rgba(0,0,0,0.08)' }}/>
+            <span style={{ fontSize:9, fontWeight:800, color:'rgba(0,0,0,0.35)', textTransform:'uppercase', letterSpacing:'0.15em' }}>⚡ Quick Play</span>
+            <div style={{ flex:1, height:1, background:'rgba(0,0,0,0.08)' }}/>
           </div>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8 }}>
             {[
-              { emoji:'🎯', title:'Smart Revision',   sub:'चुकलेले → auto-save', color:'#7C3AED', bg:'rgba(124,58,237,0.07)', border:'rgba(124,58,237,0.2)', onClick:()=>go('REVISION') },
-              { emoji:'🏆', title:'Friend Challenge', sub:'Link share → compete', color:'#DC2626', bg:'rgba(220,38,38,0.07)',  border:'rgba(220,38,38,0.2)',  onClick:()=>go('CHALLENGE') },
-              { emoji:'🎴', title:'Flashcard Mode',   sub:'Swipe → vocabulary',  color:'#059669', bg:'rgba(5,150,105,0.07)', border:'rgba(5,150,105,0.2)',  onClick:()=>go('FLASHCARD') },
-              { emoji:'📈', title:'Analytics',        sub:'Performance graphs',  color:'#E8671A', bg:'rgba(232,103,26,0.07)', border:'rgba(232,103,26,0.2)',  onClick:()=>setShowAnalytics(true) },
-            ].map(({ emoji, title, sub, color, bg, border, onClick }) => (
-              <div key={title} className="card-hover" onClick={onClick}
-                style={{ background:bg, border:`1.5px solid ${border}`, borderRadius:16, padding:'14px 12px', cursor:'pointer' }}>
-                <div style={{ fontSize:22, marginBottom:6 }}>{emoji}</div>
-                <div style={{ fontWeight:900, fontSize:12, color:'#1C2B2B', marginBottom:2 }}>{title}</div>
-                <div style={{ fontSize:9, fontWeight:700, color }}>{sub}</div>
+              { e:'⚔️', t:'Tournament', s:'20Q · Rank', c:'#D97706', action:()=>go('TOURNAMENT') },
+              { e:'⚡', t:'Speed Drill', s:'6sec · Fast', c:'#F59E0B', action:()=>go('SPEED_DRILL') },
+              { e:'🎮', t:'Live Quiz', s:'Multiplayer', c:'#8B5CF6', action:()=>go('LIVE_QUIZ') },
+              { e:'🏆', t:'Friend Duel', s:'Compete', c:'#DC2626', action:()=>go('CHALLENGE') },
+              { e:'📊', t:'Exam Countdown', s:'दिवस बाकी', c:'#2563EB', action:()=>setShowCountdown(true) },
+              { e:'🏆', t:'Mock Series', s:'Complete Papers', c:'#F59E0B', action:()=>setShowMockSeries(true) },
+            ].map(({e,t,s,c,action}) => (
+              <div key={t} className="card-hover" onClick={action}
+                style={{ background:'#fff', border:`1.5px solid ${c}20`, borderRadius:16, padding:'13px 10px', cursor:'pointer', textAlign:'center', boxShadow:`0 2px 10px ${c}10` }}>
+                <div style={{ fontSize:24, marginBottom:5 }}>{e}</div>
+                <div style={{ fontWeight:900, fontSize:11, color:'#1C2B2B', marginBottom:2 }}>{t}</div>
+                <div style={{ fontSize:9, fontWeight:700, color:c }}>{s}</div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Support banner */}
-        <div onClick={()=>setShowSupport(true)}
-          style={{ background:'linear-gradient(135deg,#FFF7ED,#FEF3C7)', border:'1px solid rgba(232,103,26,0.2)', borderRadius:16, padding:'14px 16px', marginBottom:20, display:'flex', alignItems:'center', justifyContent:'space-between', cursor:'pointer' }}
-          onMouseEnter={e=>(e.currentTarget.style.boxShadow='0 6px 24px rgba(232,103,26,0.15)')}
-          onMouseLeave={e=>(e.currentTarget.style.boxShadow='none')}>
-          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-            <div style={{ fontSize:24, animation:'sp-heart 2s ease infinite' }}>❤️</div>
-            <div>
-              <div style={{ fontWeight:900, fontSize:12, color:'#92400E' }}>MPSC सारथी सपोर्ट करा!</div>
-              <div style={{ fontSize:10, color:'#B45309', fontWeight:600 }}>₹29 पासून · GPay / PhonePe</div>
-            </div>
+        {/* ── AI TOOLS ── */}
+        <div style={{ marginBottom:16 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>
+            <div style={{ flex:1, height:1, background:'rgba(0,0,0,0.08)' }}/>
+            <span style={{ fontSize:9, fontWeight:800, color:'rgba(0,0,0,0.35)', textTransform:'uppercase', letterSpacing:'0.15em' }}>🤖 AI Tools</span>
+            <div style={{ flex:1, height:1, background:'rgba(0,0,0,0.08)' }}/>
           </div>
-          <ChevronRight size={16} style={{ color:'#E8671A' }} />
-        </div>
-
-        {/* Section divider */}
-        <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
-          <div style={{ flex:1, height:1, background:'rgba(0,0,0,0.08)' }} />
-          <span style={{ fontSize:9, fontWeight:800, color:'rgba(0,0,0,0.3)', textTransform:'uppercase', letterSpacing:'0.15em' }}>अभ्यास विभाग</span>
-          <div style={{ flex:1, height:1, background:'rgba(0,0,0,0.08)' }} />
-        </div>
-
-        {/* Featured card */}
-        <div style={{ marginBottom:12 }}>
-          <div onClick={()=>go(Mode.MOCK_TEST)} className="card-hover"
-            style={{ background:'linear-gradient(135deg,#7F1D1D,#450A0A)', border:'1px solid rgba(239,68,68,0.4)', borderRadius:22, padding:'22px 20px', cursor:'pointer', boxShadow:'0 6px 28px rgba(239,68,68,0.2)' }}>
-            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-              <div>
-                <div style={{ display:'inline-flex', alignItems:'center', gap:5, background:'rgba(239,68,68,0.2)', border:'1px solid rgba(239,68,68,0.4)', borderRadius:999, padding:'3px 10px', marginBottom:10 }}>
-                  <div style={{ width:5, height:5, borderRadius:'50%', background:'#EF4444', animation:'pulse 2s infinite' }} />
-                  <span style={{ fontSize:9, fontWeight:800, color:'#FCA5A5', textTransform:'uppercase' }}>LIVE TEST</span>
-                </div>
-                <div style={{ fontSize:'clamp(1.1rem,4vw,1.4rem)', fontWeight:900, color:'#fff' }}>Full Mock Test 📝</div>
-                <div style={{ fontSize:11, color:'#FCA5A5', fontWeight:700, marginTop:3 }}>100 प्रश्न · 2 तास · Timer</div>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, marginBottom:8 }}>
+            {[
+              { e:'🤖', t:'Study Buddy', s:'Personal tutor', c:'#7C3AED', action:()=>setShowStudyBuddy(true) },
+              { e:'🧠', t:'Weak Topics', s:'AI analysis', c:'#DC2626', action:()=>setShowWeakTopics(true) },
+              { e:'🎙️', t:'Mock Interview', s:'AI practice', c:'#8B5CF6', action:()=>setShowAIInterview(true) },
+              { e:'🌐', t:'Translator', s:'EN ↔ मराठी', c:'#7C3AED', action:()=>go('TRANSLATOR') },
+              { e:'📖', t:'Concept AI', s:'Topics explain', c:'#059669', action:()=>go('CONCEPT') },
+              { e:'✍️', t:'Essay Mode', s:'AI evaluate', c:'#D97706', action:()=>go('ESSAY') },
+            ].map(({e,t,s,c,action}) => (
+              <div key={t} className="card-hover" onClick={action}
+                style={{ background:'#fff', border:`1.5px solid ${c}20`, borderRadius:16, padding:'13px 10px', cursor:'pointer', boxShadow:`0 2px 10px ${c}10` }}>
+                <div style={{ fontSize:22, marginBottom:5 }}>{e}</div>
+                <div style={{ fontWeight:900, fontSize:11, color:'#1C2B2B', marginBottom:2 }}>{t}</div>
+                <div style={{ fontSize:9, fontWeight:700, color:c }}>{s}</div>
               </div>
-              <ChevronRight size={20} style={{ color:'#FCA5A5' }} />
-            </div>
+            ))}
+          </div>
+          {/* AI Quiz + Answer Evaluator wider */}
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+            {[
+              { e:'🤖', t:'AI Quiz Generator', s:'Topic → 5 MPSC questions', c:'#DC2626', action:()=>go('AI_QUIZ') },
+              { e:'✅', t:'Answer Evaluator', s:'Long answer score करा', c:'#059669', action:()=>go('EVAL_ANSWER') },
+              { e:'📅', t:'AI Study Schedule', s:'7-day plan', c:'#3B82F6', action:()=>setShowAISchedule(true) },
+            ].map(({e,t,s,c,action}) => (
+              <div key={t} className="card-hover" onClick={action}
+                style={{ background:`${c}08`, border:`1.5px solid ${c}20`, borderRadius:16, padding:'14px', cursor:'pointer', display:'flex', alignItems:'center', gap:10 }}>
+                <div style={{ fontSize:26, flexShrink:0 }}>{e}</div>
+                <div>
+                  <div style={{ fontWeight:900, fontSize:12, color:'#1C2B2B', marginBottom:2 }}>{t}</div>
+                  <div style={{ fontSize:10, fontWeight:600, color:c }}>{s}</div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Regular cards */}
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:20 }}>
-          {SECTIONS.map(({ mode:m, label, sub, icon:Icon, accent, tag }) => (
-            <div key={String(m)} onClick={()=>go(m)} className="card-hover"
-              style={{ background:'#fff', border:'1px solid rgba(0,0,0,0.07)', borderRadius:18, padding:'16px 14px', position:'relative', overflow:'hidden', cursor:'pointer', boxShadow:'0 2px 8px rgba(0,0,0,0.05)' }}>
-              <div style={{ position:'absolute', top:0, left:0, right:0, height:3, background:`linear-gradient(90deg,transparent,${accent},transparent)`, opacity:0.7 }} />
-              <div style={{ display:'flex', alignItems:'start', justifyContent:'space-between', marginBottom:10 }}>
-                <div style={{ background:`${accent}15`, border:`1px solid ${accent}25`, borderRadius:10, padding:7 }}>
-                  <Icon size={17} style={{ color:accent }} />
-                </div>
-                <span style={{ fontSize:7, fontWeight:900, textTransform:'uppercase', background:`${accent}15`, border:`1px solid ${accent}25`, borderRadius:999, padding:'2px 7px', color:accent }}>{tag}</span>
+        {/* ── STUDY TOOLS ── */}
+        <div style={{ marginBottom:16 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>
+            <div style={{ flex:1, height:1, background:'rgba(0,0,0,0.08)' }}/>
+            <span style={{ fontSize:9, fontWeight:800, color:'rgba(0,0,0,0.35)', textTransform:'uppercase', letterSpacing:'0.15em' }}>📚 Study Tools</span>
+            <div style={{ flex:1, height:1, background:'rgba(0,0,0,0.08)' }}/>
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8, marginBottom:8 }}>
+            {[
+              { e:'📖', t:'Mistake Book', s:'Revise errors', c:'#8B5CF6', action:()=>go('MISTAKE_BOOK') },
+              { e:'🎴', t:'Flashcards', s:'Swipe vocab', c:'#059669', action:()=>go('FLASHCARD') },
+              { e:'🎯', t:'Smart Rev.', s:'Auto-save', c:'#7C3AED', action:()=>go('REVISION') },
+              { e:'⏱️', t:'Pomodoro', s:'Focus timer', c:'#E8671A', action:()=>go('POMODORO') },
+            ].map(({e,t,s,c,action}) => (
+              <div key={t} className="card-hover" onClick={action}
+                style={{ background:'#fff', border:`1.5px solid ${c}20`, borderRadius:16, padding:'13px 10px', cursor:'pointer', textAlign:'center', boxShadow:`0 2px 8px ${c}0F` }}>
+                <div style={{ fontSize:22, marginBottom:5 }}>{e}</div>
+                <div style={{ fontWeight:900, fontSize:11, color:'#1C2B2B', marginBottom:2 }}>{t}</div>
+                <div style={{ fontSize:9, fontWeight:700, color:c }}>{s}</div>
               </div>
-              <div style={{ fontWeight:900, fontSize:'clamp(0.8rem,3vw,0.95rem)', marginBottom:2, color:'#111' }}>{label}</div>
-              <div style={{ fontSize:9, color:'rgba(0,0,0,0.4)', fontWeight:600 }}>{sub}</div>
+            ))}
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8 }}>
+            {[
+              { e:'📅', t:'Study Planner', s:'Syllabus tracker', c:'#7C3AED', action:()=>go('PLANNER') },
+              { e:'📝', t:'My Notes', s:'Personal notes', c:'#E8671A', action:()=>go('NOTES') },
+              { e:'🏦', t:'Question Bank', s:'Browse all Q's', c:'#059669', action:()=>go('QUESTION_BANK') },
+              { e:'📚', t:'Formula Sheet', s:'Quick revision', c:'#059669', action:()=>go('FORMULA') },
+              { e:'🔊', t:'Voice Quiz', s:'TTS audio', c:'#E8671A', action:()=>go('VOICE') },
+              { e:'🧠', t:'Mnemonics', s:'Memory tricks', c:'#8B5CF6', action:()=>go('MNEMONIC') },
+            ].map(({e,t,s,c,action}) => (
+              <div key={t} className="card-hover" onClick={action}
+                style={{ background:'#fff', border:`1.5px solid ${c}20`, borderRadius:16, padding:'13px 10px', cursor:'pointer', boxShadow:`0 2px 8px ${c}0F` }}>
+                <div style={{ fontSize:20, marginBottom:5 }}>{e}</div>
+                <div style={{ fontWeight:900, fontSize:11, color:'#1C2B2B', marginBottom:2 }}>{t}</div>
+                <div style={{ fontSize:9, fontWeight:700, color:c }}>{s}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── MORE PRACTICE ── */}
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, marginBottom:16 }}>
+          {[
+            { e:'📜', t:'PYQ संच', s:'मागील वर्षांचे', c:'#F59E0B', action:()=>go('PYQ') },
+            { e:'⚡', t:'SpardhaYodha', s:'Speed quiz', c:'#E8671A', action:()=>go(Mode.SPARDHA) },
+            { e:'📋', t:'Test History', s:'Past results', c:'#2563EB', action:()=>setShowMockHistory(true) },
+          ].map(({e,t,s,c,action}) => (
+            <div key={t} className="card-hover" onClick={action}
+              style={{ background:'#fff', border:`1.5px solid ${c}20`, borderRadius:16, padding:'13px 10px', cursor:'pointer', textAlign:'center', boxShadow:`0 2px 8px ${c}10` }}>
+              <div style={{ fontSize:22, marginBottom:5 }}>{e}</div>
+              <div style={{ fontWeight:900, fontSize:11, color:'#1C2B2B', marginBottom:2 }}>{t}</div>
+              <div style={{ fontSize:9, fontWeight:700, color:c }}>{s}</div>
             </div>
           ))}
         </div>
 
-        {/* ✨ नवीन Features Section */}
-        <div style={{ marginBottom:20 }}>
-          <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:12 }}>
-            <div style={{ flex:1, height:1, background:'rgba(0,0,0,0.07)' }}/>
-            <span style={{ fontSize:10, fontWeight:900, color:'#E8671A', textTransform:'uppercase', letterSpacing:'0.08em', whiteSpace:'nowrap' }}>✨ नवीन Features</span>
-            <div style={{ flex:1, height:1, background:'rgba(0,0,0,0.07)' }}/>
+        {/* ── LIVE TEST FEATURE ── */}
+        <div onClick={()=>go(Mode.MOCK_TEST)} className="card-hover"
+          style={{ background:'linear-gradient(135deg,#7F1D1D,#450A0A)', border:'1px solid rgba(239,68,68,0.4)', borderRadius:22, padding:'20px 20px', cursor:'pointer', boxShadow:'0 6px 28px rgba(239,68,68,0.2)', marginBottom:16 }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+            <div>
+              <div style={{ display:'inline-flex', alignItems:'center', gap:5, background:'rgba(239,68,68,0.2)', border:'1px solid rgba(239,68,68,0.4)', borderRadius:999, padding:'3px 10px', marginBottom:10 }}>
+                <div style={{ width:5, height:5, borderRadius:'50%', background:'#EF4444', animation:'pulse 2s infinite' }} />
+                <span style={{ fontSize:9, fontWeight:800, color:'#FCA5A5', textTransform:'uppercase' }}>LIVE TEST</span>
+              </div>
+              <div style={{ fontSize:'clamp(1.1rem,4vw,1.4rem)', fontWeight:900, color:'#fff' }}>Full Mock Test 📝</div>
+              <div style={{ fontSize:11, color:'#FCA5A5', fontWeight:700, marginTop:3 }}>100 प्रश्न · 2 तास · Timer</div>
+            </div>
+            <ChevronRight size={20} style={{ color:'#FCA5A5' }} />
           </div>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
-            {[
-              { label:'Doubt Community', sub:'प्रश्न विचारा · उत्तरे द्या', accent:'#E8671A', emoji:'💬', tag:'NEW', onClick:()=>setShowDoubtCommunity(true) },
-              { label:'Vocabulary Builder', sub:'Daily 10 Words + Quiz', accent:'#8B5CF6', emoji:'📖', tag:'HOT', onClick:()=>setShowVocabBuilder(true) },
-              { label:'Newspaper Summary', sub:'AI Marathi News', accent:'#EC4899', emoji:'📰', tag:'AI', onClick:()=>setShowNewspaper(true) },
-              { label:'Maps & Geography', sub:'Maharashtra Interactive', accent:'#0D6B6E', emoji:'🗺️', tag:'NEW', onClick:()=>setShowMapsGeo(true) },
-              { label:'Mock Test Series', sub:'Complete Prelims Papers', accent:'#F59E0B', emoji:'🏆', tag:'EXAM', onClick:()=>setShowMockSeries(true) },
-              { label:'AI Daily Briefing', sub:'रोज सकाळी Important Facts', accent:'#3B82F6', emoji:'⚡', tag:'AI', onClick:()=>setShowAIBriefing(true) },
-            ].map(({ label, sub, accent, emoji, tag, onClick }) => (
-              <div key={label} onClick={onClick} className="card-hover"
-                style={{ background:'#fff', border:`1px solid ${accent}20`, borderRadius:18, padding:'14px 12px', position:'relative', overflow:'hidden', cursor:'pointer', boxShadow:`0 2px 10px ${accent}10` }}>
-                <div style={{ position:'absolute', top:0, left:0, right:0, height:3, background:`linear-gradient(90deg,transparent,${accent},transparent)`, opacity:0.8 }} />
-                <div style={{ display:'flex', alignItems:'start', justifyContent:'space-between', marginBottom:8 }}>
-                  <span style={{ fontSize:22, lineHeight:1 }}>{emoji}</span>
+        </div>
+
+        {/* ── SUBJECT SECTIONS ── */}
+        <div style={{ marginBottom:16 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>
+            <div style={{ flex:1, height:1, background:'rgba(0,0,0,0.08)' }}/>
+            <span style={{ fontSize:9, fontWeight:800, color:'rgba(0,0,0,0.35)', textTransform:'uppercase', letterSpacing:'0.15em' }}>📋 अभ्यास विभाग</span>
+            <div style={{ flex:1, height:1, background:'rgba(0,0,0,0.08)' }}/>
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:10 }}>
+            {SECTIONS.map(({ mode:m, label, sub, icon:Icon, accent, tag }) => (
+              <div key={String(m)} onClick={()=>go(m)} className="card-hover"
+                style={{ background:'#fff', border:'1px solid rgba(0,0,0,0.06)', borderRadius:18, padding:'16px 14px', position:'relative', overflow:'hidden', cursor:'pointer', boxShadow:'0 2px 8px rgba(0,0,0,0.05)' }}>
+                <div style={{ position:'absolute', top:0, left:0, right:0, height:3, background:`linear-gradient(90deg,transparent,${accent},transparent)`, opacity:0.7 }} />
+                <div style={{ display:'flex', alignItems:'start', justifyContent:'space-between', marginBottom:10 }}>
+                  <div style={{ background:`${accent}15`, border:`1px solid ${accent}25`, borderRadius:10, padding:7 }}>
+                    <Icon size={17} style={{ color:accent }} />
+                  </div>
                   <span style={{ fontSize:7, fontWeight:900, textTransform:'uppercase', background:`${accent}15`, border:`1px solid ${accent}25`, borderRadius:999, padding:'2px 7px', color:accent }}>{tag}</span>
                 </div>
-                <div style={{ fontWeight:900, fontSize:'clamp(0.75rem,2.8vw,0.9rem)', marginBottom:2, color:'#111' }}>{label}</div>
+                <div style={{ fontWeight:900, fontSize:'clamp(0.8rem,3vw,0.95rem)', marginBottom:2, color:'#111' }}>{label}</div>
                 <div style={{ fontSize:9, color:'rgba(0,0,0,0.4)', fontWeight:600 }}>{sub}</div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Footer */}
+        {/* ── CURRENT AFFAIRS + NEWS ── */}
+        <div style={{ marginBottom:16 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>
+            <div style={{ flex:1, height:1, background:'rgba(0,0,0,0.08)' }}/>
+            <span style={{ fontSize:9, fontWeight:800, color:'rgba(0,0,0,0.35)', textTransform:'uppercase', letterSpacing:'0.15em' }}>📰 Current Affairs</span>
+            <div style={{ flex:1, height:1, background:'rgba(0,0,0,0.08)' }}/>
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8 }}>
+            {[
+              { e:'📰', t:'CA Feed', s:'Category filter', c:'#EC4899', action:()=>go('CURRENT_FEED') },
+              { e:'🗞️', t:'News Summary', s:'AI Marathi', c:'#EC4899', action:()=>setShowNewspaper(true) },
+              { e:'💬', t:'Doubt Community', s:'Q&A forum', c:'#E8671A', action:()=>setShowDoubtCommunity(true) },
+              { e:'📖', t:'Vocab Builder', s:'Daily 10 words', c:'#8B5CF6', action:()=>setShowVocabBuilder(true) },
+              { e:'🗺️', t:'Maharashtra Map', s:'36 districts', c:'#0D9488', action:()=>setShowMapsGeo(true) },
+              { e:'🗺️', t:'District Quiz', s:'Geography MCQ', c:'#059669', action:()=>go('DISTRICT_QUIZ') },
+            ].map(({e,t,s,c,action}) => (
+              <div key={t} className="card-hover" onClick={action}
+                style={{ background:'#fff', border:`1.5px solid ${c}20`, borderRadius:16, padding:'13px 10px', cursor:'pointer', boxShadow:`0 2px 8px ${c}10` }}>
+                <div style={{ fontSize:22, marginBottom:5 }}>{e}</div>
+                <div style={{ fontWeight:900, fontSize:11, color:'#1C2B2B', marginBottom:2 }}>{t}</div>
+                <div style={{ fontSize:9, fontWeight:700, color:c }}>{s}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── ANALYTICS + PROGRESS ── */}
+        <div style={{ marginBottom:16 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>
+            <div style={{ flex:1, height:1, background:'rgba(0,0,0,0.08)' }}/>
+            <span style={{ fontSize:9, fontWeight:800, color:'rgba(0,0,0,0.35)', textTransform:'uppercase', letterSpacing:'0.15em' }}>📊 Analytics & Progress</span>
+            <div style={{ flex:1, height:1, background:'rgba(0,0,0,0.08)' }}/>
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, marginBottom:8 }}>
+            {[
+              { e:'📈', t:'Analytics', s:'Performance', c:'#E8671A', action:()=>setShowAnalytics(true) },
+              { e:'🌡️', t:'Heatmap', s:'Activity calendar', c:'#7C3AED', action:()=>setShowHeatmap(true) },
+              { e:'📊', t:'Subject %', s:'Per-subject', c:'#E8671A', action:()=>setShowSubjectProgress(true) },
+              { e:'🎯', t:'Readiness', s:'Exam ready?', c:'#059669', action:()=>setShowReadiness(true) },
+              { e:'🏆', t:'Rank Predict', s:'Possible rank', c:'#2563EB', action:()=>setShowRankPredictor(true) },
+              { e:'📊', t:'Cut-offs', s:'Year trends', c:'#2563EB', action:()=>setShowCutoff(true) },
+            ].map(({e,t,s,c,action}) => (
+              <div key={t} className="card-hover" onClick={action}
+                style={{ background:'#fff', border:`1.5px solid ${c}20`, borderRadius:16, padding:'13px 10px', cursor:'pointer', boxShadow:`0 2px 8px ${c}10` }}>
+                <div style={{ fontSize:22, marginBottom:5 }}>{e}</div>
+                <div style={{ fontWeight:900, fontSize:11, color:'#1C2B2B', marginBottom:2 }}>{t}</div>
+                <div style={{ fontSize:9, fontWeight:700, color:c }}>{s}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+            {[
+              { e:'⚡', t:'XP Dashboard', s:'Level + badges', c:'#D97706', action:()=>setShowXPDash(true) },
+              { e:'🔥', t:'Streak Rewards', s:'Milestones', c:'#E8671A', action:()=>setShowStreakRewards(true) },
+            ].map(({e,t,s,c,action}) => (
+              <div key={t} className="card-hover" onClick={action}
+                style={{ background:`${c}08`, border:`1.5px solid ${c}20`, borderRadius:16, padding:'14px', cursor:'pointer', display:'flex', alignItems:'center', gap:10 }}>
+                <div style={{ fontSize:26, flexShrink:0 }}>{e}</div>
+                <div><div style={{ fontWeight:900, fontSize:12, color:'#1C2B2B', marginBottom:2 }}>{t}</div><div style={{ fontSize:10, fontWeight:600, color:c }}>{s}</div></div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── SOCIAL + GAMIFICATION ── */}
+        <div style={{ marginBottom:16 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>
+            <div style={{ flex:1, height:1, background:'rgba(0,0,0,0.08)' }}/>
+            <span style={{ fontSize:9, fontWeight:800, color:'rgba(0,0,0,0.35)', textTransform:'uppercase', letterSpacing:'0.15em' }}>🎮 Social & Fun</span>
+            <div style={{ flex:1, height:1, background:'rgba(0,0,0,0.08)' }}/>
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8 }}>
+            {[
+              { e:'👥', t:'Study Groups', s:'Chat + learn', c:'#2563EB', action:()=>go('GROUPS') },
+              { e:'🏆', t:'Leaderboard', s:'Top students', c:'#F59E0B', action:()=>setShowLeaderboard(true) },
+              { e:'🪙', t:'Coin Shop', s:'Themes unlock', c:'#D97706', action:()=>setShowCoinShop(true) },
+              { e:'🎁', t:'Referral', s:'Invite = coins', c:'#E8671A', action:()=>setShowReferral(true) },
+            ].map(({e,t,s,c,action}) => (
+              <div key={t} className="card-hover" onClick={action}
+                style={{ background:'#fff', border:`1.5px solid ${c}20`, borderRadius:16, padding:'13px 10px', cursor:'pointer', textAlign:'center', boxShadow:`0 2px 8px ${c}0F` }}>
+                <div style={{ fontSize:22, marginBottom:5 }}>{e}</div>
+                <div style={{ fontWeight:900, fontSize:11, color:'#1C2B2B', marginBottom:2 }}>{t}</div>
+                <div style={{ fontSize:9, fontWeight:700, color:c }}>{s}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── DOWNLOADS ── */}
+        <div style={{ marginBottom:16 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8 }}>
+            {[
+              { e:'📄', t:'PDF Report', s:'Download progress', c:'#DC2626', action:()=>setShowPDFReport(true) },
+              { e:'🏅', t:'Certificate', s:'Achievement PDF', c:'#D97706', action:()=>setShowCertificate(true) },
+              { e:'💬', t:'Share Score', s:'WhatsApp share', c:'#25D366', action:()=>setShowWAShare(true) },
+            ].map(({e,t,s,c,action}) => (
+              <div key={t} className="card-hover" onClick={action}
+                style={{ background:'#fff', border:`1.5px solid ${c}20`, borderRadius:16, padding:'14px 10px', cursor:'pointer', textAlign:'center', boxShadow:`0 2px 8px ${c}10` }}>
+                <div style={{ fontSize:24, marginBottom:5 }}>{e}</div>
+                <div style={{ fontWeight:900, fontSize:11, color:'#1C2B2B', marginBottom:2 }}>{t}</div>
+                <div style={{ fontSize:9, fontWeight:700, color:c }}>{s}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── SUPPORT BANNER ── */}
+        <div onClick={()=>setShowSupport(true)} className="card-hover"
+          style={{ background:'linear-gradient(135deg,#FFF7ED,#FEF3C7)', border:'1px solid rgba(232,103,26,0.2)', borderRadius:18, padding:'16px 18px', marginBottom:16, display:'flex', alignItems:'center', justifyContent:'space-between', cursor:'pointer' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+            <div style={{ fontSize:28, animation:'sp-heart 2s ease infinite' }}>❤️</div>
+            <div>
+              <div style={{ fontWeight:900, fontSize:13, color:'#92400E' }}>MPSC सारथी सपोर्ट करा!</div>
+              <div style={{ fontSize:11, color:'#B45309', fontWeight:600 }}>Free portal चालू ठेवण्यासाठी · ₹29 पासून</div>
+            </div>
+          </div>
+          <ChevronRight size={16} style={{ color:'#E8671A' }} />
+        </div>
+
+        {/* ── FOOTER ── */}
         <div style={{ textAlign:'center', paddingBottom:8 }}>
           <div style={{ display:'flex', justifyContent:'center', gap:2, marginBottom:6 }}>
             {[...Array(5)].map((_,i) => <Star key={i} size={10} fill="#F97316" style={{ color:'#F97316' }} />)}
@@ -562,7 +735,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* Floating AI Buddy button */}
+      {/* Floating AI Buddy */}
       {!showStudyBuddy && (
         <button onClick={()=>setShowStudyBuddy(true)}
           style={{position:'fixed',bottom:76,right:16,zIndex:99,width:52,height:52,borderRadius:16,background:'linear-gradient(135deg,#7C3AED,#EC4899)',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:24,boxShadow:'0 6px 24px rgba(124,58,237,0.5)',animation:'pulse 2s ease infinite'}}>
