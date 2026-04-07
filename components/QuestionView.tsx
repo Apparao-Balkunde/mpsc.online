@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import { addXP, checkAndAwardBadges } from './xpSystem';
 import {
   ArrowLeft, CheckCircle2, Trophy, BookOpen,
   ChevronDown, HelpCircle, XCircle, RefreshCcw,
@@ -85,6 +86,10 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName, onProgr
   const [selYear, setSelYear]       = useState('All');
   const [selSubject, setSelSubject] = useState('All');
   const [answers, setAnswers]       = useState<Record<number, number>>({});
+  const [bookmarked, setBookmarked] = useState<Set<number>>(() => {
+    try { return new Set(JSON.parse(localStorage.getItem('mpsc_bookmarks_ids') || '[]')); } catch { return new Set(); }
+  });
+  const [xpToast, setXpToast]       = useState<{show:boolean; xp:number; msg:string}>({show:false,xp:0,msg:''});
   const [score, setScore]           = useState(0);
   const [attempted, setAttempted]   = useState(0);
 
@@ -107,7 +112,7 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName, onProgr
   useEffect(() => { fetchData(); }, [fetchData]);
   useEffect(() => { setPage(0); }, [selExam, selSubject, selYear]);
 
-  const handleAnswer = (itemId: number, optIdx: number, correctIdx: number) => {
+  const handleAnswer = (itemId: number, optIdx: number, correctIdx: number, item?: any) => {
     if (answers[itemId] !== undefined) return;
     const correct = optIdx === correctIdx;
     setAnswers(prev => ({ ...prev, [itemId]: optIdx }));
@@ -115,6 +120,61 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName, onProgr
     setAttempted(p => p + 1);
     updateProgress(1, correct ? 1 : 0);
     onProgressUpdate?.();
+
+    // XP System
+    const xpEarned = correct ? 5 : 1;
+    const progress = JSON.parse(localStorage.getItem('mpsc_user_progress') || '{}');
+    const badges   = checkAndAwardBadges(progress.totalCorrect || 0, progress.streak || 0);
+    const result   = addXP(xpEarned, badges);
+    if (result.levelUp) {
+      setXpToast({ show:true, xp:xpEarned, msg:'🎉 Level Up!' });
+    } else if (correct) {
+      setXpToast({ show:true, xp:xpEarned, msg:`+${xpEarned} XP` });
+    }
+    setTimeout(() => setXpToast(t => ({...t, show:false})), 2000);
+
+    // Auto-add to Mistake Book if wrong
+    if (!correct && item) {
+      try {
+        const mistakes = JSON.parse(localStorage.getItem('mpsc_mistake_book') || '[]');
+        if (!mistakes.find((m: any) => m.question === item.question)) {
+          mistakes.unshift({
+            id: Date.now().toString(), question:item.question, options:item.options,
+            correct_answer_index:item.correct_answer_index, explanation:item.explanation,
+            subject:item.subject, wrongAnswer:optIdx,
+            addedAt:new Date().toLocaleDateString('mr-IN'), revisedCount:0
+          });
+          localStorage.setItem('mpsc_mistake_book', JSON.stringify(mistakes.slice(0, 200)));
+        }
+      } catch {}
+    }
+  };
+
+  const toggleBookmark = (item: any) => {
+    setBookmarked(prev => {
+      const next = new Set(prev);
+      if (next.has(item.id)) {
+        next.delete(item.id);
+        // Remove from localStorage bookmarks
+        try {
+          const bms = JSON.parse(localStorage.getItem('mpsc_bookmarks') || '[]');
+          localStorage.setItem('mpsc_bookmarks', JSON.stringify(bms.filter((b: any) => b.id !== item.id)));
+          localStorage.setItem('mpsc_bookmarks_ids', JSON.stringify([...next]));
+        } catch {}
+      } else {
+        next.add(item.id);
+        // Save to localStorage bookmarks
+        try {
+          const bms = JSON.parse(localStorage.getItem('mpsc_bookmarks') || '[]');
+          bms.unshift({ id:item.id, question:item.question, options:item.options,
+            correct_answer_index:item.correct_answer_index, explanation:item.explanation,
+            subject:item.subject, table:tableName });
+          localStorage.setItem('mpsc_bookmarks', JSON.stringify(bms.slice(0, 500)));
+          localStorage.setItem('mpsc_bookmarks_ids', JSON.stringify([...next]));
+        } catch {}
+      }
+      return next;
+    });
   };
 
   const resetSession = () => { setAnswers({}); setScore(0); setAttempted(0); window.scrollTo({ top: 0, behavior: 'smooth' }); };
@@ -133,6 +193,12 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName, onProgr
 
   return (
     <div style={base}>
+      {/* XP Toast */}
+      {xpToast.show && (
+        <div style={{ position:'fixed', top:70, right:16, zIndex:999, background:'linear-gradient(135deg,#F97316,#F59E0B)', borderRadius:14, padding:'10px 16px', color:'#fff', fontWeight:900, fontSize:14, boxShadow:'0 6px 24px rgba(249,115,22,0.4)', animation:'qv-in 0.3s ease', display:'flex', alignItems:'center', gap:8 }}>
+          ⚡ {xpToast.msg}
+        </div>
+      )}
       <style>{CSS}</style>
 
       {/* Header */}
@@ -233,6 +299,14 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName, onProgr
                         {item.year      && <span style={{ fontSize: 9, fontWeight: 800, background: 'rgba(232,103,26,0.1)', border: '1px solid rgba(232,103,26,0.2)', borderRadius: 99, padding: '3px 9px', color: '#C4510E', textTransform: 'uppercase' }}>{item.year}</span>}
                         {item.difficulty && <span style={{ fontSize: 9, fontWeight: 800, background: dc.bg, border: `1px solid ${dc.border}`, borderRadius: 99, padding: '3px 9px', color: dc.color, textTransform: 'uppercase' }}>{item.difficulty}</span>}
                         <span style={{ marginLeft: 'auto', fontSize: 9, fontWeight: 700, color: '#B0CCCC' }}>#{globalIdx + 1}</span>
+                        {/* Bookmark button */}
+                        <button onClick={e => { e.stopPropagation(); toggleBookmark(item); }}
+                          style={{ background:'none', border:'none', cursor:'pointer', padding:'2px 4px', display:'flex', alignItems:'center' }}
+                          title={bookmarked.has(item.id) ? 'Bookmark remove करा' : 'Bookmark करा'}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill={bookmarked.has(item.id) ? '#F97316' : 'none'} stroke={bookmarked.has(item.id) ? '#F97316' : '#B0CCCC'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+                          </svg>
+                        </button>
                       </div>
 
                       {/* Question */}
@@ -255,7 +329,7 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName, onProgr
 
                           return (
                             <button key={i} className="qv-opt" data-locked={hasAnswered ? 'true' : 'false'}
-                              onClick={() => handleAnswer(item.id, i, item.correct_answer_index)}
+                              onClick={() => handleAnswer(item.id, i, item.correct_answer_index, item)}
                               style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 13, border: `1.5px solid ${border}`, background: bg, color, fontWeight: 600, fontSize: 13, textAlign: 'left', cursor: hasAnswered ? 'default' : 'pointer', transition: 'all 0.15s ease', animation: isSelected && !hasAnswered ? 'qv-pop 0.2s ease' : 'none' }}>
                               <span style={{ width: 26, height: 26, borderRadius: 7, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900, background: bdgBg, color: bdgCol, border: bdgBorder, transition: 'all 0.15s' }}>
                                 {hasAnswered && isAns ? <CheckCircle2 size={13} /> : hasAnswered && isSelected ? <XCircle size={13} /> : String.fromCharCode(65 + i)}
@@ -265,6 +339,13 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName, onProgr
                           );
                         })}
                       </div>
+
+                      {/* Wrong answer indicator → auto saved to Mistake Book */}
+                      {hasAnswered && answers[item.id] !== item.correct_answer_index && (
+                        <div style={{ marginTop:10, display:'flex', alignItems:'center', gap:6, fontSize:10, fontWeight:700, color:'#8B5CF6', background:'rgba(139,92,246,0.06)', border:'1px solid rgba(139,92,246,0.15)', borderRadius:10, padding:'7px 12px' }}>
+                          📖 Mistake Book मध्ये auto-save झाले!
+                        </div>
+                      )}
 
                       {/* Explanation */}
                       {hasAnswered && (
