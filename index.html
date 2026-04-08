@@ -2,35 +2,26 @@
 <html lang="mr">
   <head>
     <meta charset="UTF-8" />
-    <meta http-equiv="Content-Security-Policy" content="
-      default-src 'self' https://vswtorhncwprbxlzewar.supabase.co;
-      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://pagead2.googlesyndication.com https://static.cloudflareinsights.com https://me.kes.v2.scr.kaspersky-labs.com https://googleads.g.doubleclick.net https://www.googletagservices.com https://adservice.google.com https://ep1.adtrafficquality.google https://ep2.adtrafficquality.google;
-      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://me.kes.v2.scr.kaspersky-labs.com;
-      font-src 'self' https://fonts.gstatic.com;
-      img-src 'self' data: https:;
-      connect-src 'self' https://vswtorhncwprbxlzewar.supabase.co wss://vswtorhncwprbxlzewar.supabase.co https://api.groq.com https://mpscsarathi.online https://pagead2.googlesyndication.com https://ep1.adtrafficquality.google https://ep2.adtrafficquality.google https://googleads.g.doubleclick.net;
-      frame-src 'self' https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://www.google.com;
-    ">
-
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
+    <!-- ✅ PWA & Icons -->
+    <link rel="icon" type="image/png" href="/icons/icon-192.png" />
     <link rel="manifest" href="/manifest.json" />
     <link rel="apple-touch-icon" href="/logo192.png" />
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="theme-color" content="#E8671A" />
 
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8635186039357683" crossorigin="anonymous"></script>
-
+    <!-- ✅ SEO -->
     <title>MPSC सारथी | MPSC Mock Test, PYQs & Daily Practice Sets 2026</title>
     <meta name="title" content="MPSC सारथी | MPSC Mock Test, PYQs & Daily Practice Sets 2026" />
     <meta name="description" content="MPSC सारथी: राज्यसेवा, Combined Group B & C, PSI, STI, ASO आणि सरळसेवा भरतीसाठी महाराष्ट्रातील नंबर १ सराव पोर्टल. मोफत ऑनलाइन टेस्ट सिरीज, मागील वर्षांचे प्रश्न (PYQs) स्पष्टीकरणासह." />
     <meta name="keywords" content="MPSC Mock Test 2026, MPSC Practice Set Marathi, MPSC PYQ With Explanation, MPSC Online Test Series Free, MPSC Sarathi Online, MPSC Question Bank, MPSC Rajyaseva Practice Paper, Talathi, ZP, Nagarparishad, Marathi Grammar Test MPSC, सरळसेवा सराव" />
     <meta name="author" content="MPSC Sarathi" />
     <meta name="robots" content="index, follow" />
-    <meta name="theme-color" content="#F97316" /> 
     <link rel="canonical" href="https://mpscsarathi.online/" />
 
+    <!-- ✅ Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://mpscsarathi.online/" />
     <meta property="og:title" content="MPSC सारथी | मोफत सराव परीक्षा आणि PYQs पोर्टल" />
@@ -38,17 +29,27 @@
     <meta property="og:site_name" content="MPSC सारथी" />
     <meta property="og:image" content="https://mpscsarathi.online/og-image.jpg" />
 
+    <!-- ✅ Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="MPSC सारथी | मोफत सराव परीक्षा" />
     <meta name="twitter:description" content="MPSC Mock Test, PYQs, Vocab, SpardhaYodha — सर्व एकाच ठिकाणी." />
     <meta name="twitter:image" content="https://mpscsarathi.online/og-image.jpg" />
 
+    <!-- ✅ Schema.org -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "WebSite",
       "name": "MPSC सारथी",
       "url": "https://mpscsarathi.online/",
+      "description": "महाराष्ट्रातील नंबर १ MPSC सराव पोर्टल",
+      "inLanguage": "mr",
+      "publisher": {
+        "@type": "Organization",
+        "name": "MPSC सारथी",
+        "url": "https://mpscsarathi.online",
+        "logo": { "@type": "ImageObject", "url": "https://mpscsarathi.online/logo192.png" }
+      },
       "potentialAction": {
         "@type": "SearchAction",
         "target": "https://mpscsarathi.online/?q={search_term_string}",
@@ -57,103 +58,203 @@
     }
     </script>
 
-    <script>
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then((regs) => {
-          regs.forEach((reg) => reg.unregister());
-        }).catch(() => {});
-      }
-      if ('caches' in window) {
-        caches.keys().then((keys) => {
-          keys.filter((k) => k.includes('mpsc')).forEach((k) => caches.delete(k));
-        }).catch(() => {});
-      }
-      try {
-        const savedMode = localStorage.getItem('mpsc_mode');
-        if (savedMode === 'Quiz' || savedMode === 'QUIZ') {
-          localStorage.setItem('mpsc_mode', 'HOME');
-        }
-      } catch (_) {}
-    </script>
-    
+    <!-- ✅ AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8635186039357683" crossorigin="anonymous"></script>
+
+    <!-- ✅ Fonts — Preconnect for speed -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&family=Noto+Sans+Devanagari:wght@400;700;900&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800;900&family=Noto+Sans+Devanagari:wght@400;600;700;900&display=swap" rel="stylesheet" />
+
+    <!-- ✅ Init Script -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister())).catch(() => {});
+      }
+      if ('caches' in window) {
+        caches.keys().then(keys => keys.filter(k => k.includes('mpsc')).forEach(k => caches.delete(k))).catch(() => {});
+      }
+      try {
+        const m = localStorage.getItem('mpsc_mode');
+        if (m === 'Quiz' || m === 'QUIZ') localStorage.setItem('mpsc_mode', 'HOME');
+      } catch (_) {}
+    </script>
 
     <style>
-      /* Base Styles */
       *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
       html { scroll-behavior: smooth; }
       body {
         margin: 0;
-        font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif;
+        font-family: 'Baloo 2', 'Noto Sans Devanagari', sans-serif;
         background: #F5F0E8;
         color: #1a1a1a;
         -webkit-font-smoothing: antialiased;
       }
 
-      /* Loading Screen Styles */
+      /* ═══════════════════════════════════════
+         ✨ PREMIUM LOADING SCREEN
+         Saffron + Deep Teal — Maharashtra colors
+      ═══════════════════════════════════════ */
       #root-loading {
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         min-height: 100svh;
-        background: #F5F0E8;
-        z-index: 1000;
+        background: linear-gradient(160deg, #0D1F1F 0%, #162929 50%, #1C3535 100%);
         position: relative;
+        overflow: hidden;
       }
 
-      .mpsc-logo-mark {
-        width: 80px;
-        height: 80px;
-        border-radius: 20px;
-        background: linear-gradient(135deg, #F97316, #EF4444);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 24px;
-        box-shadow: 0 12px 30px rgba(249, 115, 22, 0.3);
-        animation: logo-bounce 2s infinite ease-in-out;
-      }
-      .mpsc-logo-mark span {
-        font-weight: 900;
-        font-size: 14px;
-        color: #fff;
-        text-align: center;
-        line-height: 1.2;
+      /* Background geometric pattern */
+      #root-loading::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image:
+          radial-gradient(circle at 20% 20%, rgba(232,103,26,0.12) 0%, transparent 50%),
+          radial-gradient(circle at 80% 80%, rgba(13,107,110,0.15) 0%, transparent 50%),
+          radial-gradient(circle at 60% 20%, rgba(249,115,22,0.06) 0%, transparent 40%);
+        pointer-events: none;
       }
 
-      .mpsc-ring {
-        width: 32px;
-        height: 32px;
-        border: 3px solid rgba(249, 115, 22, 0.1);
-        border-top-color: #F97316;
+      /* Floating dots pattern */
+      #root-loading::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image: radial-gradient(circle, rgba(232,103,26,0.15) 1px, transparent 1px);
+        background-size: 32px 32px;
+        pointer-events: none;
+        opacity: 0.4;
+      }
+
+      /* Logo container */
+      .mpsc-logo-wrap {
+        position: relative;
+        margin-bottom: 32px;
+        z-index: 1;
+      }
+
+      /* Pulse ring behind logo */
+      .mpsc-logo-wrap::before {
+        content: '';
+        position: absolute;
+        inset: -16px;
         border-radius: 50%;
-        animation: spin 0.8s linear infinite;
-        margin-bottom: 16px;
+        border: 2px solid rgba(232,103,26,0.2);
+        animation: ring-pulse 2s ease-in-out infinite;
+      }
+      .mpsc-logo-wrap::after {
+        content: '';
+        position: absolute;
+        inset: -32px;
+        border-radius: 50%;
+        border: 1px solid rgba(232,103,26,0.1);
+        animation: ring-pulse 2s ease-in-out infinite 0.5s;
       }
 
-      .mpsc-loading-text {
-        font-weight: 800;
+      .mpsc-logo-svg {
+        width: 88px;
+        height: 88px;
+        animation: logo-enter 0.6s cubic-bezier(.34,1.56,.64,1) forwards;
+      }
+
+      /* Brand name */
+      .mpsc-brand {
+        font-family: 'Baloo 2', sans-serif;
+        font-weight: 900;
+        font-size: 28px;
+        color: #fff;
+        letter-spacing: -0.03em;
+        margin: 0 0 4px;
+        z-index: 1;
+        animation: fade-up 0.5s ease 0.3s both;
+      }
+      .mpsc-brand span {
+        color: #E8671A;
+      }
+
+      .mpsc-tagline {
         font-size: 12px;
-        color: #F97316;
-        letter-spacing: 0.1em;
+        font-weight: 600;
+        color: rgba(255,255,255,0.45);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        margin: 0 0 36px;
+        z-index: 1;
+        animation: fade-up 0.5s ease 0.4s both;
       }
 
-      @keyframes spin { to { transform: rotate(360deg); } }
-      @keyframes logo-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+      /* Loading bar */
+      .mpsc-loader-bar {
+        width: 160px;
+        height: 3px;
+        background: rgba(255,255,255,0.08);
+        border-radius: 99px;
+        overflow: hidden;
+        z-index: 1;
+        animation: fade-up 0.4s ease 0.5s both;
+      }
+      .mpsc-loader-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #E8671A, #F59E0B, #E8671A);
+        background-size: 200% 100%;
+        border-radius: 99px;
+        animation: bar-shimmer 1.5s ease-in-out infinite, bar-grow 2s ease forwards;
+      }
 
+      /* Loading steps text */
+      .mpsc-load-step {
+        margin-top: 16px;
+        font-size: 11px;
+        font-weight: 700;
+        color: rgba(255,255,255,0.3);
+        letter-spacing: 0.08em;
+        z-index: 1;
+        animation: fade-up 0.4s ease 0.6s both;
+      }
+
+      /* Keyframes */
+      @keyframes logo-enter {
+        from { opacity: 0; transform: scale(0.7) rotate(-10deg); }
+        to   { opacity: 1; transform: scale(1) rotate(0deg); }
+      }
+      @keyframes fade-up {
+        from { opacity: 0; transform: translateY(12px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes ring-pulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50%       { transform: scale(1.1); opacity: 0.4; }
+      }
+      @keyframes bar-shimmer {
+        0%   { background-position: 200% center; }
+        100% { background-position: -200% center; }
+      }
+      @keyframes bar-grow {
+        from { width: 0%; }
+        to   { width: 100%; }
+      }
+      @keyframes fade-out {
+        to { opacity: 0; transform: scale(1.03); pointer-events: none; }
+      }
+
+      .mpsc-loading-hide {
+        animation: fade-out 0.4s ease forwards !important;
+      }
+
+      /* Top progress bar */
       .mpsc-progress {
         position: fixed;
         top: 0; left: 0; right: 0;
         height: 3px;
-        background: #F97316;
+        background: linear-gradient(90deg, #E8671A, #F59E0B);
         z-index: 9999;
         transform-origin: left;
-        animation: load-progress 2s ease-in-out forwards;
+        animation: bar-grow 2.5s ease forwards;
+        box-shadow: 0 0 8px rgba(232,103,26,0.5);
       }
-      @keyframes load-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
       #seo-content { position: absolute; visibility: hidden; width: 1px; height: 1px; }
     </style>
@@ -164,11 +265,49 @@
 
     <div id="root">
       <div id="root-loading">
-        <div class="mpsc-logo-mark">
-          <span>MPSC<br/>सारथी</span>
+
+        <!-- SVG Logo — Maharashtra Saffron shield -->
+        <div class="mpsc-logo-wrap">
+          <svg class="mpsc-logo-svg" viewBox="0 0 88 88" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="shield-bg" x1="0" y1="0" x2="88" y2="88" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#E8671A"/>
+                <stop offset="100%" stop-color="#C4510E"/>
+              </linearGradient>
+              <linearGradient id="shine" x1="0" y1="0" x2="0" y2="88" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="rgba(255,255,255,0.25)"/>
+                <stop offset="60%" stop-color="rgba(255,255,255,0)"/>
+              </linearGradient>
+            </defs>
+            <!-- Shield shape -->
+            <path d="M44 6 L76 20 L76 48 C76 64 62 76 44 82 C26 76 12 64 12 48 L12 20 Z"
+              fill="url(#shield-bg)" />
+            <!-- Shine overlay -->
+            <path d="M44 6 L76 20 L76 48 C76 64 62 76 44 82 C26 76 12 64 12 48 L12 20 Z"
+              fill="url(#shine)" />
+            <!-- Border -->
+            <path d="M44 9 L73 22 L73 48 C73 62 60 73 44 79 C28 73 15 62 15 48 L15 22 Z"
+              fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+            <!-- MPSC text -->
+            <text x="44" y="41" text-anchor="middle" font-family="'Baloo 2', sans-serif"
+              font-weight="900" font-size="13" fill="white" letter-spacing="0.5">MPSC</text>
+            <!-- Sarathi text -->
+            <text x="44" y="56" text-anchor="middle" font-family="'Noto Sans Devanagari', sans-serif"
+              font-weight="700" font-size="10" fill="rgba(255,255,255,0.85)">सारथी</text>
+            <!-- Star accents -->
+            <circle cx="44" cy="27" r="2" fill="rgba(255,255,255,0.6)"/>
+            <circle cx="32" cy="31" r="1.2" fill="rgba(255,255,255,0.3)"/>
+            <circle cx="56" cy="31" r="1.2" fill="rgba(255,255,255,0.3)"/>
+          </svg>
         </div>
-        <div class="mpsc-ring"></div>
-        <p class="mpsc-loading-text">MPSC सारथी लोड होत आहे...</p>
+
+        <h1 class="mpsc-brand">MPSC <span>सारथी</span></h1>
+        <p class="mpsc-tagline">Maharashtra's #1 Study Portal</p>
+
+        <div class="mpsc-loader-bar">
+          <div class="mpsc-loader-fill"></div>
+        </div>
+        <p class="mpsc-load-step" id="load-step-text">Initializing...</p>
       </div>
     </div>
 
@@ -178,20 +317,27 @@
     </div>
 
     <script>
+      // Loading step messages
+      const steps = ['Initializing...', 'Loading questions...', 'Setting up AI...', 'Almost ready...'];
+      let si = 0;
+      const stepEl = document.getElementById('load-step-text');
+      const stepTimer = setInterval(() => {
+        si = (si + 1) % steps.length;
+        if (stepEl) stepEl.textContent = steps[si];
+      }, 600);
+
       window.addEventListener('load', function () {
+        clearInterval(stepTimer);
         const bar = document.getElementById('top-progress');
-        if (bar) {
-          bar.style.opacity = '0';
-          setTimeout(() => bar.remove(), 500);
-        }
-        // Loader logic
+        if (bar) { bar.style.opacity = '0'; setTimeout(() => bar.remove(), 400); }
+        // Smooth fade out loading screen
         setTimeout(() => {
           const loader = document.getElementById('root-loading');
-          if (loader && document.getElementById('root').children.length > 1) {
-            loader.style.opacity = '0';
-            setTimeout(() => loader.style.display = 'none', 300);
+          if (loader) {
+            loader.classList.add('mpsc-loading-hide');
+            setTimeout(() => { loader.style.display = 'none'; }, 420);
           }
-        }, 1000);
+        }, 800);
       });
     </script>
     <script type="module" src="./index.tsx"></script>
