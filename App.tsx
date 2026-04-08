@@ -49,6 +49,9 @@ import { NewspaperSummary } from './components/NewspaperSummary';
 import { MapsGeography } from './components/MapsGeography';
 import { MockTestSeries } from './components/MockTestSeries';
 import { AIDailyBriefing } from './components/AIDailyBriefing';
+import { NewsToQuestion } from './components/NewsToQuestion';
+import { SyllabusRadar } from './components/SyllabusRadar';
+import { ExamCalendar } from './components/ExamCalendar';
 import { SpeedDrill } from './components/SpeedDrill';
 import { MistakeBook } from './components/MistakeBook';
 import { AIStudyBuddy } from './components/AIStudyBuddy';
@@ -184,6 +187,9 @@ export default function App() {
   const [showCutoff, setShowCutoff]                 = useState(false);
   const [showSubjectProgress, setShowSubjectProgress] = useState(false);
   const [showAIBriefing, setShowAIBriefing]         = useState(false);
+  const [showNewsToQ, setShowNewsToQ]               = useState(false);
+  const [showSyllabusRadar, setShowSyllabusRadar]   = useState(false);
+  const [showExamCalendar, setShowExamCalendar]     = useState(false);
   const [showStudyBuddy, setShowStudyBuddy]         = useState(false);
   const { user, loading: authLoading }        = useAuth();
 
@@ -263,6 +269,9 @@ export default function App() {
   if (mode === 'DISTRICT_QUIZ')  return <DistrictQuiz onBack={back} />;
   if (mode === 'SPEED_DRILL')   return <SpeedDrill onBack={back} />;
   if (mode === 'MISTAKE_BOOK')  return <MistakeBook onBack={back} />;
+  if (mode === 'NEWS_TO_Q')     return <NewsToQuestion onBack={back} />;
+  if (mode === 'SYLLABUS_RADAR') return <SyllabusRadar onBack={back} />;
+  if (mode === 'EXAM_CALENDAR') return <ExamCalendar onBack={back} />;
 
   if (mode !== Mode.HOME) return (
     <div style={{ minHeight:'100vh', background:'#F5F0E8', fontFamily:"'Poppins','Noto Sans Devanagari',sans-serif", color:'#1a1a1a' }}>
@@ -310,6 +319,7 @@ export default function App() {
       {showMapsGeo        && <MapsGeography onClose={()=>setShowMapsGeo(false)} />}
       {showMockSeries     && <MockTestSeries onClose={()=>setShowMockSeries(false)} />}
       {showAIBriefing     && <AIDailyBriefing onClose={()=>setShowAIBriefing(false)} />}
+      {showNewsToQ        && <NewsToQuestion onBack={()=>setShowNewsToQ(false)} />}
       {showAIInterview    && <div style={{position:'fixed',inset:0,zIndex:200,overflowY:'auto'}}><AIMockInterview onBack={()=>setShowAIInterview(false)} /></div>}
       {showAISchedule     && <div style={{position:'fixed',inset:0,zIndex:200,overflowY:'auto'}}><AIStudySchedule onBack={()=>setShowAISchedule(false)} /></div>}
       {showAdmin          && <div style={{position:'fixed',inset:0,zIndex:200,overflowY:'auto'}}><AdminPanel /></div>}
@@ -504,6 +514,9 @@ export default function App() {
               { e:'🤖', t:'AI Quiz Generator', s:'Topic → 5 MPSC questions', c:'#DC2626', action:()=>go('AI_QUIZ') },
               { e:'✅', t:'Answer Evaluator', s:'Long answer score करा', c:'#059669', action:()=>go('EVAL_ANSWER') },
               { e:'📅', t:'AI Study Schedule', s:'7-day plan', c:'#3B82F6', action:()=>setShowAISchedule(true) },
+              { e:'📰', t:'News → Question', s:'बातमी → MPSC MCQ', c:'#EC4899', action:()=>go('NEWS_TO_Q') },
+              { e:'🎯', t:'Syllabus Radar', s:'Gap analysis', c:'#7C3AED', action:()=>go('SYLLABUS_RADAR') },
+              { e:'📅', t:'Exam Calendar', s:'Schedule + countdown', c:'#0D6B6E', action:()=>go('EXAM_CALENDAR') },
             ].map(({e,t,s,c,action}) => (
               <div key={t} className="card-hover" onClick={action}
                 style={{ background:`${c}08`, border:`1.5px solid ${c}20`, borderRadius:16, padding:'14px', cursor:'pointer', display:'flex', alignItems:'center', gap:10 }}>
