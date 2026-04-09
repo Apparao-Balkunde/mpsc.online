@@ -19,8 +19,10 @@ const QUICK = [
   '🧠 मला motivation दे',
   '📚 राज्यघटना कसे अभ्यासायचे?',
   '⏰ Time management tips दे',
-  '🎯 MPSC 2025 साठी strategy काय?',
-  '❓ माझी accuracy कमी आहे, काय करू?',
+  '🎯 MPSC 2025 strategy सांग',
+  '❓ Accuracy कमी आहे, काय करू?',
+  '🗺️ Maharashtra geography shortcuts',
+  '📰 Current affairs कशी study करू?',
 ];
 
 export const AIStudyBuddy: React.FC<Props> = ({ onClose, user }) => {
