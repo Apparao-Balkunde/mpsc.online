@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Play, Pause, RotateCcw, Coffee, BookOpen, Target, Bell } from 'lucide-react';
+import { addXP } from './xpSystem';
 
 interface Props { onBack: () => void; }
 
@@ -43,6 +44,16 @@ export const PomodoroTimer: React.FC<Props> = ({ onBack }) => {
               // Notification
               if ('Notification' in window && Notification.permission === 'granted') {
                 new Notification('🎉 Study Session Complete!', { body: 'Break time! 5 min rest करा.' });
+              // Award XP + coins per pomodoro session
+              addXP(15);
+              const coins = parseInt(localStorage.getItem('mpsc_coins')||'0');
+              localStorage.setItem('mpsc_coins', String(coins + 10));
+              // Save session to history
+              try {
+                const hist = JSON.parse(localStorage.getItem('mpsc_pomodoro_history')||'[]');
+                hist.unshift({ date: new Date().toLocaleDateString('mr-IN'), task: '', duration: session.study/60, time: new Date().toLocaleTimeString('mr-IN',{hour:'2-digit',minute:'2-digit'}) });
+                localStorage.setItem('mpsc_pomodoro_history', JSON.stringify(hist.slice(0,30)));
+              } catch {}
               }
             } else {
               setPhase('study');
