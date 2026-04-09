@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, Brain, CheckCircle2, X, Check, RefreshCcw, ChevronRight, Trash2 } from 'lucide-react';
 import { updateProgress } from '../App';
+import { addXP } from './xpSystem';
 
 interface RevisionQuestion {
   id: number; question: string; options: string[];
