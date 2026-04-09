@@ -185,6 +185,40 @@ app.post('/api/ai', async (req, res) => {
     }
 });
 
+// ✅ Report Question endpoint
+app.post('/api/report-question', async (req, res) => {
+    const { questionId, table, question } = req.body;
+    if (!questionId || !table) return res.status(400).json({ error: 'Missing data' });
+    try {
+        // Store in Supabase reported_questions table (if exists)
+        await supabase.from('reported_questions').insert({
+            question_id: questionId,
+            table_name: table,
+            question_preview: (question || '').slice(0, 100),
+            reported_at: new Date().toISOString()
+        }).then(() => {}).catch(() => {}); // Silent fail if table missing
+        res.json({ success: true, message: 'Report received' });
+    } catch {
+        res.json({ success: true }); // Always acknowledge
+    }
+});
+
+// ✅ Push notification subscription endpoint
+app.post('/api/push/subscribe', async (req, res) => {
+    const { subscription, userId } = req.body;
+    if (!subscription) return res.status(400).json({ error: 'Missing subscription' });
+    try {
+        await supabase.from('push_subscriptions').upsert({
+            user_id: userId || 'anon',
+            subscription: JSON.stringify(subscription),
+            updated_at: new Date().toISOString()
+        }, { onConflict: 'user_id' }).then(() => {}).catch(() => {});
+        res.json({ success: true });
+    } catch {
+        res.json({ success: true });
+    }
+});
+
 // Static + SPA
 app.use(express.static(path.join(__dirname, 'dist')));
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'dist', 'index.html')));
