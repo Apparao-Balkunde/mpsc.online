@@ -150,6 +150,28 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName, onProgr
     }
   };
 
+  const [reportedQs, setReportedQs] = useState<Set<number>>(new Set());
+  const [reportToast, setReportToast] = useState('');
+
+  const reportQuestion = (item: any) => {
+    if (reportedQs.has(item.id)) return;
+    setReportedQs(prev => new Set([...prev, item.id]));
+    // Save report locally
+    try {
+      const reports = JSON.parse(localStorage.getItem('mpsc_reported_questions') || '[]');
+      reports.push({ id: item.id, question: item.question.slice(0,80), table: tableName, reportedAt: new Date().toISOString() });
+      localStorage.setItem('mpsc_reported_questions', JSON.stringify(reports.slice(-100)));
+    } catch {}
+    // Send to server (best-effort)
+    fetch('/api/report-question', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ questionId: item.id, table: tableName, question: item.question.slice(0, 100) })
+    }).catch(() => {});
+    setReportToast('प्रश्न report झाला! आम्ही तपासू. धन्यवाद 🙏');
+    setTimeout(() => setReportToast(''), 3000);
+  };
+
   const toggleBookmark = (item: any) => {
     setBookmarked(prev => {
       const next = new Set(prev);
@@ -194,6 +216,11 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName, onProgr
   return (
     <div style={base}>
       {/* XP Toast */}
+      {reportToast && (
+        <div style={{ position:'fixed', bottom:90, left:'50%', transform:'translateX(-50%)', zIndex:9999, background:'#EF4444', color:'#fff', fontWeight:800, fontSize:13, borderRadius:14, padding:'12px 20px', boxShadow:'0 6px 24px rgba(239,68,68,0.3)', whiteSpace:'nowrap', animation:'qv-fade 0.3s ease', fontFamily:"'Baloo 2',sans-serif" }}>
+          ⚠️ {reportToast}
+        </div>
+      )}
       {xpToast.show && (
         <div style={{ position:'fixed', top:70, right:16, zIndex:999, background:'linear-gradient(135deg,#F97316,#F59E0B)', borderRadius:14, padding:'10px 16px', color:'#fff', fontWeight:900, fontSize:14, boxShadow:'0 6px 24px rgba(249,115,22,0.4)', animation:'qv-in 0.3s ease', display:'flex', alignItems:'center', gap:8 }}>
           ⚡ {xpToast.msg}
@@ -305,6 +332,15 @@ export const QuestionView: React.FC<Props> = ({ type, onBack, tableName, onProgr
                           title={bookmarked.has(item.id) ? 'Bookmark remove करा' : 'Bookmark करा'}>
                           <svg width="16" height="16" viewBox="0 0 24 24" fill={bookmarked.has(item.id) ? '#F97316' : 'none'} stroke={bookmarked.has(item.id) ? '#F97316' : '#B0CCCC'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+                          </svg>
+                        </button>
+                        {/* Report button */}
+                        <button onClick={e => { e.stopPropagation(); reportQuestion(item); }}
+                          style={{ background:'none', border:'none', cursor: reportedQs.has(item.id) ? 'default' : 'pointer', padding:'2px 4px', display:'flex', alignItems:'center', opacity: reportedQs.has(item.id) ? 0.4 : 1 }}
+                          title="चुकीचा प्रश्न report करा">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={reportedQs.has(item.id) ? '#EF4444' : '#D0D8D8'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
                           </svg>
                         </button>
                       </div>
