@@ -301,6 +301,7 @@ export default function App() {
 
   // DASHBOARD
   return (
+    <ThemeProvider>
     <div style={{ minHeight:'100vh', background:'#F5F0E8', fontFamily:"'Poppins','Noto Sans Devanagari',sans-serif", color:'#1a1a1a', overflowX:'hidden' }}>
       <style>{CSS}</style>
 
@@ -364,6 +365,7 @@ export default function App() {
             </div>
           </div>
           <button onClick={()=>setShowSearch(true)} style={{ background:'rgba(0,0,0,0.05)', border:'1px solid rgba(0,0,0,0.08)', borderRadius:11, padding:'8px 10px', cursor:'pointer', color:'#7A9090', display:'flex' }}>🔍</button>
+          <DarkModeToggle />
           {user
             ? <button onClick={()=>setShowProfile(true)} style={{ width:36, height:36, borderRadius:12, background:'linear-gradient(135deg,#E8671A,#C4510E)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontWeight:900, fontSize:15, flexShrink:0, boxShadow:'0 4px 12px rgba(232,103,26,0.35)' }}>
                 {(user.user_metadata?.full_name||user.email||'U')[0].toUpperCase()}
@@ -794,5 +796,6 @@ export default function App() {
       )}
       <BottomNav active="HOME" onNav={handleBottomNav} dailyDone={dailyDone} />
     </div>
+    </ThemeProvider>
   );
 }
