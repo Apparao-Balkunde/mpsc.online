@@ -319,7 +319,9 @@ export default function App() {
       {showMapsGeo        && <MapsGeography onClose={()=>setShowMapsGeo(false)} />}
       {showMockSeries     && <MockTestSeries onClose={()=>setShowMockSeries(false)} />}
       {showAIBriefing     && <AIDailyBriefing onClose={()=>setShowAIBriefing(false)} />}
-      {showNewsToQ        && <NewsToQuestion onBack={()=>setShowNewsToQ(false)} />}
+      {showNewsToQ        && <div style={{position:'fixed',inset:0,zIndex:200,overflowY:'auto'}}><NewsToQuestion onBack={()=>setShowNewsToQ(false)} /></div>}
+      {showSyllabusRadar  && <div style={{position:'fixed',inset:0,zIndex:200,overflowY:'auto'}}><SyllabusRadar onBack={()=>setShowSyllabusRadar(false)} /></div>}
+      {showExamCalendar   && <div style={{position:'fixed',inset:0,zIndex:200,overflowY:'auto'}}><ExamCalendar onBack={()=>setShowExamCalendar(false)} /></div>}
       {showAIInterview    && <div style={{position:'fixed',inset:0,zIndex:200,overflowY:'auto'}}><AIMockInterview onBack={()=>setShowAIInterview(false)} /></div>}
       {showAISchedule     && <div style={{position:'fixed',inset:0,zIndex:200,overflowY:'auto'}}><AIStudySchedule onBack={()=>setShowAISchedule(false)} /></div>}
       {showAdmin          && <div style={{position:'fixed',inset:0,zIndex:200,overflowY:'auto'}}><AdminPanel /></div>}
@@ -383,8 +385,13 @@ export default function App() {
           <div style={{ position:'absolute', top:-40, right:-40, width:160, height:160, borderRadius:'50%', background:'rgba(249,115,22,0.12)', filter:'blur(30px)' }}/>
           <div style={{ position:'absolute', bottom:-30, left:-20, width:120, height:120, borderRadius:'50%', background:'rgba(59,130,246,0.1)', filter:'blur(25px)' }}/>
           <div style={{ position:'relative', zIndex:1 }}>
-            <div style={{ display:'inline-flex', alignItems:'center', gap:6, background:'rgba(249,115,22,0.2)', border:'1px solid rgba(249,115,22,0.35)', borderRadius:999, padding:'5px 13px', marginBottom:10 }}>
-              <span style={{ fontSize:12, fontWeight:800, color:'#FED7AA' }}>{greeting} 🙏</span>
+            <div style={{ display:'flex', gap:8, alignItems:'center', marginBottom:10, flexWrap:'wrap' }}>
+              <div style={{ display:'inline-flex', alignItems:'center', gap:6, background:'rgba(249,115,22,0.2)', border:'1px solid rgba(249,115,22,0.35)', borderRadius:999, padding:'5px 13px' }}>
+                <span style={{ fontSize:12, fontWeight:800, color:'#FED7AA' }}>{greeting} 🙏</span>
+              </div>
+              <div style={{ display:'inline-flex', alignItems:'center', gap:6, background:'rgba(255,255,255,0.1)', border:'1px solid rgba(255,255,255,0.2)', borderRadius:999, padding:'5px 13px' }}>
+                <span style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.7)' }}>📅 {new Date().toLocaleDateString('mr-IN',{weekday:'short',day:'numeric',month:'short'})}</span>
+              </div>
             </div>
             <h1 style={{ fontSize:'clamp(1.4rem,5vw,2rem)', fontWeight:900, letterSpacing:'-0.04em', lineHeight:1.2, margin:'0 0 14px', color:'#fff' }}>
               यश मिळवायचे,{' '}
@@ -437,6 +444,21 @@ export default function App() {
         </div>
 
         {/* ── TODAY SECTION ── */}
+        {/* 3 feature cards row */}
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, marginBottom:10 }}>
+          {[
+            { e:'📰', t:'News→Quiz', s:'AI MCQ बनवा', c:'#8B5CF6', action:()=>setShowNewsToQ(true) },
+            { e:'🎯', t:'Syllabus Radar', s:'Coverage %', c:'#E8671A', action:()=>setShowSyllabusRadar(true) },
+            { e:'📆', t:'Exam Calendar', s:'Important dates', c:'#2563EB', action:()=>setShowExamCalendar(true) },
+          ].map(({e,t,s,c,action})=>(
+            <div key={t} className="card-hover" onClick={action}
+              style={{background:'#fff',border:`1.5px solid ${c}25`,borderRadius:16,padding:'12px 10px',cursor:'pointer',textAlign:'center',boxShadow:`0 2px 8px ${c}10`}}>
+              <div style={{fontSize:22,marginBottom:4}}>{e}</div>
+              <div style={{fontWeight:900,fontSize:11,color:'#1C2B2B',marginBottom:2}}>{t}</div>
+              <div style={{fontSize:9,fontWeight:700,color:c}}>{s}</div>
+            </div>
+          ))}
+        </div>
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:16 }}>
           {/* Daily Challenge — big featured */}
           <div className="card-hover" onClick={()=>go('DAILY')}
@@ -473,6 +495,7 @@ export default function App() {
               { e:'🏆', t:'Friend Duel', s:'Compete', c:'#DC2626', action:()=>go('CHALLENGE') },
               { e:'📊', t:'Exam Countdown', s:'दिवस बाकी', c:'#2563EB', action:()=>setShowCountdown(true) },
               { e:'🏆', t:'Mock Series', s:'Complete Papers', c:'#F59E0B', action:()=>setShowMockSeries(true) },
+              { e:'🧩', t:'Vocab Quiz', s:'Daily 10 words', c:'#8B5CF6', action:()=>setShowVocabBuilder(true) },
             ].map(({e,t,s,c,action}) => (
               <div key={t} className="card-hover" onClick={action}
                 style={{ background:'#fff', border:`1.5px solid ${c}20`, borderRadius:16, padding:'13px 10px', cursor:'pointer', textAlign:'center', boxShadow:`0 2px 10px ${c}10` }}>
@@ -560,6 +583,8 @@ export default function App() {
               { e:'📚', t:'Formula Sheet', s:'Quick revision', c:'#059669', action:()=>go('FORMULA') },
               { e:'🔊', t:'Voice Quiz', s:'TTS audio', c:'#E8671A', action:()=>go('VOICE') },
               { e:'🧠', t:'Mnemonics', s:'Memory tricks', c:'#8B5CF6', action:()=>go('MNEMONIC') },
+              { e:'🎯', t:'Syllabus Radar', s:'Coverage track', c:'#E8671A', action:()=>setShowSyllabusRadar(true) },
+              { e:'📆', t:'Exam Calendar', s:'Dates + reminders', c:'#2563EB', action:()=>setShowExamCalendar(true) },
             ].map(({e,t,s,c,action}) => (
               <div key={t} className="card-hover" onClick={action}
                 style={{ background:'#fff', border:`1.5px solid ${c}20`, borderRadius:16, padding:'13px 10px', cursor:'pointer', boxShadow:`0 2px 8px ${c}0F` }}>
@@ -639,6 +664,7 @@ export default function App() {
             {[
               { e:'📰', t:'CA Feed', s:'Category filter', c:'#EC4899', action:()=>go('CURRENT_FEED') },
               { e:'🗞️', t:'News Summary', s:'AI Marathi', c:'#EC4899', action:()=>setShowNewspaper(true) },
+              { e:'🧠', t:'News→MCQ', s:'News से Questions', c:'#8B5CF6', action:()=>setShowNewsToQ(true) },
               { e:'💬', t:'Doubt Community', s:'Q&A forum', c:'#E8671A', action:()=>setShowDoubtCommunity(true) },
               { e:'📖', t:'Vocab Builder', s:'Daily 10 words', c:'#8B5CF6', action:()=>setShowVocabBuilder(true) },
               { e:'🗺️', t:'Maharashtra Map', s:'36 districts', c:'#0D9488', action:()=>setShowMapsGeo(true) },
@@ -664,6 +690,7 @@ export default function App() {
           <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, marginBottom:8 }}>
             {[
               { e:'📈', t:'Analytics', s:'Performance', c:'#E8671A', action:()=>setShowAnalytics(true) },
+              { e:'📉', t:'Progress', s:'Dashboard', c:'#7C3AED', action:()=>setShowProgress(true) },
               { e:'🌡️', t:'Heatmap', s:'Activity calendar', c:'#7C3AED', action:()=>setShowHeatmap(true) },
               { e:'📊', t:'Subject %', s:'Per-subject', c:'#E8671A', action:()=>setShowSubjectProgress(true) },
               { e:'🎯', t:'Readiness', s:'Exam ready?', c:'#059669', action:()=>setShowReadiness(true) },
