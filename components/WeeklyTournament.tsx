@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Trophy, Clock, Users, Zap, ChevronRight, CheckCircle2, Share2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { updateProgress } from '../App';
+import { addXP, checkAndAwardBadges } from './xpSystem';
 
 interface Props { onBack: () => void; }
 interface Q { id:number; question:string; options:string[]; correct_answer_index:number; explanation:string; subject:string; }
@@ -77,6 +78,12 @@ export const WeeklyTournament: React.FC<Props> = ({ onBack }) => {
     // Save to localStorage
     const rank = Math.max(1, Math.floor(Math.random()*200) - score*3);
     localStorage.setItem('mpsc_tournament_last', JSON.stringify({ score, total:questions.length, rank, date:new Date().toISOString() }));
+    // Award XP for tournament
+    const xpEarned = 30 + score * 5;
+    const prog = JSON.parse(localStorage.getItem('mpsc_user_progress')||'{}');
+    addXP(xpEarned, checkAndAwardBadges(prog.totalCorrect||0, prog.streak||0));
+    const coins = parseInt(localStorage.getItem('mpsc_coins')||'0');
+    localStorage.setItem('mpsc_coins', String(coins + 50 + score*10));
     setPhase('result');
   };
 
