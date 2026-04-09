@@ -1,15 +1,14 @@
-// services/gemini.ts (Modified to Local Focus)
-import { mockQuestions } from '../data/mockQuestions'; // तुमची लोकल डेटा फाईल
-import { vocabData } from '../data/vocabData';
+// services/gemini.ts — Fixed: removed missing data/ imports
+// data/mockQuestions & data/vocabData files नाहीत — supabase वापरतो
 
 export const generateQuiz = async (subject: string, topic: string) => {
-  // AI ला विचारण्याऐवजी लोकल डेटा फिल्टर करा
-  const filtered = mockQuestions.filter(q => q.subject === subject && q.topic === topic);
-  return { data: filtered, fromCache: true };
+  // Stub — actual questions supabase मधून येतात
+  console.log('[gemini.ts] generateQuiz called:', subject, topic);
+  return { data: [], fromCache: false };
 };
 
 export const generateVocab = async (subject: string, category: string) => {
-  // लोकल डेटाबेसमधून शब्द मिळवा
-  const words = vocabData[subject][category];
-  return { data: words, fromCache: true };
+  // Stub — vocab supabase vocab_questions table मधून येतो
+  console.log('[gemini.ts] generateVocab called:', subject, category);
+  return { data: [], fromCache: false };
 };
