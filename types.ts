@@ -48,3 +48,25 @@ export interface UserProgress {
   streak: number;
   lastActiveDate: string;
 }
+
+// ── StudyMode साठी types ──────────────────────────────────────────────────
+export enum Subject {
+  MARATHI = 'MARATHI',
+  ENGLISH = 'ENGLISH',
+  GS      = 'GS',
+}
+
+export interface RuleExplanation {
+  rule: string;
+  explanation: string;
+  examples: string[];
+  mnemonics?: string;
+}
+
+export interface SavedNote {
+  id: string;
+  subject: Subject;
+  topic: string;
+  content: string;
+  savedAt: string;
+}
