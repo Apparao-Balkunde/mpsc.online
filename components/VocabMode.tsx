@@ -27,7 +27,7 @@ const DAILY_WORDS = [
 
 type QuizState = 'learning' | 'quiz' | 'result';
 
-export function VocabBuilder({ onClose }: { onClose: () => void }) {
+export const VocabMode: React.FC<Props> = ({ onBack }) => {
   const [currentIdx, setCurrentIdx] = useState(0);
   const [showMeaning, setShowMeaning] = useState(false);
   const [quizState, setQuizState] = useState<QuizState>('learning');
