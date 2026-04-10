@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, MapPin, Check, X, SkipForward, Trophy } from 'lucide-react';
 import { updateProgress } from '../App';
+import { addXP, checkAndAwardBadges } from './xpSystem';
 
 interface Props { onBack: () => void; }
 
@@ -36,6 +37,7 @@ export const DistrictQuiz: React.FC<Props> = ({ onBack }) => {
     const correct = i===q.a;
     if (correct) setScore(s=>s+1);
     updateProgress(1, correct?1:0);
+    addXP(correct ? 5 : 1);
     setTimeout(() => {
       if (idx+1>=qs.length) setDone(true);
       else { setIdx(x=>x+1); setAnswered(null); }
@@ -48,7 +50,11 @@ export const DistrictQuiz: React.FC<Props> = ({ onBack }) => {
         <div style={{fontSize:56,marginBottom:12}}>{score>=8?'🏆':score>=6?'⭐':'📚'}</div>
         <div style={{fontWeight:900,fontSize:30,letterSpacing:'-0.04em',marginBottom:4}}>{score}/{qs.length}</div>
         <div style={{fontSize:13,color:'rgba(255,255,255,0.6)',fontWeight:600,marginBottom:24}}>Maharashtra Geography Quiz</div>
-        <div style={{display:'flex',gap:10}}>
+        <div style={{background:'rgba(5,150,105,0.12)',border:'1px solid rgba(5,150,105,0.3)',borderRadius:14,padding:'10px',marginBottom:10,textAlign:'center',fontSize:14,fontWeight:900,color:'#34D399'}}>
+          +{score*5+(qs.length-score)} ⚡ XP earned!
+        </div>
+        <div style={{display:'flex',gap:8}}>
+          <button onClick={()=>{const p=Math.round((score/qs.length)*100);const t=`🗺️ MPSC District Quiz!\n\n${score}/${qs.length} · ${p}% accuracy\nmpscsarathi.online`;window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank');}} style={{flex:1,background:'linear-gradient(135deg,#25D366,#128C7E)',border:'none',borderRadius:14,padding:'12px',color:'#fff',fontWeight:900,cursor:'pointer'}}>📤</button>
           <button onClick={()=>{setQs([...QUESTIONS].sort(()=>Math.random()-0.5).slice(0,10));setIdx(0);setAnswered(null);setScore(0);setDone(false);}}
             style={{flex:1,background:'linear-gradient(135deg,#E8671A,#C4510E)',border:'none',borderRadius:14,padding:'14px',color:'#fff',fontWeight:900,cursor:'pointer'}}>पुन्हा</button>
           <button onClick={onBack} style={{flex:1,background:'rgba(255,255,255,0.08)',border:'1px solid rgba(255,255,255,0.15)',borderRadius:14,padding:'14px',color:'#fff',fontWeight:800,cursor:'pointer'}}>Home</button>
