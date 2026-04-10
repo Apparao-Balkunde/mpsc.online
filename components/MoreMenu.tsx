@@ -1,5 +1,7 @@
 import React from 'react';
-import { X, Brain, Clock, Trophy, Layers, Heart, Users, BarChart2, Bookmark, LogIn, LogOut } from 'lucide-react';
+import { X, Brain, Clock, Trophy, Layers, Heart, Users, BarChart2, Bookmark, LogIn, LogOut, Mic, Bell } from 'lucide-react';
+import { NotificationToggle } from './PushNotifications';
+import { DarkModeToggle } from './ThemeContext';
 
 interface Props {
   onClose: () => void;
@@ -25,6 +27,10 @@ export const MoreMenu: React.FC<Props> = ({ onClose, onNav, onShowSupport, onSho
     { emoji:'🏆', label:'Friend Challenge',  sub:'मित्राला challenge',  onClick:() => { onNav('CHALLENGE'); onClose(); } },
     { emoji:'📅', label:'Daily Challenge',   sub:'रोजचे 5 प्रश्न',     onClick:() => { onNav('DAILY');     onClose(); } },
     { emoji:'🔖', label:'Bookmarks',         sub:'जतन केलेले',         onClick:() => { onNav('BOOKMARKS'); onClose(); } },
+    { emoji:'📖', label:'Study Notes',       sub:'AI Grammar Notes',    onClick:() => { onNav('STUDY_MODE'); onClose(); } },
+    { emoji:'🎙️', label:'Voice Quiz',        sub:'ऐकत ऐकत शिका',       onClick:() => { onNav('VOICE');     onClose(); } },
+    { emoji:'⚔️', label:'Tournament',        sub:'Weekly challenge',     onClick:() => { onNav('TOURNAMENT'); onClose(); } },
+    { emoji:'⚡', label:'Speed Drill',        sub:'60 sec challenge',    onClick:() => { onNav('SPEED');     onClose(); } },
   ];
 
   return (
@@ -102,6 +108,12 @@ export const MoreMenu: React.FC<Props> = ({ onClose, onNav, onShowSupport, onSho
             style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, background:'rgba(217,119,6,0.08)', border:'1px solid rgba(217,119,6,0.2)', borderRadius:14, padding:'12px', color:'#B45309', fontWeight:800, fontSize:12, cursor:'pointer' }}>
             <Users size={15} /> Leaderboard
           </button>
+        </div>
+
+        {/* Notification + Dark Mode */}
+        <div style={{ display:'flex', flexDirection:'column', gap:8, marginBottom:12 }}>
+          <NotificationToggle />
+          <DarkModeToggle style={{ justifyContent:'space-between', padding:'12px 14px', borderRadius:12 }} />
         </div>
 
         {/* Support */}
