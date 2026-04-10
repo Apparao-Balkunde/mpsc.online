@@ -7,7 +7,7 @@ import { MockTestMode } from './components/MockTestMode';
 import { VocabMode } from './components/VocabMode';
 import { LiteratureMode } from './components/LiteratureMode';
 import { SpardhaYodha } from './components/SpardhaYodha';
-import  PYQMode  from './components/PYQMode';
+import { PYQMode } from './components/PYQMode';
 import { ProgressDashboard } from './components/Progressdashboard';
 import { AIDoubtSolver } from './components/AIDoubtSolver';
 import { AuthModal } from './components/AuthModal';
