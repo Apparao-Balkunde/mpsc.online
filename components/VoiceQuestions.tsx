@@ -12,7 +12,7 @@ const CSS = `@keyframes lq-spin{to{transform:rotate(360deg)}} @keyframes lq-fade
 const ROOM_KEY = 'mpsc_quiz_rooms';
 const TIME = 20;
 
-export const LiveQuizRoom: React.FC<Props> = ({ onBack, user }) => {
+export const LiveQuizRoom: React.FC<Props> = ({ onBack }) => {
   const [phase, setPhase]       = useState<'lobby'|'playing'|'result'>('lobby');
   const [roomId, setRoomId]     = useState('');
   const [joinId, setJoinId]     = useState('');
