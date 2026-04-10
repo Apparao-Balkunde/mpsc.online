@@ -78,7 +78,7 @@ const CSS = `
 
 interface Props { onBack: () => void; }
 
-export const DailyChallange: React.FC<Props> = ({ onBack }) => {
+export const DailyChallenge: React.FC<Props> = ({ onBack }) => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [qIdx, setQIdx]           = useState(0);
   const [answers, setAnswers]     = useState<Record<number,number>>({});
