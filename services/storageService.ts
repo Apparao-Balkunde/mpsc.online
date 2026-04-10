@@ -1,6 +1,7 @@
-import { UserProgress, QuizQuestion } from '../types';
+import { UserProgress, QuizQuestion, SavedNote } from '../types';
 
 const STORAGE_KEY = 'mpsc_sarathi_progress';
+const NOTES_KEY = 'mpsc_sarathi_notes';
 
 export const getProgress = (): UserProgress => {
   const data = localStorage.getItem(STORAGE_KEY);
@@ -9,9 +10,32 @@ export const getProgress = (): UserProgress => {
     correctAnswers: 0,
     subjectMastery: {},
     bookmarks: { questions: [], articles: [] },
-    recentActivity: []
+    recentActivity: [],
+    viewedTopics: [] // हे नवीन फील्ड ॲड करा
   };
 };
+
+// --- नवीन फंक्शन्स जे बिल्ड एरर फिक्स करतील ---
+
+export const markTopicViewed = (subject: string, topicId: string): void => {
+  const progress = getProgress();
+  // viewedTopics array नसेल तर तो तयार करा
+  if (!progress.viewedTopics) progress.viewedTopics = [];
+  
+  const uniqueId = `${subject}:${topicId}`;
+  if (!progress.viewedTopics.includes(uniqueId)) {
+    progress.viewedTopics.push(uniqueId);
+    saveProgress(progress);
+  }
+};
+
+export const saveNote = (note: SavedNote): void => {
+  const notes = JSON.parse(localStorage.getItem(NOTES_KEY) || '[]');
+  notes.push({ ...note, id: Date.now().toString() });
+  localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+};
+
+// --- जुने फंक्शन्स ---
 
 export const toggleQuestionBookmark = (question: QuizQuestion): boolean => {
   const progress = getProgress();
