@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Users, Zap, Crown, Copy, Check, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { updateProgress } from '../App';
+import { addXP, checkAndAwardBadges } from './xpSystem';
 
 interface Props { onBack: () => void; user?: any; }
 interface Q { id:number; question:string; options:string[]; correct_answer_index:number; subject:string; }
@@ -119,7 +120,13 @@ export const LiveQuizRoom: React.FC<Props> = ({ onBack, user }) => {
           </div>
         ))}
       </div>
-      <button onClick={onBack} style={{ width:'100%', background:'linear-gradient(135deg,#E8671A,#C4510E)', border:'none', borderRadius:14, padding:'14px', color:'#fff', fontWeight:900, fontSize:14, cursor:'pointer' }}>डॅशबोर्ड</button>
+      <div style={{background:'rgba(245,200,66,0.12)',border:'1px solid rgba(245,200,66,0.25)',borderRadius:14,padding:'10px',marginBottom:10,textAlign:'center',fontSize:14,fontWeight:900,color:'#F5C842'}}>
+        +{score*4+questions.length} ⚡ XP earned!
+      </div>
+      <div style={{display:'flex',gap:8,marginBottom:0}}>
+        <button onClick={()=>{const p=Math.round((score/questions.length)*100);const t=`🎮 MPSC Live Quiz!\n\n${score}/${questions.length} · ${p}%\nmpscsarathi.online`;window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank');}} style={{flex:1,background:'linear-gradient(135deg,#25D366,#128C7E)',border:'none',borderRadius:14,padding:'13px',color:'#fff',fontWeight:900,cursor:'pointer'}}>📤 Share</button>
+        <button onClick={onBack} style={{flex:2,background:'linear-gradient(135deg,#E8671A,#C4510E)',border:'none',borderRadius:14,padding:'13px',color:'#fff',fontWeight:900,fontSize:14,cursor:'pointer'}}>डॅशबोर्ड</button>
+      </div>
     </div>
   );
 
