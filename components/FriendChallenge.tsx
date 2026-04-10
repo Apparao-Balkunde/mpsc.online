@@ -22,7 +22,7 @@ const QUESTIONS = [
 
 const CSS = `@keyframes dq-fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}} @keyframes dq-spin{to{transform:rotate(360deg)}}`;
 
-export const DistrictQuiz: React.FC<Props> = ({ onBack }) => {
+export const FriendChallenge: React.FC<Props> = ({ onBack }) => {
   const [idx, setIdx]       = useState(0);
   const [answered, setAnswered] = useState<number|null>(null);
   const [score, setScore]   = useState(0);
