@@ -1,76 +1,98 @@
-// MPSC सारथी Service Worker
-const CACHE_NAME = 'mpsc-sarathi-v2';
+// MPSC Sarathi Service Worker — Offline Mode
+const CACHE_NAME = 'mpsc-sarathi-v1';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
 ];
 
-// Install — cache static assets
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(STATIC_ASSETS))
-      .then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS))
   );
+  self.skipWaiting();
 });
 
-// Activate — remove old caches
 self.addEventListener('activate', e => {
   e.waitUntil(
-    caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))))
-      .then(() => self.clients.claim())
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+    )
   );
+  self.clients.claim();
 });
 
-// Fetch strategy:
-// - Static assets: Cache First
-// - Supabase API: Network First, fallback cache
-// - Everything else: Network First
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
-  const isSupabase = url.hostname.includes('supabase');
-  const isStatic = e.request.destination === 'script' || e.request.destination === 'style' || e.request.destination === 'font';
+  // API calls — network only
+  if (url.pathname.startsWith('/api/')) return;
+  // Supabase — network only
+  if (url.hostname.includes('supabase')) return;
 
-  if (isStatic) {
-    // Cache First for JS/CSS/fonts
-    e.respondWith(
-      caches.match(e.request).then(cached => cached || fetch(e.request).then(res => {
-        const clone = res.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
-        return res;
-      }))
-    );
-    return;
-  }
-
-  if (isSupabase) {
-    // Network First for API — offline fallback
-    e.respondWith(
-      fetch(e.request)
-        .then(res => {
-          const clone = res.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
-          return res;
-        })
-        .catch(() => caches.match(e.request) || new Response(
-          JSON.stringify({ error: 'Offline — कृपया internet connection तपासा' }),
-          { headers: { 'Content-Type': 'application/json' } }
-        ))
-    );
-    return;
-  }
-
-  // Default: Network First
   e.respondWith(
-    fetch(e.request).catch(() => caches.match(e.request))
+    caches.match(e.request).then(cached => {
+      if (cached) return cached;
+      return fetch(e.request).then(res => {
+        if (!res || res.status !== 200 || res.type === 'opaque') return res;
+        const clone = res.clone();
+        caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
+        return res;
+      }).catch(() => caches.match('/index.html'));
+    })
   );
 });
 
-// Background sync for offline bookmarks
-self.addEventListener('sync', e => {
-  if (e.tag === 'sync-bookmarks') {
-    console.log('[SW] Background sync: bookmarks');
+// Cache questions from Supabase for offline use
+self.addEventListener('message', e => {
+  if (e.data?.type === 'CACHE_QUESTIONS') {
+    caches.open(CACHE_NAME).then(cache => {
+      e.data.urls?.forEach(url => fetch(url).then(r => cache.put(url, r)).catch(() => {}));
+    });
+  }
+});
+
+// ── Push Notification Handler ──────────────────────────────────────────────
+self.addEventListener('push', e => {
+  let data = { title: '🎯 MPSC Sarathi', body: 'आजचा अभ्यास सुरू करा! 📚', icon: '/icon128.png' };
+  try { if (e.data) data = { ...data, ...e.data.json() }; } catch (_) {}
+
+  e.waitUntil(
+    self.registration.showNotification(data.title, {
+      body:  data.body,
+      icon:  data.icon  || '/icon128.png',
+      badge: '/icon72.png',
+      vibrate: [200, 100, 200],
+      data:  { url: data.url || '/' },
+      actions: [
+        { action: 'open',    title: '📚 अभ्यास करा' },
+        { action: 'dismiss', title: '⏰ नंतर' },
+      ],
+    })
+  );
+});
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  if (e.action === 'dismiss') return;
+  const url = e.notification.data?.url || '/';
+  e.waitUntil(
+    clients.matchAll({ type:'window', includeUncontrolled:true }).then(list => {
+      const existing = list.find(c => c.url.includes(self.location.origin));
+      if (existing) { existing.focus(); existing.navigate(url); }
+      else clients.openWindow(url);
+    })
+  );
+});
+
+// ── Schedule-based reminder (localStorage-based fallback) ──────────────────
+self.addEventListener('message', e => {
+  if (e.data?.type === 'CACHE_QUESTIONS') {
+    caches.open('mpsc-sarathi-v1').then(cache => {
+      (e.data.urls || []).forEach(url => fetch(url).then(r => cache.put(url, r)).catch(() => {}));
+    });
+  }
+  if (e.data?.type === 'SCHEDULE_REMINDER') {
+    // Store reminder time for background sync (best-effort)
+    self._reminderTime = e.data.time;
   }
 });
