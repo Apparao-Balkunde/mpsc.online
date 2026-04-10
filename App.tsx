@@ -69,6 +69,10 @@ import { CutoffTracker } from './components/CutoffTracker';
 import { EssayMode } from './components/EssayMode';
 import { SubjectProgress } from './components/SubjectProgress';
 import { DistrictQuiz } from './components/DistrictQuiz';
+import { VoiceQuestions } from './components/VoiceQuestions';
+import { WeeklyTournament } from './components/WeeklyTournament';
+import { StudyMode } from './components/StudyMode';
+import { PushNotifications, NotificationToggle } from './components/PushNotifications';
 import { useAuth, signOut } from './hooks/useAuth';
 import { pullProgressFromCloud, pushProgressToCloud, startAutoSync } from './lib/Cloudsync';
 import { Heart } from 'lucide-react';
@@ -76,7 +80,7 @@ import {
   History, BookOpen, Trophy, Newspaper, ShieldCheck,
   Zap, BookMarked, X, Target, Flame, Languages,
   GraduationCap, ChevronRight, Star, TrendingUp,
-  Award, Bookmark, BarChart2, FileText
+  Award, Bookmark, BarChart2, FileText, Mic
 } from 'lucide-react';
 
 const Quiz = QuizMode;
@@ -119,7 +123,8 @@ const SECTIONS = [
   { mode: Mode.MOCK,            label:'State Board',      sub:'पाठ्यपुस्तक Mock',      icon:Trophy,        accent:'#F59E0B', tag:'MOCK'  },
   { mode: Mode.CURRENT_AFFAIRS, label:'चालू घडामोडी',   sub:'Daily Updates',          icon:Newspaper,     accent:'#EC4899', tag:'DAILY' },
   { mode: 'PYQ' as any, label: 'PYQ संच', sub: 'मागील वर्षांचे प्रश्न', icon: FileText, accent: '#F59E0B', tag: 'PYQ' },
-  { mode: 'QUIZ' as any, label: 'Quiz Mode', sub: 'सराव चाचणी', icon: Zap, accent: '#E8671A', tag: 'HOT' } // ही नवीन ओळ नीट टाका
+  { mode: 'QUIZ' as any,  label: 'Quiz Mode',   sub: 'सराव चाचणी',           icon: Zap,  accent: '#E8671A', tag: 'HOT'  },
+  { mode: 'VOICE' as any, label: 'Voice Quiz',  sub: '🎙️ ऐकत शिका (TTS)',     icon: Mic,  accent: '#8B5CF6', tag: 'NEW'  },
 ];
 
 function Ring({ pct, color, size=64, stroke=5 }: { pct:number; color:string; size?:number; stroke?:number }) {
@@ -252,6 +257,7 @@ export default function App() {
   if (mode === 'PLANNER')      return <StudyPlanner onBack={back} />;
   if (mode === 'NOTES')        return <NotesFeature onBack={back} />;
   if (mode === 'VOICE')        return <VoiceQuestions onBack={back} />;
+  if (mode === 'STUDY_MODE')   return <StudyMode onBack={back} />;
   if (mode === 'TRANSLATOR')   return <AIMarathiTranslator onBack={back} />;
   if (mode === 'TOURNAMENT')   return <WeeklyTournament onBack={back} />;
   if (mode === 'CURRENT_FEED') return <CurrentAffairsFeed onBack={back} />;
@@ -338,6 +344,7 @@ export default function App() {
       {showSubjectProgress && <SubjectProgress onClose={()=>setShowSubjectProgress(false)} />}
       {showStudyBuddy     && <AIStudyBuddy onClose={()=>setShowStudyBuddy(false)} user={user} />}
       <AIDoubtSolver />
+      <PushNotifications />
       {showAuth        && <AuthModal onClose={()=>setShowAuth(false)} />}
       {showLeaderboard && <Leaderboard onClose={()=>setShowLeaderboard(false)} currentUserId={user?.id} />}
       {showSupport     && <SupportModal onClose={()=>setShowSupport(false)} />}
@@ -583,6 +590,7 @@ export default function App() {
               { e:'📝', t:'My Notes', s:'Personal notes', c:'#E8671A', action:()=>go('NOTES') },
               { e:'🏦', t:'Question Bank', s:"Browse all Q/'s", c:'#059669', action:()=>go('QUESTION_BANK') },
               { e:'📚', t:'Formula Sheet', s:'Quick revision', c:'#059669', action:()=>go('FORMULA') },
+              { e:'📖', t:'Study Notes', s:'AI grammar notes', c:'#7C3AED', action:()=>go('STUDY_MODE') },
               { e:'🔊', t:'Voice Quiz', s:'TTS audio', c:'#E8671A', action:()=>go('VOICE') },
               { e:'🧠', t:'Mnemonics', s:'Memory tricks', c:'#8B5CF6', action:()=>go('MNEMONIC') },
               { e:'🎯', t:'Syllabus Radar', s:'Coverage track', c:'#E8671A', action:()=>setShowSyllabusRadar(true) },
