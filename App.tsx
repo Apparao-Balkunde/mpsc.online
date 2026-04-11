@@ -49,6 +49,7 @@ import { NewspaperSummary } from './components/NewspaperSummary';
 import { MapsGeography } from './components/MapsGeography';
 import { MockTestSeries } from './components/MockTestSeries';
 import { AIDailyBriefing } from './components/AIDailyBriefing';
+import { MPSCNotifications } from './components/MPSCNotifications';
 import { NewsToQuestion } from './components/Newstoquestion';
 import { SyllabusRadar } from './components/Syllabusradar';
 import { ExamCalendar } from './components/Examcalendar';
@@ -196,6 +197,7 @@ export default function App() {
   const [showSyllabusRadar, setShowSyllabusRadar]   = useState(false);
   const [showExamCalendar, setShowExamCalendar]     = useState(false);
   const [showStudyBuddy, setShowStudyBuddy]         = useState(false);
+  const [showNotifications, setShowNotifications]   = useState(false);
   const { user, loading: authLoading }        = useAuth();
 
   const isExam = mode === Mode.MOCK_TEST;
@@ -274,6 +276,7 @@ export default function App() {
   if (mode === 'ESSAY')          return <EssayMode onBack={back} />;
   if (mode === 'DISTRICT_QUIZ')  return <DistrictQuiz onBack={back} />;
   if (mode === 'SPEED_DRILL')   return <SpeedDrill onBack={back} />;
+  if (mode === 'NOTIFICATIONS') return <MPSCNotifications onBack={back} isAdmin={!!user} />;
   if (mode === 'MISTAKE_BOOK')  return <MistakeBook onBack={back} />;
   if (mode === 'NEWS_TO_Q')     return <NewsToQuestion onBack={back} />;
   if (mode === 'SYLLABUS_RADAR') return <SyllabusRadar onBack={back} />;
@@ -372,6 +375,10 @@ export default function App() {
             </div>
           </div>
           <button onClick={()=>setShowSearch(true)} style={{ background:'rgba(0,0,0,0.05)', border:'1px solid rgba(0,0,0,0.08)', borderRadius:11, padding:'8px 10px', cursor:'pointer', color:'#7A9090', display:'flex' }}>🔍</button>
+          <button onClick={()=>go('NOTIFICATIONS')} style={{ position:'relative', background:'rgba(220,38,38,0.08)', border:'1px solid rgba(220,38,38,0.2)', borderRadius:11, padding:'8px 10px', cursor:'pointer', color:'#DC2626', display:'flex' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <div style={{position:'absolute',top:4,right:4,width:7,height:7,borderRadius:'50%',background:'#DC2626',border:'1.5px solid #fff',animation:'pulse 2s infinite'}}/>
+          </button>
           <DarkModeToggle />
           {user
             ? <button onClick={()=>setShowProfile(true)} style={{ width:36, height:36, borderRadius:12, background:'linear-gradient(135deg,#E8671A,#C4510E)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontWeight:900, fontSize:15, flexShrink:0, boxShadow:'0 4px 12px rgba(232,103,26,0.35)' }}>
@@ -453,6 +460,16 @@ export default function App() {
         </div>
 
         {/* ── TODAY SECTION ── */}
+        {/* MPSC Notifications banner */}
+        <div onClick={()=>go('NOTIFICATIONS')}
+          style={{ display:'flex', alignItems:'center', gap:12, background:'linear-gradient(135deg,#1E3A5F,#1E40AF)', borderRadius:16, padding:'14px 16px', marginBottom:10, cursor:'pointer' }}>
+          <div style={{ fontSize:24 }}>🏛️</div>
+          <div style={{ flex:1 }}>
+            <div style={{ fontWeight:900, fontSize:13, color:'#fff' }}>MPSC Official Notifications</div>
+            <div style={{ fontSize:10, color:'rgba(255,255,255,0.6)', fontWeight:600 }}>परीक्षा · निकाल · Admit Card · Vacancy</div>
+          </div>
+          <div style={{ background:'#DC2626', borderRadius:99, padding:'3px 9px', fontSize:10, fontWeight:900, color:'#fff', animation:'pulse 2s infinite' }}>NEW</div>
+        </div>
         {/* 3 feature cards row */}
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, marginBottom:10 }}>
           {[
