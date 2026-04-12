@@ -6,6 +6,7 @@ import cors from 'cors';
 import 'dotenv/config';
 import { createClient } from '@supabase/supabase-js';
 import { createClient as createRedisClient } from 'redis';
+import * as cheerio from 'cheerio';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -293,6 +294,204 @@ app.post('/api/analytics/question', async (req, res) => {
         res.json({ success: true });
     } catch { res.json({ success: true }); }
 });
+
+// ═══════════════════════════════════════════════════════════════
+// 🔴 MPSC Official Notifications — Scraper + Realtime
+// mpsc.gov.in वरून notifications scrape करून Supabase मध्ये store
+// ═══════════════════════════════════════════════════════════════
+
+// Supabase service-role client (scraper ला write access हवा)
+const supabaseAdmin = createClient(
+  process.env.VITE_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY
+);
+
+// Type detector — title वरून notification type ओळखणे
+function detectType(title = '') {
+  const t = title.toLowerCase();
+  if (t.includes('result') || t.includes('निकाल'))            return 'result';
+  if (t.includes('admit') || t.includes('hall ticket') || t.includes('प्रवेशपत्र')) return 'admit';
+  if (t.includes('syllabus') || t.includes('अभ्यासक्रम'))    return 'syllabus';
+  if (t.includes('vacancy') || t.includes('भरती') || t.includes('जागा')) return 'vacancy';
+  if (t.includes('exam') || t.includes('परीक्षा') || t.includes('schedule') || t.includes('timetable')) return 'exam';
+  return 'general';
+}
+
+// Core scraper — mpsc.gov.in वरून notifications fetch करणे
+async function scrapeMPSC() {
+  const URLS = [
+    'https://mpsc.gov.in/home',
+    'https://mpsc.gov.in/notifications',
+  ];
+
+  const scraped = [];
+
+  for (const url of URLS) {
+    try {
+      const res = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml',
+          'Accept-Language': 'mr,en;q=0.9',
+        },
+        signal: AbortSignal.timeout(12000),
+      });
+
+      if (!res.ok) continue;
+      const html = await res.text();
+      const $ = cheerio.load(html);
+
+      // mpsc.gov.in चे common selectors — notification links
+      const selectors = [
+        '.notification-item a',
+        '.news-item a',
+        '.notice a',
+        'ul.notification a',
+        '.marquee a',
+        'a[href*="notification"]',
+        'a[href*="advertisement"]',
+        'a[href*="result"]',
+        'a[href*="admit"]',
+        '.panel-body a',
+        '.list-group-item a',
+        'td a',   // table-based layouts
+      ];
+
+      for (const sel of selectors) {
+        $(sel).each((i, el) => {
+          const $el  = $(el);
+          const title = $el.text().trim().replace(/\s+/g, ' ');
+          let link   = $el.attr('href') || '';
+
+          if (!title || title.length < 10) return;
+          if (link && !link.startsWith('http')) {
+            link = link.startsWith('/') ? `https://mpsc.gov.in${link}` : `https://mpsc.gov.in/${link}`;
+          }
+
+          // Duplicate avoid
+          if (scraped.find(s => s.title === title)) return;
+
+          const parentText = $el.closest('tr,li,div').text();
+          // Date extract attempt (dd/mm/yyyy or yyyy-mm-dd patterns)
+          const dateMatch = parentText.match(/(\d{2})[\/\-](\d{2})[\/\-](\d{4})/) ||
+                            parentText.match(/(\d{4})[\/\-](\d{2})[\/\-](\d{2})/);
+          let date = new Date().toISOString().split('T')[0];
+          if (dateMatch) {
+            const raw = dateMatch[0];
+            if (raw.length === 10) {
+              // dd/mm/yyyy → yyyy-mm-dd
+              const parts = raw.split(/[\/\-]/);
+              if (parseInt(parts[2]) > 2000) date = `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+              else date = raw; // already yyyy-mm-dd
+            }
+          }
+
+          scraped.push({
+            id:          `mpsc-${Buffer.from(title).toString('base64').slice(0,20)}`,
+            title,
+            type:        detectType(title),
+            date,
+            link:        link || url,
+            description: null,
+            is_new:      true,
+            source:      'official',
+            scraped_at:  new Date().toISOString(),
+          });
+        });
+      }
+    } catch (err) {
+      console.error(`[MPSC Scraper] ${url} failed:`, err.message);
+    }
+  }
+
+  return scraped;
+}
+
+// Supabase मध्ये upsert + cache
+async function refreshNotifications() {
+  console.log('[MPSC] Scraping mpsc.gov.in...');
+  try {
+    const scraped = await scrapeMPSC();
+
+    if (scraped.length > 0) {
+      const { error } = await supabaseAdmin
+        .from('mpsc_notifications')
+        .upsert(scraped, { onConflict: 'id', ignoreDuplicates: false });
+      if (error) console.error('[MPSC] Supabase upsert error:', error.message);
+      else console.log(`[MPSC] ✅ ${scraped.length} notifications synced`);
+    } else {
+      console.log('[MPSC] ⚠️ No items scraped (site structure may have changed)');
+    }
+
+    // Redis cache update
+    const { data } = await supabaseAdmin
+      .from('mpsc_notifications')
+      .select('*')
+      .order('date', { ascending: false })
+      .limit(50);
+
+    await redisClient.setEx('mpsc_notifications', 1800, JSON.stringify(data || []));
+    return { scraped: scraped.length, total: data?.length || 0 };
+  } catch (err) {
+    console.error('[MPSC] refreshNotifications error:', err.message);
+    return { scraped: 0, total: 0 };
+  }
+}
+
+// ── API: GET notifications (cache-first) ──────────────────────────────────
+app.get('/api/notifications', async (req, res) => {
+  try {
+    // Redis cache check
+    const cached = await redisClient.get('mpsc_notifications');
+    if (cached) return res.json({ success: true, data: JSON.parse(cached), fromCache: true });
+
+    // Supabase fallback
+    const { data, error } = await supabaseAdmin
+      .from('mpsc_notifications')
+      .select('*')
+      .order('date', { ascending: false })
+      .limit(50);
+    if (error) throw error;
+
+    await redisClient.setEx('mpsc_notifications', 1800, JSON.stringify(data || []));
+    res.json({ success: true, data: data || [], fromCache: false });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ── API: Force scrape (Admin trigger) ─────────────────────────────────────
+app.post('/api/notifications/refresh', async (req, res) => {
+  const { secret } = req.body;
+  if (secret && secret !== process.env.ADMIN_SECRET) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+  const result = await refreshNotifications();
+  res.json({ success: true, ...result });
+});
+
+// ── API: Manual add notification ──────────────────────────────────────────
+app.post('/api/notifications/add', async (req, res) => {
+  const { secret, notification } = req.body;
+  if (secret !== process.env.ADMIN_SECRET) return res.status(403).json({ error: 'Forbidden' });
+  try {
+    const { error } = await supabaseAdmin
+      .from('mpsc_notifications')
+      .upsert({ ...notification, source: 'manual', scraped_at: new Date().toISOString() });
+    if (error) throw error;
+    await redisClient.del('mpsc_notifications'); // cache invalidate
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Auto-refresh cron — दर 30 मिनिटांनी scrape ───────────────────────────
+const SCRAPE_INTERVAL_MS = 30 * 60 * 1000; // 30 min
+setTimeout(async () => {
+  await refreshNotifications(); // startup वर एकदा run
+  setInterval(refreshNotifications, SCRAPE_INTERVAL_MS);
+}, 5000); // server start झाल्यावर 5 sec delay
 
 // Static + SPA
 app.use(express.static(path.join(__dirname, 'dist')));
