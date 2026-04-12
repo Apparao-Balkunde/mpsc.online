@@ -12,7 +12,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Executing remote ssh commands using password
+      - name: Executing remote ssh commands
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST }}      
@@ -20,9 +20,10 @@ jobs:
           key: ${{ secrets.SSH_KEY }}     
           script: |
             cd /home/ubuntu/mpsc.online
-            # १. लोकल बदल बाजूला ठेवा किंवा ओव्हरराईट करा
+            # १. जुने सर्व लोकल बदल काढून नवीन कोड घेणे
             git fetch origin main
             git reset --hard origin/main
             
-            # २. डॉकर बिल्ड करा (नवीन पद्धत: 'docker compose' वापरा)
+            # २. डॉकर सर्विसेस रिस्टार्ट करणे (नवीन 'docker compose' कमांडसह)
+            docker compose down
             docker compose up -d --build --remove-orphans
