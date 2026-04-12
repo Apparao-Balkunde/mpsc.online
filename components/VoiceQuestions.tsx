@@ -28,7 +28,7 @@ export const VoiceQuestions: React.FC<Props> = ({ onBack }) => {
   const [showSettings, setShowSettings] = useState(false);
   const [score, setScore]         = useState(0);
   const [done, setDone]           = useState(false);
-  const [lang, setLang]           = useState<'hi-IN'|'mr-IN'>('hi-IN');
+  const [lang, setLang]           = useState<'mr-IN'|'en-IN'>('mr-IN');
   const synthRef = useRef<SpeechSynthesis | null>(null);
   const autoRef  = useRef<any>(null);
 
@@ -79,14 +79,13 @@ export const VoiceQuestions: React.FC<Props> = ({ onBack }) => {
   const getBestVoice = () => {
     if (!synthRef.current) return null;
     const voices = synthRef.current.getVoices();
-    // Prefer Hindi/Marathi voices
+    // Prefer Marathi or English voices only
     const preferred = voices.find(v =>
       v.lang === lang ||
-      v.lang.startsWith('hi') ||
       v.lang.startsWith('mr') ||
-      v.name.includes('Hindi') ||
+      v.lang.startsWith('en') ||
       v.name.includes('Marathi') ||
-      v.name.includes('Google हिंदी')
+      v.name.includes('Google मराठी')
     );
     return preferred || voices.find(v => v.lang.startsWith('en')) || null;
   };
@@ -139,9 +138,7 @@ export const VoiceQuestions: React.FC<Props> = ({ onBack }) => {
     synthRef.current?.cancel();
     setSpeaking(false);
     if (idx + 1 >= questions.length) {
-      const finalScore = score + (answered === questions[idx]?.correct_answer_index ? 0 : 0); // already counted
       setDone(true);
-      const pct = Math.round(((answered === questions[idx]?.correct_answer_index ? score : score) / questions.length) * 100);
       speak(`Quiz पूर्ण! तुम्ही ${score} पैकी ${questions.length} बरोबर उत्तरे दिली.`);
     } else {
       setAnswered(null);
@@ -181,7 +178,7 @@ export const VoiceQuestions: React.FC<Props> = ({ onBack }) => {
         <div style={{ fontSize:14, color:'rgba(255,255,255,0.5)', fontWeight:600, marginBottom:8 }}>{pct}% accuracy</div>
         <div style={{ fontSize:13, fontWeight:800, color:'#A78BFA', marginBottom:28 }}>+{score*4+questions.length} ⚡ XP earned!</div>
         <div style={{ display:'flex', gap:10, width:'100%', maxWidth:380 }}>
-          <button onClick={()=>{const t=`🔊 MPSC Voice Quiz!\\n\\n${score}/${questions.length} · ${pct}%\\nmpscsarathi.online`;window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank');}}
+          <button onClick={()=>{const t=`🔊 MPSC Voice Quiz!\n\n${score}/${questions.length} · ${pct}%\nmpscsarathi.online`;window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank');}}
             style={{ flex:1, background:'linear-gradient(135deg,#25D366,#128C7E)', border:'none', borderRadius:14, padding:'14px', color:'#fff', fontWeight:900, cursor:'pointer' }}>📤 Share</button>
           <button onClick={replay}
             style={{ flex:1, background:'linear-gradient(135deg,#E8671A,#C4510E)', border:'none', borderRadius:14, padding:'14px', color:'#fff', fontWeight:900, cursor:'pointer' }}>🔁 पुन्हा</button>
@@ -226,7 +223,7 @@ export const VoiceQuestions: React.FC<Props> = ({ onBack }) => {
           </div>
           <div style={{ display:'flex', gap:8 }}>
             <div style={{ fontSize:11, fontWeight:800, color:'rgba(255,255,255,0.5)', textTransform:'uppercase', letterSpacing:'0.1em', width:50, paddingTop:8 }}>Voice</div>
-            {([['hi-IN','हिंदी'],['mr-IN','मराठी']] as const).map(([l,label]) => (
+            {([['mr-IN','मराठी'],['en-IN','English']] as const).map(([l,label]) => (
               <button key={l} onClick={()=>setLang(l)}
                 style={{ flex:1, padding:'8px', borderRadius:10, background:lang===l?'#7C3AED':'rgba(255,255,255,0.08)', border:`1px solid ${lang===l?'#7C3AED':'rgba(255,255,255,0.1)'}`, color:'#fff', fontWeight:800, fontSize:11, cursor:'pointer' }}>
                 {label}
@@ -263,7 +260,7 @@ export const VoiceQuestions: React.FC<Props> = ({ onBack }) => {
       <div style={{ maxWidth:520, margin:'0 auto', padding:'0 16px' }}>
         {/* Question card */}
         {q && (
-          <div style={{ background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:22, padding:'22px 18px', marginBottom:14, animation:'vq-fade 0.3s ease', key:idx }}>
+          <div style={{ background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:22, padding:'22px 18px', marginBottom:14, animation:'vq-fade 0.3s ease' }}>
             <div style={{ fontSize:10, fontWeight:800, color:'rgba(232,103,26,0.8)', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:8 }}>
               Q.{idx+1} · {q.subject}
             </div>
