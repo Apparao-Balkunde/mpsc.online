@@ -12,7 +12,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Executing remote ssh commands
+      - name: Executing remote ssh commands using SSH Key
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST }}      
@@ -20,10 +20,18 @@ jobs:
           key: ${{ secrets.SSH_KEY }}     
           script: |
             cd /home/ubuntu/mpsc.online
-            # १. जुने सर्व लोकल बदल काढून नवीन कोड घेणे
+            
+            # १. सर्व्हरवरील जुने बदल काढून नवीन कोड ओढणे
             git fetch origin main
             git reset --hard origin/main
             
-            # २. डॉकर सर्विसेस रिस्टार्ट करणे (नवीन 'docker compose' कमांडसह)
+            # २. डॉकर कंटेनर पूर्णपणे रिफ्रेश करणे
+            # आपण इथे GitHub Secrets मधून Supabase चे डिटेल्स पास करत आहोत
             docker compose down
-            docker compose up -d --build --remove-orphans
+            
+            docker compose up -d --build --remove-orphans \
+              --build-arg VITE_SUPABASE_URL="${{ secrets.VITE_SUPABASE_URL }}" \
+              --build-arg VITE_SUPABASE_ANON_KEY="${{ secrets.VITE_SUPABASE_ANON_KEY }}"
+
+            # ३. न वापरलेले जुने इमेजेस काढून जागा मोकळी करणे (Oracle Free Tier साठी महत्त्वाचे)
+            docker image prune -f
