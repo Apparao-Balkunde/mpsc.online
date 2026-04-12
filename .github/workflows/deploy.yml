@@ -20,5 +20,9 @@ jobs:
           key: ${{ secrets.SSH_KEY }}     
           script: |
             cd /home/ubuntu/mpsc.online
-            git pull origin main
-            docker-compose up -d --build --remove-orphans
+            # १. लोकल बदल बाजूला ठेवा किंवा ओव्हरराईट करा
+            git fetch origin main
+            git reset --hard origin/main
+            
+            # २. डॉकर बिल्ड करा (नवीन पद्धत: 'docker compose' वापरा)
+            docker compose up -d --build --remove-orphans
