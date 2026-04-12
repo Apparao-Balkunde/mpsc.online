@@ -1,227 +1,318 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Users, Zap, Crown, Copy, Check, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Volume2, VolumeX, Play, Pause, SkipForward, Settings, Mic } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { updateProgress } from '../App';
-import { addXP, checkAndAwardBadges } from './xpSystem';
+import { addXP } from './xpSystem';
 
-interface Props { onBack: () => void; user?: any; }
-interface Q { id:number; question:string; options:string[]; correct_answer_index:number; subject:string; }
-interface Player { name:string; score:number; answers:number; }
+interface Props { onBack: () => void; }
+interface Q { id:number; question:string; options:string[]; correct_answer_index:number; explanation:string; subject:string; }
 
-const CSS = `@keyframes lq-spin{to{transform:rotate(360deg)}} @keyframes lq-fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}} @keyframes lq-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}} @keyframes lq-timer{from{width:100%}to{width:0}}`;
-const ROOM_KEY = 'mpsc_quiz_rooms';
-const TIME = 20;
+const RATES  = [0.7, 0.9, 1.0, 1.2, 1.5];
+const TOTAL  = 10;
+
+const CSS = `
+  @keyframes vq-spin { to{transform:rotate(360deg)} }
+  @keyframes vq-fade { from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)} }
+  @keyframes vq-wave { 0%{height:8px}25%{height:22px}50%{height:12px}75%{height:26px}100%{height:8px} }
+  @keyframes vq-pulse { 0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.7;transform:scale(0.95)} }
+`;
 
 export const VoiceQuestions: React.FC<Props> = ({ onBack }) => {
-  const [phase, setPhase]       = useState<'lobby'|'playing'|'result'>('lobby');
-  const [roomId, setRoomId]     = useState('');
-  const [joinId, setJoinId]     = useState('');
   const [questions, setQuestions] = useState<Q[]>([]);
-  const [qIdx, setQIdx]         = useState(0);
-  const [answered, setAnswered] = useState<number|null>(null);
-  const [timeLeft, setTimeLeft] = useState(TIME);
-  const [score, setScore]       = useState(0);
-  const [players, setPlayers]   = useState<Player[]>([]);
-  const [loading, setLoading]   = useState(false);
-  const [copied, setCopied]     = useState(false);
-  const timerRef = useRef<any>(null);
-  const myName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Player';
+  const [idx, setIdx]             = useState(0);
+  const [speaking, setSpeaking]   = useState(false);
+  const [muted, setMuted]         = useState(false);
+  const [rate, setRate]           = useState(1.0);
+  const [answered, setAnswered]   = useState<number|null>(null);
+  const [loading, setLoading]     = useState(true);
+  const [showSettings, setShowSettings] = useState(false);
+  const [score, setScore]         = useState(0);
+  const [done, setDone]           = useState(false);
+  const [lang, setLang]           = useState<'hi-IN'|'mr-IN'>('hi-IN');
+  const synthRef = useRef<SpeechSynthesis | null>(null);
+  const autoRef  = useRef<any>(null);
 
-  const createRoom = async () => {
-    setLoading(true);
+  // Load questions
+  useEffect(() => {
+    synthRef.current = window.speechSynthesis;
+    loadQuestions();
+    return () => {
+      synthRef.current?.cancel();
+      clearTimeout(autoRef.current);
+    };
+  }, []);
+
+  // Auto-read new question
+  useEffect(() => {
+    if (questions.length > 0 && !loading && !done) {
+      autoRef.current = setTimeout(() => readQuestion(), 600);
+    }
+  }, [idx, questions.length, loading]);
+
+  const loadQuestions = async () => {
     try {
-      const { data } = await supabase.rpc('get_random_mock_questions', { exam_filter:'Rajyaseva', row_limit:10 });
-      const qs = data || [];
-      const id = Math.random().toString(36).slice(2,7).toUpperCase();
-      const roomData = { id, questions:qs, players:[{ name:myName, score:0, answers:0 }], created:Date.now() };
-      const rooms = JSON.parse(localStorage.getItem(ROOM_KEY)||'{}');
-      rooms[id] = roomData;
-      localStorage.setItem(ROOM_KEY, JSON.stringify(rooms));
-      setRoomId(id); setQuestions(qs);
-      setPlayers([{ name:myName, score:0, answers:0 }]);
-      setPhase('playing');
-    } catch { alert('Room बनवता आले नाही!'); }
+      const { data } = await supabase.rpc('get_random_mock_questions', {
+        exam_filter: 'Rajyaseva',
+        row_limit: TOTAL
+      });
+      if (data?.length) setQuestions(data);
+      else {
+        // Fallback questions if Supabase fails
+        setQuestions([
+          { id:1, question:'भारताची राजधानी कोणती आहे?', options:['मुंबई','दिल्ली','चेन्नई','कोलकाता'], correct_answer_index:1, explanation:'नवी दिल्ली ही भारताची राजधानी आहे.', subject:'भूगोल' },
+          { id:2, question:'महाराष्ट्राची स्थापना कधी झाली?', options:['1 मे 1960','15 ऑगस्ट 1947','26 जानेवारी 1950','1 जून 1960'], correct_answer_index:0, explanation:'महाराष्ट्र राज्याची स्थापना 1 मे 1960 रोजी झाली.', subject:'इतिहास' },
+          { id:3, question:'भारतीय राज्यघटनेत किती मूलभूत हक्क आहेत?', options:['5','6','7','8'], correct_answer_index:1, explanation:'भारतीय राज्यघटनेत 6 मूलभूत हक्क आहेत.', subject:'राज्यघटना' },
+          { id:4, question:'गोदावरी नदीचे उगमस्थान कोठे आहे?', options:['महाबळेश्वर','त्र्यंबकेश्वर','नाशिक','पुणे'], correct_answer_index:1, explanation:'गोदावरी नदी नाशिक जिल्ह्यातील त्र्यंबकेश्वर येथून उगम पावते.', subject:'भूगोल' },
+          { id:5, question:'RBI ची स्थापना केव्हा झाली?', options:['1930','1935','1947','1950'], correct_answer_index:1, explanation:'Reserve Bank of India ची स्थापना 1 एप्रिल 1935 रोजी झाली.', subject:'अर्थशास्त्र' },
+        ]);
+      }
+    } catch {
+      setQuestions([
+        { id:1, question:'महाराष्ट्राची राजधानी कोणती?', options:['पुणे','नागपूर','मुंबई','औरंगाबाद'], correct_answer_index:2, explanation:'मुंबई ही महाराष्ट्राची उन्हाळी राजधानी आहे.', subject:'भूगोल' },
+        { id:2, question:'भारतीय राज्यघटना कधी लागू झाली?', options:['1947','1950','1952','1955'], correct_answer_index:1, explanation:'भारतीय राज्यघटना 26 जानेवारी 1950 रोजी लागू झाली.', subject:'राज्यघटना' },
+        { id:3, question:'73 वी घटनादुरुस्ती कशाशी संबंधित आहे?', options:['नगरपालिका','पंचायती राज','शिक्षण','अर्थव्यवस्था'], correct_answer_index:1, explanation:'73 वी घटनादुरुस्ती 1992 - पंचायती राज व्यवस्थेला मान्यता.', subject:'राज्यघटना' },
+      ]);
+    }
     setLoading(false);
   };
 
-  const joinRoom = () => {
-    const rooms = JSON.parse(localStorage.getItem(ROOM_KEY)||'{}');
-    const room = rooms[joinId.toUpperCase()];
-    if (!room) { alert('Room सापडला नाही! ID check करा.'); return; }
-    // Add player
-    if (!room.players.find((p:Player) => p.name === myName)) {
-      room.players.push({ name:myName, score:0, answers:0 });
-      localStorage.setItem(ROOM_KEY, JSON.stringify(rooms));
-    }
-    setRoomId(room.id); setQuestions(room.questions); setPlayers(room.players);
-    setPhase('playing');
+  const getBestVoice = () => {
+    if (!synthRef.current) return null;
+    const voices = synthRef.current.getVoices();
+    // Prefer Hindi/Marathi voices
+    const preferred = voices.find(v =>
+      v.lang === lang ||
+      v.lang.startsWith('hi') ||
+      v.lang.startsWith('mr') ||
+      v.name.includes('Hindi') ||
+      v.name.includes('Marathi') ||
+      v.name.includes('Google हिंदी')
+    );
+    return preferred || voices.find(v => v.lang.startsWith('en')) || null;
   };
 
-  useEffect(() => {
-    if (phase !== 'playing') return;
-    timerRef.current = setInterval(() => {
-      setTimeLeft(t => {
-        if (t <= 1) { nextQ(); return TIME; }
-        return t-1;
-      });
-    }, 1000);
-    return () => clearInterval(timerRef.current);
-  }, [phase, qIdx]);
+  const speak = (text: string, onEnd?: () => void) => {
+    if (muted || !synthRef.current) { onEnd?.(); return; }
+    synthRef.current.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.rate  = rate;
+    utt.pitch = 1;
+    utt.lang  = lang;
+    const voice = getBestVoice();
+    if (voice) utt.voice = voice;
+    utt.onstart = () => setSpeaking(true);
+    utt.onend   = () => { setSpeaking(false); onEnd?.(); };
+    utt.onerror = () => { setSpeaking(false); onEnd?.(); };
+    synthRef.current.speak(utt);
+  };
 
-  const handleAnswer = (i: number) => {
+  const readQuestion = () => {
+    const q = questions[idx];
+    if (!q) return;
+    const optText = q.options.map((o,i) => `${String.fromCharCode(65+i)}. ${o}`).join('. ');
+    const text = `प्रश्न ${idx+1}. ${q.question}. पर्याय: ${optText}`;
+    speak(text);
+  };
+
+  const readAnswer = (ansIdx: number) => {
+    const q = questions[idx];
+    if (!q) return;
+    const correct = ansIdx === q.correct_answer_index;
+    const text = correct
+      ? `बरोबर! उत्तर आहे ${q.options[q.correct_answer_index]}. ${q.explanation || ''}`
+      : `चुकीचे. बरोबर उत्तर: ${q.options[q.correct_answer_index]}. ${q.explanation || ''}`;
+    speak(text);
+  };
+
+  const handleAnswer = (optIdx: number) => {
     if (answered !== null) return;
-    clearInterval(timerRef.current);
-    setAnswered(i);
-    const correct = i === questions[qIdx]?.correct_answer_index;
-    if (correct) {
-      setScore(s => s+1);
-      updateProgress(1, 1);
-    } else { updateProgress(1, 0); }
-    setTimeout(nextQ, 1500);
+    synthRef.current?.cancel();
+    setAnswered(optIdx);
+    const correct = optIdx === questions[idx]?.correct_answer_index;
+    if (correct) setScore(s => s+1);
+    updateProgress(1, correct ? 1 : 0);
+    addXP(correct ? 4 : 1);
+    readAnswer(optIdx);
   };
 
-  const nextQ = () => {
+  const nextQuestion = () => {
+    synthRef.current?.cancel();
+    setSpeaking(false);
+    if (idx + 1 >= questions.length) {
+      const finalScore = score + (answered === questions[idx]?.correct_answer_index ? 0 : 0); // already counted
+      setDone(true);
+      const pct = Math.round(((answered === questions[idx]?.correct_answer_index ? score : score) / questions.length) * 100);
+      speak(`Quiz पूर्ण! तुम्ही ${score} पैकी ${questions.length} बरोबर उत्तरे दिली.`);
+    } else {
+      setAnswered(null);
+      setIdx(p => p+1);
+    }
+  };
+
+  const replay = () => {
+    synthRef.current?.cancel();
+    setSpeaking(false);
     setAnswered(null);
-    if (qIdx + 1 >= questions.length) {
-      // Update room scores
-      const rooms = JSON.parse(localStorage.getItem(ROOM_KEY)||'{}');
-      const room = rooms[roomId];
-      if (room) {
-        const player = room.players.find((p:Player)=>p.name===myName);
-        if (player) { player.score = score; player.answers = questions.length; }
-        localStorage.setItem(ROOM_KEY, JSON.stringify(rooms));
-        setPlayers([...room.players].sort((a:Player,b:Player)=>b.score-a.score));
-      }
-      setPhase('result');
-    } else { setQIdx(q=>q+1); setTimeLeft(TIME); }
+    setIdx(0);
+    setScore(0);
+    setDone(false);
+    setTimeout(() => readQuestion(), 400);
   };
 
-  const copy = () => { navigator.clipboard.writeText(`MPSC Quiz Room: ${roomId} — mpscsarathi.online`).catch(()=>{}); setCopied(true); setTimeout(()=>setCopied(false),2000); };
+  const q = questions[idx];
 
-  const q = questions[qIdx];
-  const timerPct = (timeLeft/TIME)*100;
-
-  if (phase === 'result') return (
-    <div style={{ minHeight:'100vh', background:'linear-gradient(135deg,#0F1117,#1A0A2E)', fontFamily:"'Baloo 2','Noto Sans Devanagari',sans-serif", color:'#fff', padding:'20px 16px' }}>
+  // ── LOADING ──
+  if (loading) return (
+    <div style={{ minHeight:'100vh', background:'#080C18', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', fontFamily:"'Baloo 2',sans-serif" }}>
       <style>{CSS}</style>
-      <button onClick={onBack} style={{ background:'rgba(255,255,255,0.08)', border:'none', borderRadius:9, padding:'8px 10px', cursor:'pointer', color:'#fff', display:'flex', marginBottom:20 }}><ArrowLeft size={14}/></button>
-      <div style={{ textAlign:'center', marginBottom:24 }}>
-        <div style={{ fontSize:56, marginBottom:10 }}>{score === questions.length?'🏆':score>=questions.length*0.7?'⭐':'💪'}</div>
-        <div style={{ fontWeight:900, fontSize:28, letterSpacing:'-0.04em' }}>{score}/{questions.length}</div>
-        <div style={{ fontSize:13, color:'rgba(255,255,255,0.6)', fontWeight:600 }}>तुमचा score</div>
-      </div>
-      <div style={{ background:'rgba(255,255,255,0.06)', borderRadius:20, padding:'16px', marginBottom:16 }}>
-        <div style={{ fontSize:12, fontWeight:800, color:'rgba(255,255,255,0.5)', textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:12 }}>Leaderboard</div>
-        {players.map((p, i) => (
-          <div key={p.name} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 0', borderBottom:i<players.length-1?'1px solid rgba(255,255,255,0.06)':'none' }}>
-            <div style={{ width:28, height:28, borderRadius:9, background:i===0?'linear-gradient(135deg,#F5C842,#D97706)':'rgba(255,255,255,0.1)', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:900, fontSize:13 }}>{i+1}</div>
-            <div style={{ flex:1, fontWeight:800, fontSize:13, color:p.name===myName?'#F5C842':'#fff' }}>{p.name} {p.name===myName?'(तुम्ही)':''}</div>
-            <div style={{ fontWeight:900, fontSize:16, color:i===0?'#F5C842':'rgba(255,255,255,0.8)' }}>{p.score}/{questions.length}</div>
-          </div>
-        ))}
-      </div>
-      <div style={{background:'rgba(245,200,66,0.12)',border:'1px solid rgba(245,200,66,0.25)',borderRadius:14,padding:'10px',marginBottom:10,textAlign:'center',fontSize:14,fontWeight:900,color:'#F5C842'}}>
-        +{score*4+questions.length} ⚡ XP earned!
-      </div>
-      <div style={{display:'flex',gap:8,marginBottom:0}}>
-        <button onClick={()=>{const p=Math.round((score/questions.length)*100);const t=`🎮 MPSC Live Quiz!\n\n${score}/${questions.length} · ${p}%\nmpscsarathi.online`;window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank');}} style={{flex:1,background:'linear-gradient(135deg,#25D366,#128C7E)',border:'none',borderRadius:14,padding:'13px',color:'#fff',fontWeight:900,cursor:'pointer'}}>📤 Share</button>
-        <button onClick={onBack} style={{flex:2,background:'linear-gradient(135deg,#E8671A,#C4510E)',border:'none',borderRadius:14,padding:'13px',color:'#fff',fontWeight:900,fontSize:14,cursor:'pointer'}}>डॅशबोर्ड</button>
-      </div>
+      <div style={{ width:50, height:50, border:'3px solid rgba(232,103,26,0.2)', borderTopColor:'#E8671A', borderRadius:'50%', animation:'vq-spin 0.8s linear infinite', marginBottom:16 }}/>
+      <div style={{ fontSize:13, fontWeight:700, color:'rgba(255,255,255,0.5)' }}>Questions लोड होत आहेत...</div>
     </div>
   );
 
-  if (phase === 'playing' && q) return (
-    <div style={{ minHeight:'100vh', background:'linear-gradient(135deg,#0F1117,#1A0A2E)', fontFamily:"'Baloo 2','Noto Sans Devanagari',sans-serif", color:'#fff', paddingBottom:40 }}>
+  // ── DONE ──
+  if (done) {
+    const pct = Math.round((score / questions.length) * 100);
+    return (
+      <div style={{ minHeight:'100vh', background:'linear-gradient(135deg,#080C18,#1A0A2E)', fontFamily:"'Baloo 2','Noto Sans Devanagari',sans-serif", color:'#fff', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:24 }}>
+        <style>{CSS}</style>
+        <div style={{ fontSize:64, marginBottom:12 }}>{pct>=80?'🏆':pct>=60?'⭐':'📚'}</div>
+        <div style={{ fontWeight:900, fontSize:32, letterSpacing:'-0.04em', marginBottom:4 }}>{score}/{questions.length}</div>
+        <div style={{ fontSize:14, color:'rgba(255,255,255,0.5)', fontWeight:600, marginBottom:8 }}>{pct}% accuracy</div>
+        <div style={{ fontSize:13, fontWeight:800, color:'#A78BFA', marginBottom:28 }}>+{score*4+questions.length} ⚡ XP earned!</div>
+        <div style={{ display:'flex', gap:10, width:'100%', maxWidth:380 }}>
+          <button onClick={()=>{const t=`🔊 MPSC Voice Quiz!\\n\\n${score}/${questions.length} · ${pct}%\\nmpscsarathi.online`;window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank');}}
+            style={{ flex:1, background:'linear-gradient(135deg,#25D366,#128C7E)', border:'none', borderRadius:14, padding:'14px', color:'#fff', fontWeight:900, cursor:'pointer' }}>📤 Share</button>
+          <button onClick={replay}
+            style={{ flex:1, background:'linear-gradient(135deg,#E8671A,#C4510E)', border:'none', borderRadius:14, padding:'14px', color:'#fff', fontWeight:900, cursor:'pointer' }}>🔁 पुन्हा</button>
+          <button onClick={onBack}
+            style={{ flex:1, background:'rgba(255,255,255,0.08)', border:'1px solid rgba(255,255,255,0.15)', borderRadius:14, padding:'14px', color:'#fff', fontWeight:800, cursor:'pointer' }}>Home</button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── QUIZ ──
+  return (
+    <div style={{ minHeight:'100vh', background:'linear-gradient(135deg,#080C18,#0F1117)', fontFamily:"'Baloo 2','Noto Sans Devanagari',sans-serif", paddingBottom:60, color:'#fff' }}>
       <style>{CSS}</style>
-      <div style={{ padding:'14px 20px', display:'flex', alignItems:'center', gap:10 }}>
-        <button onClick={onBack} style={{ background:'rgba(255,255,255,0.08)', border:'none', borderRadius:9, padding:'8px 10px', cursor:'pointer', color:'#fff', display:'flex' }}><ArrowLeft size={14}/></button>
-        <div style={{ flex:1, background:'rgba(255,255,255,0.1)', borderRadius:99, height:5, overflow:'hidden' }}>
-          <div style={{ height:'100%', background:'linear-gradient(90deg,#E8671A,#F5C842)', borderRadius:99, width:`${((qIdx)/questions.length)*100}%`, transition:'width 0.4s' }}/>
-        </div>
-        <span style={{ fontSize:11, fontWeight:800, color:'rgba(255,255,255,0.7)' }}>{qIdx+1}/{questions.length}</span>
-        <div style={{ display:'flex', alignItems:'center', gap:5, background:timeLeft<=5?'rgba(220,38,38,0.3)':'rgba(255,255,255,0.08)', borderRadius:99, padding:'5px 12px', transition:'background 0.3s' }}>
-          <span style={{ fontSize:14, fontWeight:900, color:timeLeft<=5?'#EF4444':'#F5C842' }}>{timeLeft}s</span>
-        </div>
-      </div>
-      <div style={{ height:4, background:'rgba(255,255,255,0.1)', margin:'0 20px 16px' }}>
-        <div style={{ height:'100%', background:timeLeft<=5?'#EF4444':'#F5C842', width:`${timerPct}%`, transition:'width 1s linear, background 0.3s' }}/>
-      </div>
 
-      <div style={{ maxWidth:560, margin:'0 auto', padding:'0 16px' }}>
-        {/* Room ID */}
-        <button onClick={copy} style={{ display:'flex', alignItems:'center', gap:6, background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:10, padding:'6px 12px', cursor:'pointer', color:'rgba(255,255,255,0.6)', fontSize:11, fontWeight:700, marginBottom:16 }}>
-          {copied?<><Check size={11}/>Copied!</>:<><Copy size={11}/>Room: {roomId}</>}
+      {/* Header */}
+      <div style={{ padding:'14px 20px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+        <button onClick={()=>{ synthRef.current?.cancel(); onBack(); }}
+          style={{ background:'rgba(255,255,255,0.08)', border:'none', borderRadius:9, padding:'8px 10px', cursor:'pointer', color:'#fff', display:'flex' }}>
+          <ArrowLeft size={14}/>
         </button>
-
-        <div style={{ background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:20, padding:'20px', marginBottom:14, animation:'lq-fade 0.25s ease' }}>
-          <div style={{ fontSize:10, fontWeight:800, color:'rgba(245,200,66,0.8)', textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:8 }}>Q.{qIdx+1} · {q.subject}</div>
-          <p style={{ fontWeight:700, fontSize:'clamp(0.95rem,4vw,1.1rem)', lineHeight:1.7, color:'#fff', margin:0 }}>{q.question}</p>
+        <div style={{ fontWeight:900, fontSize:15, color:'#fff', display:'flex', alignItems:'center', gap:7 }}>
+          <Volume2 size={16} style={{color:'#E8671A'}}/> Voice Quiz
         </div>
+        <button onClick={()=>setShowSettings(s=>!s)}
+          style={{ background:'rgba(255,255,255,0.08)', border:'none', borderRadius:9, padding:'8px 10px', cursor:'pointer', color:'#fff', display:'flex' }}>
+          <Settings size={14}/>
+        </button>
+      </div>
 
-        <div style={{ display:'flex', flexDirection:'column', gap:9 }}>
-          {q.options?.map((opt,i) => {
-            const isSel = answered===i, isAns = i===q.correct_answer_index;
-            let bg='rgba(255,255,255,0.06)', border='rgba(255,255,255,0.12)', color='#fff';
-            if (answered!==null && isAns)            { bg='rgba(5,150,105,0.2)'; border='rgba(5,150,105,0.5)'; }
-            if (answered!==null && isSel && !isAns)  { bg='rgba(220,38,38,0.2)'; border='rgba(220,38,38,0.5)'; }
-            if (answered!==null && !isSel && !isAns) { color='rgba(255,255,255,0.3)'; }
+      {/* Settings panel */}
+      {showSettings && (
+        <div style={{ background:'rgba(255,255,255,0.06)', borderRadius:16, margin:'0 16px 14px', padding:'16px', animation:'vq-fade 0.2s ease' }}>
+          <div style={{ display:'flex', gap:8, marginBottom:12 }}>
+            <div style={{ fontSize:11, fontWeight:800, color:'rgba(255,255,255,0.5)', textTransform:'uppercase', letterSpacing:'0.1em', width:50, paddingTop:8 }}>Speed</div>
+            {RATES.map(r => (
+              <button key={r} onClick={()=>setRate(r)}
+                style={{ flex:1, padding:'8px', borderRadius:10, background:rate===r?'#E8671A':'rgba(255,255,255,0.08)', border:`1px solid ${rate===r?'#E8671A':'rgba(255,255,255,0.1)'}`, color:'#fff', fontWeight:800, fontSize:11, cursor:'pointer' }}>
+                {r}x
+              </button>
+            ))}
+          </div>
+          <div style={{ display:'flex', gap:8 }}>
+            <div style={{ fontSize:11, fontWeight:800, color:'rgba(255,255,255,0.5)', textTransform:'uppercase', letterSpacing:'0.1em', width:50, paddingTop:8 }}>Voice</div>
+            {([['hi-IN','हिंदी'],['mr-IN','मराठी']] as const).map(([l,label]) => (
+              <button key={l} onClick={()=>setLang(l)}
+                style={{ flex:1, padding:'8px', borderRadius:10, background:lang===l?'#7C3AED':'rgba(255,255,255,0.08)', border:`1px solid ${lang===l?'#7C3AED':'rgba(255,255,255,0.1)'}`, color:'#fff', fontWeight:800, fontSize:11, cursor:'pointer' }}>
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Progress bar */}
+      <div style={{ margin:'0 20px 4px' }}>
+        <div style={{ background:'rgba(255,255,255,0.1)', borderRadius:99, height:5, overflow:'hidden' }}>
+          <div style={{ height:'100%', background:'linear-gradient(90deg,#E8671A,#F5C842)', borderRadius:99, width:`${((idx+1)/questions.length)*100}%`, transition:'width 0.4s' }}/>
+        </div>
+      </div>
+      <div style={{ display:'flex', justifyContent:'space-between', padding:'4px 20px 14px', fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.5)' }}>
+        <span>{idx+1}/{questions.length}</span>
+        <span>Score: {score} ✓</span>
+      </div>
+
+      {/* Sound wave animation */}
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:4, height:48, marginBottom:16 }}>
+        {speaking ? (
+          [...Array(7)].map((_,i) => (
+            <div key={i} style={{ width:5, borderRadius:3, background:`rgba(232,103,26,${0.4+i*0.08})`, animation:`vq-wave 0.8s ease ${i*0.1}s infinite` }}/>
+          ))
+        ) : (
+          <div style={{ fontSize:11, fontWeight:600, color:'rgba(255,255,255,0.3)', display:'flex', alignItems:'center', gap:6 }}>
+            <Mic size={14} style={{color:'rgba(255,255,255,0.3)'}}/> ▶ दाबा ऐकण्यासाठी
+          </div>
+        )}
+      </div>
+
+      <div style={{ maxWidth:520, margin:'0 auto', padding:'0 16px' }}>
+        {/* Question card */}
+        {q && (
+          <div style={{ background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:22, padding:'22px 18px', marginBottom:14, animation:'vq-fade 0.3s ease', key:idx }}>
+            <div style={{ fontSize:10, fontWeight:800, color:'rgba(232,103,26,0.8)', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:8 }}>
+              Q.{idx+1} · {q.subject}
+            </div>
+            <p style={{ fontWeight:700, fontSize:'clamp(0.95rem,4vw,1.1rem)', lineHeight:1.75, color:'#fff', margin:0 }}>
+              {q.question}
+            </p>
+          </div>
+        )}
+
+        {/* Options */}
+        <div style={{ display:'flex', flexDirection:'column', gap:9, marginBottom:20 }}>
+          {q?.options?.map((opt, i) => {
+            const isSel = answered === i;
+            const isAns = i === q.correct_answer_index;
+            let bg = 'rgba(255,255,255,0.06)', border = 'rgba(255,255,255,0.12)', color = '#fff';
+            if (answered !== null && isAns)           { bg='rgba(5,150,105,0.2)';  border='rgba(5,150,105,0.5)'; }
+            if (answered !== null && isSel && !isAns) { bg='rgba(220,38,38,0.2)';  border='rgba(220,38,38,0.5)'; }
+            if (answered !== null && !isSel && !isAns){ color='rgba(255,255,255,0.3)'; }
             return (
-              <button key={i} disabled={answered!==null} onClick={()=>handleAnswer(i)}
-                style={{ display:'flex', alignItems:'center', gap:10, padding:'13px 15px', borderRadius:14, border:`1.5px solid ${border}`, background:bg, color, fontWeight:700, fontSize:13, textAlign:'left', cursor:answered!==null?'default':'pointer', transition:'all 0.15s' }}>
-                <span style={{ width:26, height:26, borderRadius:8, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:900, background:'rgba(255,255,255,0.1)' }}>
-                  {answered!==null&&isAns?'✓':answered!==null&&isSel&&!isAns?'✗':String.fromCharCode(65+i)}
+              <button key={i} disabled={answered !== null} onClick={() => handleAnswer(i)}
+                style={{ display:'flex', alignItems:'center', gap:10, padding:'13px 15px', borderRadius:14, border:`1.5px solid ${border}`, background:bg, color, fontWeight:700, fontSize:13, textAlign:'left', cursor:answered!==null?'default':'pointer', transition:'all 0.2s' }}>
+                <span style={{ width:28, height:28, borderRadius:9, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:900, background:'rgba(255,255,255,0.1)' }}>
+                  {answered!==null && isAns ? '✓' : answered!==null && isSel && !isAns ? '✗' : String.fromCharCode(65+i)}
                 </span>
                 <span style={{ flex:1 }}>{opt}</span>
-                {answered!==null&&isAns&&<CheckCircle2 size={15} style={{color:'#10B981'}}/>}
               </button>
             );
           })}
         </div>
 
-        <div style={{ display:'flex', justifyContent:'center', gap:16, marginTop:16 }}>
-          <div style={{ textAlign:'center' }}>
-            <div style={{ fontWeight:900, fontSize:20, color:'#10B981' }}>{score}</div>
-            <div style={{ fontSize:9, fontWeight:700, color:'rgba(255,255,255,0.4)', textTransform:'uppercase' }}>Score</div>
-          </div>
-          <div style={{ textAlign:'center' }}>
-            <div style={{ fontWeight:900, fontSize:20, color:'rgba(255,255,255,0.7)' }}>{players.length}</div>
-            <div style={{ fontSize:9, fontWeight:700, color:'rgba(255,255,255,0.4)', textTransform:'uppercase' }}>Players</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  // Lobby
-  return (
-    <div style={{ minHeight:'100vh', background:'linear-gradient(135deg,#0F1117,#1A0A2E)', fontFamily:"'Baloo 2','Noto Sans Devanagari',sans-serif", color:'#fff', paddingBottom:40 }}>
-      <style>{CSS}</style>
-      <div style={{ padding:'16px 20px', display:'flex', alignItems:'center', gap:10 }}>
-        <button onClick={onBack} style={{ background:'rgba(255,255,255,0.08)', border:'none', borderRadius:9, padding:'8px 10px', cursor:'pointer', color:'#fff', display:'flex' }}><ArrowLeft size={14}/></button>
-        <span style={{ fontWeight:900, fontSize:16 }}>🎮 Live Quiz Room</span>
-      </div>
-      <div style={{ maxWidth:440, margin:'0 auto', padding:'20px' }}>
-        <div style={{ textAlign:'center', marginBottom:28 }}>
-          <div style={{ fontSize:56, marginBottom:10, animation:'lq-pulse 2s ease infinite' }}>🎮</div>
-          <h2 style={{ fontWeight:900, fontSize:22, letterSpacing:'-0.04em', margin:'0 0 8px' }}>Multiplayer Quiz</h2>
-          <p style={{ fontSize:13, color:'rgba(255,255,255,0.6)', fontWeight:600 }}>मित्रांसोबत एकत्र quiz खेळा! 10 questions · 20 sec each</p>
-        </div>
-
-        <div style={{ background:'rgba(255,255,255,0.06)', borderRadius:20, padding:'20px', marginBottom:14 }}>
-          <div style={{ fontWeight:800, fontSize:13, marginBottom:12, color:'rgba(255,255,255,0.8)' }}>नवीन Room तयार करा</div>
-          <button onClick={createRoom} disabled={loading}
-            style={{ width:'100%', background:'linear-gradient(135deg,#E8671A,#C4510E)', border:'none', borderRadius:14, padding:'14px', color:'#fff', fontWeight:900, fontSize:14, cursor:loading?'not-allowed':'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8, opacity:loading?0.8:1 }}>
-            {loading?<div style={{width:18,height:18,border:'2px solid rgba(255,255,255,0.4)',borderTopColor:'#fff',borderRadius:'50%',animation:'lq-spin 0.8s linear infinite'}}/>:<><Zap size={16} fill="currentColor"/> Room तयार करा</>}
+        {/* Controls */}
+        <div style={{ display:'flex', gap:10 }}>
+          <button onClick={() => setMuted(m => !m)}
+            style={{ flex:1, background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:14, padding:'14px', color:'#fff', fontWeight:800, fontSize:13, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:7 }}>
+            {muted ? <><VolumeX size={16}/> Muted</> : <><Volume2 size={16}/> Sound</>}
+          </button>
+          <button onClick={readQuestion}
+            style={{ flex:1, background:'rgba(232,103,26,0.15)', border:'1px solid rgba(232,103,26,0.3)', borderRadius:14, padding:'14px', color:'#E8671A', fontWeight:800, fontSize:13, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:7, animation:speaking?'vq-pulse 1s ease infinite':'' }}>
+            {speaking ? <><Pause size={16}/> थांबा</> : <><Play size={16}/> ऐका</>}
+          </button>
+          <button onClick={nextQuestion}
+            style={{ flex:1, background:'linear-gradient(135deg,#E8671A,#C4510E)', border:'none', borderRadius:14, padding:'14px', color:'#fff', fontWeight:900, fontSize:13, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:7 }}>
+            <SkipForward size={16}/> पुढे
           </button>
         </div>
 
-        <div style={{ background:'rgba(255,255,255,0.06)', borderRadius:20, padding:'20px' }}>
-          <div style={{ fontWeight:800, fontSize:13, marginBottom:12, color:'rgba(255,255,255,0.8)' }}>Room Join करा</div>
-          <div style={{ display:'flex', gap:8 }}>
-            <input value={joinId} onChange={e=>setJoinId(e.target.value.toUpperCase())} placeholder="Room ID (5 letters)"
-              style={{ flex:1, background:'rgba(255,255,255,0.1)', border:'1px solid rgba(255,255,255,0.15)', borderRadius:12, padding:'12px', color:'#fff', fontSize:14, fontWeight:800, fontFamily:'monospace', letterSpacing:'0.2em', outline:'none' }}/>
-            <button onClick={joinRoom} style={{ background:'linear-gradient(135deg,#059669,#047857)', border:'none', borderRadius:12, padding:'12px 20px', color:'#fff', fontWeight:900, fontSize:13, cursor:'pointer' }}>Join</button>
-          </div>
+        {/* Tip */}
+        <div style={{ marginTop:14, fontSize:11, fontWeight:600, color:'rgba(255,255,255,0.3)', textAlign:'center' }}>
+          💡 ▶ दाबा = question ऐका · उत्तर निवडा · पुढे जा
         </div>
       </div>
     </div>
