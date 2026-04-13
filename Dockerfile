@@ -1,5 +1,5 @@
 # Step 1: Build Stage
-FROM node:18-slim AS builder
+FROM node:20-slim AS builder
 WORKDIR /app
 
 # १. सिस्टम लायब्ररीज इन्स्टॉल करा
