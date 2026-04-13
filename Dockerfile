@@ -27,7 +27,7 @@ RUN rm -rf node_modules/.cache
 RUN npm run build
 
 # Step 2: Runtime Stage
-FROM node:18-slim
+FROM node:20-slim
 WORKDIR /app
 
 # ७. आवश्यक फाईल्स घ्या
