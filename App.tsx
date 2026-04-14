@@ -49,6 +49,9 @@ import { NewspaperSummary } from './components/NewspaperSummary';
 import { MapsGeography } from './components/MapsGeography';
 import { MockTestSeries } from './components/MockTestSeries';
 import { AIDailyBriefing } from './components/AIDailyBriefing';
+import { TimerChallenge }    from './components/TimerChallenge';
+import { SubjectWiseTest }   from './components/SubjectWiseTest';
+import { ConstitutionQuiz }  from './components/ConstitutionQuiz';
 import { MPSCNotifications } from './components/MPSCNotifications';
 import { NewsToQuestion } from './components/Newstoquestion';
 import { SyllabusRadar } from './components/Syllabusradar';
@@ -275,7 +278,10 @@ export default function App() {
   if (mode === 'QUESTION_BANK')  return <QuestionBank onBack={back} />;
   if (mode === 'ESSAY')          return <EssayMode onBack={back} />;
   if (mode === 'DISTRICT_QUIZ')  return <DistrictQuiz onBack={back} />;
-  if (mode === 'SPEED_DRILL')   return <SpeedDrill onBack={back} />;
+  if (mode === 'SPEED_DRILL')     return <SpeedDrill onBack={back} />;
+  if (mode === 'TIMER_CHALLENGE') return <TimerChallenge onBack={back} />;
+  if (mode === 'SUBJECT_TEST')    return <SubjectWiseTest onBack={back} />;
+  if (mode === 'CONST_QUIZ')      return <ConstitutionQuiz onBack={back} />;
   if (mode === 'NOTIFICATIONS') return <MPSCNotifications onBack={back} isAdmin={!!user} />;
   if (mode === 'MISTAKE_BOOK')  return <MistakeBook onBack={back} />;
   if (mode === 'NEWS_TO_Q')     return <NewsToQuestion onBack={back} />;
@@ -519,6 +525,7 @@ export default function App() {
               { e:'⚡', t:'Speed Drill', s:'6sec · Fast', c:'#F59E0B', action:()=>go('SPEED_DRILL') },
               { e:'🎮', t:'Live Quiz', s:'Multiplayer', c:'#8B5CF6', action:()=>go('LIVE_QUIZ') },
               { e:'🏆', t:'Friend Duel', s:'Compete', c:'#DC2626', action:()=>go('CHALLENGE') },
+              { e:'⏱️', t:'Timer Challenge', s:'Max Qs in time', c:'#EF4444', action:()=>go('TIMER_CHALLENGE') },
               { e:'📊', t:'Exam Countdown', s:'दिवस बाकी', c:'#2563EB', action:()=>setShowCountdown(true) },
               { e:'🏆', t:'Mock Series', s:'Complete Papers', c:'#F59E0B', action:()=>setShowMockSeries(true) },
               { e:'🧩', t:'Vocab Quiz', s:'Daily 10 words', c:'#8B5CF6', action:()=>setShowVocabBuilder(true) },
@@ -610,6 +617,8 @@ export default function App() {
               { e:'📖', t:'Study Notes', s:'AI grammar notes', c:'#7C3AED', action:()=>go('STUDY_MODE') },
               { e:'🔊', t:'Voice Quiz', s:'TTS audio', c:'#E8671A', action:()=>go('VOICE') },
               { e:'🧠', t:'Mnemonics', s:'Memory tricks', c:'#8B5CF6', action:()=>go('MNEMONIC') },
+              { e:'📚', t:'Subject Test', s:'विषय निवडा · 20Q', c:'#2563EB', action:()=>go('SUBJECT_TEST') },
+              { e:'⚖️', t:'राज्यघटना Quiz', s:'Chapters · MCQ', c:'#7C3AED', action:()=>go('CONST_QUIZ') },
               { e:'🎯', t:'Syllabus Radar', s:'Coverage track', c:'#E8671A', action:()=>setShowSyllabusRadar(true) },
               { e:'📆', t:'Exam Calendar', s:'Dates + reminders', c:'#2563EB', action:()=>setShowExamCalendar(true) },
             ].map(({e,t,s,c,action}) => (
