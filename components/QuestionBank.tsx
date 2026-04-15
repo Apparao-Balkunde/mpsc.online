@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Filter, Search, BookOpen, ChevronDown, ChevronUp, Loader, RefreshCw } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { updateProgress } from '../App';
+import { addXP } from './xpSystem';
 
 interface Question { id:number; question:string; options:string[]; correct_answer_index:number; explanation:string; subject:string; exam_name:string; difficulty?:string; }
 interface Props { onBack: () => void; }
@@ -53,7 +54,9 @@ export const QuestionBank: React.FC<Props> = ({ onBack }) => {
   const handleAnswer = (qId: number, optIdx: number, correctIdx: number) => {
     if (answered[qId] !== undefined) return;
     setAnswered(p => ({...p, [qId]: optIdx}));
-    updateProgress(1, optIdx === correctIdx ? 1 : 0);
+    const qCorrect = optIdx === correctIdx;
+    updateProgress(1, qCorrect ? 1 : 0);
+    addXP(qCorrect ? 5 : 1);
   };
 
   const tableInfo = TABLES.find(t=>t.key===table)!;
