@@ -1,3 +1,4 @@
+import { addXP } from './xpSystem';
 import React, { useState, useEffect, useRef } from 'react';
 import { Trophy, X, Clock, ChevronRight, BarChart2, CheckCircle, XCircle, Loader } from 'lucide-react';
 
@@ -222,7 +223,10 @@ export function MockTestSeries({ onClose }: { onClose: () => void }) {
             <div style={{ textAlign:'center' }}>
               <div style={{ fontSize:60, marginBottom:12 }}>{score >= 4 ? '🏆' : score >= 2 ? '😊' : '💪'}</div>
               <h2 style={{ fontWeight:900, fontSize:26, color:'#1C2B2B', margin:'0 0 4px' }}>{score}/{SAMPLE_QUESTIONS.length}</h2>
-              <p style={{ color:'#7A9090', fontSize:14, fontWeight:700, margin:'0 0 20px' }}>{Math.round((score/SAMPLE_QUESTIONS.length)*100)}% Accuracy</p>
+              <p style={{ color:'#7A9090', fontSize:14, fontWeight:700, margin:'0 0 12px' }}>{Math.round((score/SAMPLE_QUESTIONS.length)*100)}% Accuracy</p>
+              <div style={{ background:'rgba(245,158,11,0.1)', border:'1px solid rgba(245,158,11,0.3)', borderRadius:12, padding:'10px', marginBottom:16, fontSize:14, fontWeight:900, color:'#D97706' }}>
+                +{score*5+SAMPLE_QUESTIONS.length} ⚡ XP earned!
+              </div>
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10, marginBottom:20 }}>
                 {[['✅ बरोबर',score,'#10B981'],['❌ चुकीचे',SAMPLE_QUESTIONS.length-score,'#EF4444'],['⏭️ Skip',0,'#7A9090']].map(([l,v,c]) => (
                   <div key={l as string} style={{ background:`${c as string}10`, borderRadius:12, padding:12 }}>
@@ -232,6 +236,7 @@ export function MockTestSeries({ onClose }: { onClose: () => void }) {
                 ))}
               </div>
               <div style={{ display:'flex', gap:10 }}>
+                <button onClick={()=>{const p=Math.round((score/SAMPLE_QUESTIONS.length)*100);const t=`🏆 MPSC Mock Test!\n\n${score}/${SAMPLE_QUESTIONS.length} · ${p}%\n${currentTest?.title}\nmpscsarathi.online`;window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank');}} style={{ flex:1, background:'linear-gradient(135deg,#25D366,#128C7E)', border:'none', borderRadius:12, padding:'12px', color:'#fff', fontWeight:900, fontSize:13, cursor:'pointer' }}>📤 Share</button>
                 <button onClick={() => { setTestState('list'); setCurrentTest(null); }} style={{ flex:1, background:'#F5F0E8', border:'none', borderRadius:12, padding:'12px', color:'#7A9090', fontWeight:800, fontSize:13, cursor:'pointer' }}>← List</button>
                 <button onClick={beginTest} style={{ flex:2, background:'linear-gradient(135deg,#F59E0B,#D97706)', border:'none', borderRadius:12, padding:'12px', color:'#fff', fontWeight:900, fontSize:14, cursor:'pointer' }}>🔄 पुन्हा द्या</button>
               </div>
