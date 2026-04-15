@@ -141,6 +141,7 @@ export const MistakeBook: React.FC<Props> = ({ onBack }) => {
           </div>
           {pct >= 80 && <div style={{ fontSize: 12, color: '#FBBF24', fontWeight: 700, marginBottom: 16 }}>🔥 बरोबर उत्तरांना Mastered म्हणून mark केले!</div>}
           <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={()=>{const p=Math.round((sessionScore.correct/sessionScore.total)*100);const t=`📖 MPSC Mistake Book!\n\n${sessionScore.correct}/${sessionScore.total} revised · ${p}% accuracy\nmpscsarathi.online`;window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank');}} style={{ flex:1, background:'linear-gradient(135deg,#25D366,#128C7E)', border:'none', borderRadius:12, padding:'13px', color:'#fff', fontWeight:900, cursor:'pointer' }}>📤 Share</button>
             <button onClick={startReview} style={{ flex: 1, background: 'linear-gradient(135deg,#E8671A,#C4510E)', border: 'none', borderRadius: 12, padding: '13px', color: '#fff', fontWeight: 900, cursor: 'pointer', fontFamily: 'inherit' }}>पुन्हा</button>
             <button onClick={() => setView('list')} style={{ flex: 1, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 12, padding: '13px', color: '#fff', fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>यादी</button>
           </div>
