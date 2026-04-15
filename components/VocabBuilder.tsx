@@ -1,3 +1,5 @@
+import { updateProgress } from '../App';
+import { addXP } from './xpSystem';
 import React, { useState, useEffect } from 'react';
 import { BookOpen, X, RefreshCw, Check, ChevronRight, Star } from 'lucide-react';
 
@@ -69,7 +71,10 @@ export function VocabBuilder({ onClose }: { onClose: () => void }) {
   const handleAnswer = (opt: string) => {
     if (selectedOpt) return;
     setSelectedOpt(opt);
-    if (opt === DAILY_WORDS[quizIdx].marathi) setScore(s => s+1);
+    const correct = opt === DAILY_WORDS[quizIdx].marathi;
+    if (correct) setScore(s => s+1);
+    updateProgress(1, correct ? 1 : 0);
+    addXP(correct ? 4 : 1);
     setTimeout(() => {
       if (quizIdx+1 >= DAILY_WORDS.length) { setQuizState('result'); return; }
       setQuizIdx(i => i+1);
@@ -210,10 +215,14 @@ export function VocabBuilder({ onClose }: { onClose: () => void }) {
                 <div style={{ fontWeight:900, fontSize:28, color:'#8B5CF6' }}>{score*10}%</div>
                 <div style={{ fontSize:12, color:'#7A9090', fontWeight:700 }}>accuracy</div>
               </div>
-              <button onClick={() => { setQuizState('learning'); setCurrentIdx(0); setLearned(new Set()); }}
-                style={{ width:'100%', background:'linear-gradient(135deg,#8B5CF6,#6D28D9)', border:'none', borderRadius:14, padding:'14px', color:'#fff', fontWeight:900, fontSize:14, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
-                <RefreshCw size={15}/> पुन्हा सराव करा
-              </button>
+              <div style={{ display:'flex', gap:8, marginBottom:0 }}>
+                <button onClick={()=>{const p=score*10;const t=`📖 MPSC Vocab Builder!\n\n${score}/10 शब्द बरोबर · ${p}%\nशब्दसंग्रह वाढवा!\nmpscsarathi.online`;window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank');}}
+                  style={{ flex:1, background:'linear-gradient(135deg,#25D366,#128C7E)', border:'none', borderRadius:14, padding:'13px', color:'#fff', fontWeight:900, cursor:'pointer' }}>📤 Share</button>
+                <button onClick={() => { setQuizState('learning'); setCurrentIdx(0); setLearned(new Set()); }}
+                  style={{ flex:2, background:'linear-gradient(135deg,#8B5CF6,#6D28D9)', border:'none', borderRadius:14, padding:'13px', color:'#fff', fontWeight:900, fontSize:14, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
+                  <RefreshCw size={15}/> पुन्हा सराव करा
+                </button>
+              </div>
             </div>
           )}
         </div>
