@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, Bookmark, BookmarkX, CheckCircle2, XCircle, Check, X, BookOpen, Trash2, RefreshCcw } from 'lucide-react';
 import { getBookmarks, removeBookmark, type Bookmark as BM } from '../services/bookmarks';
 import { updateProgress } from '../App';
+import { addXP } from './xpSystem';
 
 const CSS = `
   @keyframes bm-fade { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
@@ -29,6 +30,7 @@ export const BookmarkMode: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     if (correct) setScore(p => p + 1);
     setAttempted(p => p + 1);
     updateProgress(1, correct ? 1 : 0);
+    addXP(correct ? 4 : 1);
   };
 
   const handleRemove = (id: number) => {
