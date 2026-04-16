@@ -48,7 +48,13 @@ import { VocabBuilder } from './components/VocabBuilder';
 import { NewspaperSummary } from './components/NewspaperSummary';
 import { MapsGeography } from './components/MapsGeography';
 import { MockTestSeries } from './components/MockTestSeries';
-import { AIDailyBriefing } from './components/AIDailyBriefing';
+import { AIDailyBriefing }     from './components/AIDailyBriefing';
+import { DailyWordPractice }  from './components/DailyWordPractice';
+import { GKQuickFire }        from './components/GKQuickFire';
+import { MarathiGrammar }     from './components/MarathiGrammar';
+import { CurrentAffairsMCQ }  from './components/CurrentAffairsMCQ';
+import { SchemesMCQ }         from './components/SchemesMCQ';
+import { RankBooster }        from './components/RankBooster';
 import { TimerChallenge }    from './components/TimerChallenge';
 import { SubjectWiseTest }   from './components/SubjectWiseTest';
 import { ConstitutionQuiz }  from './components/ConstitutionQuiz';
@@ -279,7 +285,13 @@ export default function App() {
   if (mode === 'ESSAY')          return <EssayMode onBack={back} />;
   if (mode === 'DISTRICT_QUIZ')  return <DistrictQuiz onBack={back} />;
   if (mode === 'SPEED_DRILL')     return <SpeedDrill onBack={back} />;
-  if (mode === 'TIMER_CHALLENGE') return <TimerChallenge onBack={back} />;
+  if (mode === 'TIMER_CHALLENGE')  return <TimerChallenge onBack={back} />;
+  if (mode === 'WORD_PRACTICE')    return <DailyWordPractice onBack={back} />;
+  if (mode === 'GK_FIRE')           return <GKQuickFire onBack={back} />;
+  if (mode === 'MARATHI_GRAMMAR')  return <MarathiGrammar onBack={back} />;
+  if (mode === 'CA_MCQ')            return <CurrentAffairsMCQ onBack={back} />;
+  if (mode === 'SCHEMES_MCQ')     return <SchemesMCQ onBack={back} />;
+  if (mode === 'RANK_BOOSTER')    return <RankBooster onBack={back} />;
   if (mode === 'SUBJECT_TEST')    return <SubjectWiseTest onBack={back} />;
   if (mode === 'CONST_QUIZ')      return <ConstitutionQuiz onBack={back} />;
   if (mode === 'NOTIFICATIONS') return <MPSCNotifications onBack={back} isAdmin={!!user} />;
@@ -526,6 +538,8 @@ export default function App() {
               { e:'🎮', t:'Live Quiz', s:'Multiplayer', c:'#8B5CF6', action:()=>go('LIVE_QUIZ') },
               { e:'🏆', t:'Friend Duel', s:'Compete', c:'#DC2626', action:()=>go('CHALLENGE') },
               { e:'⏱️', t:'Timer Challenge', s:'Max Qs in time', c:'#EF4444', action:()=>go('TIMER_CHALLENGE') },
+              { e:'🚀', t:'Rank Booster', s:'Rank estimate करा', c:'#E8671A', action:()=>go('RANK_BOOSTER') },
+              { e:'🔥', t:'GK Quick Fire', s:'15Q · 8sec · Combo', c:'#F97316', action:()=>go('GK_FIRE') },
               { e:'📊', t:'Exam Countdown', s:'दिवस बाकी', c:'#2563EB', action:()=>setShowCountdown(true) },
               { e:'🏆', t:'Mock Series', s:'Complete Papers', c:'#F59E0B', action:()=>setShowMockSeries(true) },
               { e:'🧩', t:'Vocab Quiz', s:'Daily 10 words', c:'#8B5CF6', action:()=>setShowVocabBuilder(true) },
@@ -617,8 +631,11 @@ export default function App() {
               { e:'📖', t:'Study Notes', s:'AI grammar notes', c:'#7C3AED', action:()=>go('STUDY_MODE') },
               { e:'🔊', t:'Voice Quiz', s:'TTS audio', c:'#E8671A', action:()=>go('VOICE') },
               { e:'🧠', t:'Mnemonics', s:'Memory tricks', c:'#8B5CF6', action:()=>go('MNEMONIC') },
+              { e:'📖', t:'Word Practice', s:'5 daily MPSC words', c:'#7C3AED', action:()=>go('WORD_PRACTICE') },
               { e:'📚', t:'Subject Test', s:'विषय निवडा · 20Q', c:'#2563EB', action:()=>go('SUBJECT_TEST') },
               { e:'⚖️', t:'राज्यघटना Quiz', s:'Chapters · MCQ', c:'#7C3AED', action:()=>go('CONST_QUIZ') },
+              { e:'⭐', t:'सरकारी योजना', s:'MCQ · Prelims level', c:'#FF9933', action:()=>go('SCHEMES_MCQ') },
+              { e:'📝', t:'मराठी व्याकरण', s:'संधी · समास · अलंकार', c:'#E8671A', action:()=>go('MARATHI_GRAMMAR') },
               { e:'🎯', t:'Syllabus Radar', s:'Coverage track', c:'#E8671A', action:()=>setShowSyllabusRadar(true) },
               { e:'📆', t:'Exam Calendar', s:'Dates + reminders', c:'#2563EB', action:()=>setShowExamCalendar(true) },
             ].map(({e,t,s,c,action}) => (
@@ -700,6 +717,7 @@ export default function App() {
             {[
               { e:'📰', t:'CA Feed', s:'Category filter', c:'#EC4899', action:()=>go('CURRENT_FEED') },
               { e:'🗞️', t:'News Summary', s:'AI Marathi', c:'#EC4899', action:()=>setShowNewspaper(true) },
+              { e:'🤖', t:'AI CA MCQ', s:'Topic-wise AI questions', c:'#8B5CF6', action:()=>go('CA_MCQ') },
               { e:'🧠', t:'News→MCQ', s:'News से Questions', c:'#8B5CF6', action:()=>setShowNewsToQ(true) },
               { e:'💬', t:'Doubt Community', s:'Q&A forum', c:'#E8671A', action:()=>setShowDoubtCommunity(true) },
               { e:'📖', t:'Vocab Builder', s:'Daily 10 words', c:'#8B5CF6', action:()=>setShowVocabBuilder(true) },
