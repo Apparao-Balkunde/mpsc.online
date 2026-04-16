@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { addXP } from './xpSystem';
-import { updateProgress } from '../App';
 import { ArrowLeft, Newspaper, Zap, CheckCircle, XCircle, RefreshCw, Loader, Share2, BookMarked } from 'lucide-react';
 
 interface Props { onBack: () => void; }
@@ -307,15 +305,14 @@ JSON format मध्ये फक्त array द्या:
               +{score*5+questions.length} ⚡ XP earned!
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={()=>{const p=Math.round((score/questions.length)*100);const t=`📰 MPSC News→Quiz!\n\n${score}/${questions.length} · ${p}%\nBातमीवर आधारित MCQ!\nmpscsarathi.online`;window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank');}}
-                style={{ flex:1, background:'linear-gradient(135deg,#25D366,#128C7E)', border:'none', borderRadius:14, padding:'12px', color:'#fff', fontWeight:900, cursor:'pointer' }}>📤</button>
+              <button onClick={()=>{const p=Math.round((score/questions.length)*100);const t=`📰 MPSC News→Quiz!\n\n${score}/${questions.length} · ${p}%\nmpscsarathi.online`;window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank');}} style={{flex:1,background:'linear-gradient(135deg,#25D366,#128C7E)',border:'none',borderRadius:14,padding:'12px',color:'#fff',fontWeight:900,cursor:'pointer'}}>📤</button>
               <button onClick={() => { setPhase('home'); setCustomNews(''); setSelectedTopic(null); }}
-                style={{ flex: 1, background: '#F5F0E8', border: 'none', borderRadius: 14, padding: '12px', color: '#7A9090', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>
-                ← नवीन
+                style={{ flex: 1, background: '#F5F0E8', border: 'none', borderRadius: 14, padding: '13px', color: '#7A9090', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>
+                ← नवीन बातमी
               </button>
               <button onClick={() => { setCurrentIdx(0); setScore(0); setAnswers([]); setSelectedOpt(null); setPhase('quiz'); }}
-                style={{ flex: 1, background: 'linear-gradient(135deg,#EC4899,#BE185D)', border: 'none', borderRadius: 14, padding: '12px', color: '#fff', fontWeight: 900, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                <RefreshCw size={14} /> पुन्हा
+                style={{ flex: 1, background: 'linear-gradient(135deg,#EC4899,#BE185D)', border: 'none', borderRadius: 14, padding: '13px', color: '#fff', fontWeight: 900, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                <RefreshCw size={14} /> पुन्हा करा
               </button>
             </div>
           </div>
