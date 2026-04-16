@@ -106,6 +106,10 @@ export const QuizMode: React.FC<QuizModeProps> = ({ onBack }) => {
             {score}<span style={{ fontSize: '0.4em', WebkitTextFillColor: '#7A9090', fontWeight: 700 }}>/{questions.length}</span>
           </div>
           <div style={{ fontSize: 14, color: '#4A6060', fontWeight: 700, marginTop: 8, marginBottom: 28 }}>{pct}% अचूकता</div>
+          <button onClick={()=>{const t=`📚 MPSC Quiz!\n\n${score}/${questions.length} · ${pct}% accuracy\nmpscsarathi.online`;window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank');}}
+            style={{ width:'100%', background:'linear-gradient(135deg,#25D366,#128C7E)', border:'none', borderRadius:16, padding:'13px', color:'#fff', fontWeight:900, fontSize:13, cursor:'pointer', marginBottom:8, display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
+            📤 Share Score
+          </button>
           <div style={{ display: 'flex', gap: 10 }}>
             <button onClick={resetQuiz} style={{ flex: 1, background: 'linear-gradient(135deg,#1C2B2B,#0D6B6E)', color: '#fff', border: 'none', borderRadius: 16, padding: '14px', fontWeight: 900, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 6px 20px rgba(13,107,110,0.3)' }}>
               <RotateCcw size={18} /> पुन्हा प्रयत्न
