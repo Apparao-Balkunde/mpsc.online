@@ -102,15 +102,13 @@ export const SmartRevision: React.FC<Props> = ({ onBack }) => {
         <div style={{ fontSize:64, marginBottom:12 }}>{score/questions.length >= 0.8 ? '🧠' : '💪'}</div>
         <div style={{ fontWeight:900, fontSize:22, color:'#1C2B2B', marginBottom:6 }}>{score}/{questions.length}</div>
         <div style={{ fontSize:13, color:'#7A9090', fontWeight:600, marginBottom:24 }}>Smart Revision पूर्ण!</div>
-        <div style={{ display:'flex', gap:10 }}>
+        <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+          <button onClick={()=>{const p=Math.round((score/questions.length)*100);const t=`🎯 MPSC Smart Revision!\n\n${score}/${questions.length} · ${p}% accuracy\nChuklelele questions revise केले!\nmpscsarathi.online`;window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank');}}
+            style={{ flex:1, background:'linear-gradient(135deg,#25D366,#128C7E)', border:'none', borderRadius:14, padding:'13px', color:'#fff', fontWeight:900, cursor:'pointer' }}>📤 Share</button>
           <button onClick={() => { setPhase('quiz'); setIdx(0); setAnswers({}); }}
-            style={{ flex:1, background:'linear-gradient(135deg,#E8671A,#C4510E)', border:'none', borderRadius:14, padding:'14px', color:'#fff', fontWeight:900, fontSize:13, cursor:'pointer' }}>
-            पुन्हा करा
-          </button>
+            style={{ flex:1, background:'linear-gradient(135deg,#E8671A,#C4510E)', border:'none', borderRadius:14, padding:'13px', color:'#fff', fontWeight:900, fontSize:13, cursor:'pointer' }}>🔁 पुन्हा</button>
           <button onClick={onBack}
-            style={{ flex:1, background:'#F8F5F0', border:'1px solid rgba(0,0,0,0.1)', borderRadius:14, padding:'14px', color:'#1C2B2B', fontWeight:900, fontSize:13, cursor:'pointer' }}>
-            डॅशबोर्ड
-          </button>
+            style={{ flex:1, background:'#F8F5F0', border:'1px solid rgba(0,0,0,0.1)', borderRadius:14, padding:'13px', color:'#1C2B2B', fontWeight:900, fontSize:13, cursor:'pointer' }}>Home</button>
         </div>
       </div>
     </div>
