@@ -120,6 +120,12 @@ export const ExamCalendar: React.FC<Props> = ({ onBack }) => {
             {upcomingExams[0] ? `पुढील परीक्षा: ${daysUntil(upcomingExams[0].date)} दिवसांत` : 'परीक्षा dates track करा'}
           </div>
         </div>
+        <button onClick={()=>{
+          const upcoming=events.filter(e=>new Date(e.date)>=new Date()).slice(0,3);
+          const lines=upcoming.map(e=>`• ${e.title}: ${new Date(e.date).toLocaleDateString('mr-IN')}`).join('\n');
+          const t=`📅 MPSC Exam Calendar!\n\nआगामी परीक्षा:\n${lines||'कोणतीही परीक्षा नाही'}\n\nmpscsarathi.online`;
+          window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank');
+        }} style={{background:'rgba(255,255,255,0.2)',border:'none',borderRadius:10,width:36,height:36,color:'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16}}>📤</button>
         <button onClick={() => setTab('add')}
           style={{ background: '#E8671A', border: 'none', borderRadius: 12, padding: '8px 14px', color: '#fff', fontWeight: 900, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}>
           <Plus size={14} /> Add
