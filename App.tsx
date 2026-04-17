@@ -364,6 +364,7 @@ export default function App() {
       {showCutoff         && <CutoffTracker onClose={()=>setShowCutoff(false)} />}
       {showSubjectProgress && <SubjectProgress onClose={()=>setShowSubjectProgress(false)} />}
       {showStudyBuddy     && <AIStudyBuddy onClose={()=>setShowStudyBuddy(false)} user={user} />}
+      {showNotifications  && <div style={{position:'fixed',inset:0,zIndex:200,overflowY:'auto'}}><MPSCNotifications onBack={()=>setShowNotifications(false)} isAdmin={!!user} /></div>}
       <AIDoubtSolver />
       <PushNotifications />
       {showAuth        && <AuthModal onClose={()=>setShowAuth(false)} />}
@@ -393,6 +394,9 @@ export default function App() {
             </div>
           </div>
           <button onClick={()=>setShowSearch(true)} style={{ background:'rgba(0,0,0,0.05)', border:'1px solid rgba(0,0,0,0.08)', borderRadius:11, padding:'8px 10px', cursor:'pointer', color:'#7A9090', display:'flex' }}>🔍</button>
+          <button onClick={()=>go('NOTIFICATIONS')} style={{ position:'relative', background:'rgba(220,38,38,0.08)', border:'1px solid rgba(220,38,38,0.2)', borderRadius:11, padding:'8px 10px', cursor:'pointer', color:'#DC2626', display:'flex' }}>
+            🔔<div style={{position:'absolute',top:4,right:4,width:7,height:7,borderRadius:'50%',background:'#DC2626',border:'1.5px solid #F5F0E8'}}/>
+          </button>
           <button onClick={()=>go('NOTIFICATIONS')} style={{ position:'relative', background:'rgba(220,38,38,0.08)', border:'1px solid rgba(220,38,38,0.2)', borderRadius:11, padding:'8px 10px', cursor:'pointer', color:'#DC2626', display:'flex' }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
             <div style={{position:'absolute',top:4,right:4,width:7,height:7,borderRadius:'50%',background:'#DC2626',border:'1.5px solid #fff',animation:'pulse 2s infinite'}}/>
