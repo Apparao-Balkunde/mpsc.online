@@ -54,6 +54,8 @@ import { GKQuickFire }        from './components/GKQuickFire';
 import { MarathiGrammar }     from './components/MarathiGrammar';
 import { CurrentAffairsMCQ }  from './components/CurrentAffairsMCQ';
 import { SchemesMCQ }         from './components/SchemesMCQ';
+import { AptitudeQuiz }      from './components/AptitudeQuiz';
+import { MaharashtraGK }     from './components/MaharashtraGK';
 import { RankBooster }        from './components/RankBooster';
 import { TimerChallenge }    from './components/TimerChallenge';
 import { SubjectWiseTest }   from './components/SubjectWiseTest';
@@ -291,6 +293,8 @@ export default function App() {
   if (mode === 'MARATHI_GRAMMAR')  return <MarathiGrammar onBack={back} />;
   if (mode === 'CA_MCQ')            return <CurrentAffairsMCQ onBack={back} />;
   if (mode === 'SCHEMES_MCQ')     return <SchemesMCQ onBack={back} />;
+  if (mode === 'APTITUDE')        return <AptitudeQuiz onBack={back} />;
+  if (mode === 'MAHARASHTRA_GK')  return <MaharashtraGK onBack={back} />;
   if (mode === 'RANK_BOOSTER')    return <RankBooster onBack={back} />;
   if (mode === 'SUBJECT_TEST')    return <SubjectWiseTest onBack={back} />;
   if (mode === 'CONST_QUIZ')      return <ConstitutionQuiz onBack={back} />;
@@ -394,7 +398,7 @@ export default function App() {
             </div>
           </div>
           <button onClick={()=>setShowSearch(true)} style={{ background:'rgba(0,0,0,0.05)', border:'1px solid rgba(0,0,0,0.08)', borderRadius:11, padding:'8px 10px', cursor:'pointer', color:'#7A9090', display:'flex' }}>🔍</button>
-          <button onClick={()=>go('NOTIFICATIONS')} style={{ position:'relative', background:'rgba(220,38,38,0.08)', border:'1px solid rgba(220,38,38,0.2)', borderRadius:11, padding:'8px 10px', cursor:'pointer', color:'#DC2626', display:'flex' }}>
+          <button onClick={()=>setShowNotifications(true)} style={{ position:'relative', background:'rgba(220,38,38,0.08)', border:'1px solid rgba(220,38,38,0.2)', borderRadius:11, padding:'8px 10px', cursor:'pointer', color:'#DC2626', display:'flex' }}>
             🔔<div style={{position:'absolute',top:4,right:4,width:7,height:7,borderRadius:'50%',background:'#DC2626',border:'1.5px solid #F5F0E8'}}/>
           </button>
           <button onClick={()=>go('NOTIFICATIONS')} style={{ position:'relative', background:'rgba(220,38,38,0.08)', border:'1px solid rgba(220,38,38,0.2)', borderRadius:11, padding:'8px 10px', cursor:'pointer', color:'#DC2626', display:'flex' }}>
@@ -544,6 +548,7 @@ export default function App() {
               { e:'⏱️', t:'Timer Challenge', s:'Max Qs in time', c:'#EF4444', action:()=>go('TIMER_CHALLENGE') },
               { e:'🚀', t:'Rank Booster', s:'Rank estimate करा', c:'#E8671A', action:()=>go('RANK_BOOSTER') },
               { e:'🔥', t:'GK Quick Fire', s:'15Q · 8sec · Combo', c:'#F97316', action:()=>go('GK_FIRE') },
+              { e:'🧩', t:'Aptitude Quiz', s:'Number · Reasoning', c:'#8B5CF6', action:()=>go('APTITUDE') },
               { e:'📊', t:'Exam Countdown', s:'दिवस बाकी', c:'#2563EB', action:()=>setShowCountdown(true) },
               { e:'🏆', t:'Mock Series', s:'Complete Papers', c:'#F59E0B', action:()=>setShowMockSeries(true) },
               { e:'🧩', t:'Vocab Quiz', s:'Daily 10 words', c:'#8B5CF6', action:()=>setShowVocabBuilder(true) },
@@ -639,9 +644,9 @@ export default function App() {
               { e:'📚', t:'Subject Test', s:'विषय निवडा · 20Q', c:'#2563EB', action:()=>go('SUBJECT_TEST') },
               { e:'⚖️', t:'राज्यघटना Quiz', s:'Chapters · MCQ', c:'#7C3AED', action:()=>go('CONST_QUIZ') },
               { e:'⭐', t:'सरकारी योजना', s:'MCQ · Prelims level', c:'#FF9933', action:()=>go('SCHEMES_MCQ') },
+              { e:'🏛️', t:'Maharashtra GK', s:'Special MCQ · 36 districts', c:'#D97706', action:()=>go('MAHARASHTRA_GK') },
               { e:'📝', t:'मराठी व्याकरण', s:'संधी · समास · अलंकार', c:'#E8671A', action:()=>go('MARATHI_GRAMMAR') },
-              { e:'🎯', t:'Syllabus Radar', s:'Coverage track', c:'#E8671A', action:()=>setShowSyllabusRadar(true) },
-              { e:'📆', t:'Exam Calendar', s:'Dates + reminders', c:'#2563EB', action:()=>setShowExamCalendar(true) },
+
             ].map(({e,t,s,c,action}) => (
               <div key={t} className="card-hover" onClick={action}
                 style={{ background:'#fff', border:`1.5px solid ${c}20`, borderRadius:16, padding:'13px 10px', cursor:'pointer', boxShadow:`0 2px 8px ${c}0F` }}>
