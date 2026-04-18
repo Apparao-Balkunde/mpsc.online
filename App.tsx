@@ -49,6 +49,8 @@ import { NewspaperSummary } from './components/NewspaperSummary';
 import { MapsGeography } from './components/MapsGeography';
 import { MockTestSeries } from './components/MockTestSeries';
 import { AIDailyBriefing }     from './components/AIDailyBriefing';
+import { PrivacyPolicy }      from './components/PrivacyPolicy';
+import { AboutUs }            from './components/AboutUs';
 import { DailyWordPractice }  from './components/DailyWordPractice';
 import { GKQuickFire }        from './components/GKQuickFire';
 import { MarathiGrammar }     from './components/MarathiGrammar';
@@ -208,6 +210,8 @@ export default function App() {
   const [showSyllabusRadar, setShowSyllabusRadar]   = useState(false);
   const [showExamCalendar, setShowExamCalendar]     = useState(false);
   const [showStudyBuddy, setShowStudyBuddy]         = useState(false);
+  const [showPrivacy, setShowPrivacy]               = useState(false);
+  const [showAbout, setShowAbout]                   = useState(false);
   const [showNotifications, setShowNotifications]   = useState(false);
   const { user, loading: authLoading }        = useAuth();
 
@@ -368,6 +372,8 @@ export default function App() {
       {showCutoff         && <CutoffTracker onClose={()=>setShowCutoff(false)} />}
       {showSubjectProgress && <SubjectProgress onClose={()=>setShowSubjectProgress(false)} />}
       {showStudyBuddy     && <AIStudyBuddy onClose={()=>setShowStudyBuddy(false)} user={user} />}
+      {showPrivacy        && <PrivacyPolicy onClose={()=>setShowPrivacy(false)} />}
+      {showAbout          && <AboutUs onClose={()=>setShowAbout(false)} />}
       {showNotifications  && <div style={{position:'fixed',inset:0,zIndex:200,overflowY:'auto'}}><MPSCNotifications onBack={()=>setShowNotifications(false)} isAdmin={!!user} /></div>}
       <AIDoubtSolver />
       <PushNotifications />
@@ -840,6 +846,12 @@ export default function App() {
 
         {/* ── FOOTER ── */}
         <div style={{ textAlign:'center', paddingBottom:8 }}>
+          {/* Footer links */}
+          <div style={{ display:'flex', justifyContent:'center', gap:16, marginBottom:12, flexWrap:'wrap' }}>
+            <button onClick={()=>setShowAbout(true)} style={{ background:'none', border:'none', cursor:'pointer', fontSize:11, fontWeight:700, color:'#7A9090', textDecoration:'underline' }}>About Us</button>
+            <button onClick={()=>setShowPrivacy(true)} style={{ background:'none', border:'none', cursor:'pointer', fontSize:11, fontWeight:700, color:'#7A9090', textDecoration:'underline' }}>Privacy Policy</button>
+            <a href="mailto:support@mpscsarathi.online" style={{ fontSize:11, fontWeight:700, color:'#7A9090', textDecoration:'underline' }}>Contact</a>
+          </div>
           <div style={{ display:'flex', justifyContent:'center', gap:2, marginBottom:6 }}>
             {[...Array(5)].map((_,i) => <Star key={i} size={10} fill="#F97316" style={{ color:'#F97316' }} />)}
           </div>
