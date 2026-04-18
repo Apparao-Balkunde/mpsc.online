@@ -50,6 +50,7 @@ import { MapsGeography } from './components/MapsGeography';
 import { MockTestSeries } from './components/MockTestSeries';
 import { AIDailyBriefing }     from './components/AIDailyBriefing';
 import { PrivacyPolicy }      from './components/PrivacyPolicy';
+import { CheatSheet }         from './components/CheatSheet';
 import { AboutUs }            from './components/AboutUs';
 import { DailyWordPractice }  from './components/DailyWordPractice';
 import { GKQuickFire }        from './components/GKQuickFire';
@@ -293,6 +294,7 @@ export default function App() {
   if (mode === 'SPEED_DRILL')     return <SpeedDrill onBack={back} />;
   if (mode === 'TIMER_CHALLENGE')  return <TimerChallenge onBack={back} />;
   if (mode === 'WORD_PRACTICE')    return <DailyWordPractice onBack={back} />;
+  if (mode === 'CHEAT_SHEET')     return <CheatSheet onBack={back} />;
   if (mode === 'GK_FIRE')           return <GKQuickFire onBack={back} />;
   if (mode === 'MARATHI_GRAMMAR')  return <MarathiGrammar onBack={back} />;
   if (mode === 'CA_MCQ')            return <CurrentAffairsMCQ onBack={back} />;
@@ -647,6 +649,7 @@ export default function App() {
               { e:'🔊', t:'Voice Quiz', s:'TTS audio', c:'#E8671A', action:()=>go('VOICE') },
               { e:'🧠', t:'Mnemonics', s:'Memory tricks', c:'#8B5CF6', action:()=>go('MNEMONIC') },
               { e:'📖', t:'Word Practice', s:'5 daily MPSC words', c:'#7C3AED', action:()=>go('WORD_PRACTICE') },
+              { e:'📋', t:'Cheat Sheet', s:'Quick revision cards', c:'#E8671A', action:()=>go('CHEAT_SHEET') },
               { e:'📚', t:'Subject Test', s:'विषय निवडा · 20Q', c:'#2563EB', action:()=>go('SUBJECT_TEST') },
               { e:'⚖️', t:'राज्यघटना Quiz', s:'Chapters · MCQ', c:'#7C3AED', action:()=>go('CONST_QUIZ') },
               { e:'⭐', t:'सरकारी योजना', s:'MCQ · Prelims level', c:'#FF9933', action:()=>go('SCHEMES_MCQ') },
