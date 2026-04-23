@@ -88,6 +88,7 @@ import { VoiceQuestions } from './components/VoiceQuestions';
 import { WeeklyTournament } from './components/WeeklyTournament';
 import { StudyMode } from './components/StudyMode';
 import { PushNotifications, NotificationToggle } from './components/PushNotifications';
+import { OMRExamSimulator } from './components/OMRExamSimulator';
 import { useAuth, signOut } from './hooks/useAuth';
 import { pullProgressFromCloud, pushProgressToCloud, startAutoSync } from './lib/Cloudsync';
 import { Heart } from 'lucide-react';
@@ -216,7 +217,7 @@ export default function App() {
   const [showNotifications, setShowNotifications]   = useState(false);
   const { user, loading: authLoading }        = useAuth();
 
-  const isExam = mode === Mode.MOCK_TEST;
+  const isExam = mode === Mode.MOCK_TEST || mode === Mode.OMR_EXAM;
 
   useEffect(() => {
     localStorage.setItem('mpsc_mode', mode);
@@ -328,6 +329,7 @@ export default function App() {
         {mode === Mode.SARALSEVA       && <QuestionView type={Mode.SARALSEVA}       tableName="saralseva_questions" onBack={back} onProgressUpdate={()=>setProgress(loadProgress())} />}
         {mode === Mode.MOCK            && <QuestionView type={Mode.MOCK}            tableName="mock_questions"      onBack={back} onProgressUpdate={()=>setProgress(loadProgress())} />}
         {mode === Mode.MOCK_TEST       && <MockTestMode onBack={back} />}
+        {mode === Mode.OMR_EXAM        && <OMRExamSimulator onBack={back} />}
         {mode === Mode.CURRENT_AFFAIRS && <QuestionView type={Mode.CURRENT_AFFAIRS} tableName="current_affairs"    onBack={back} onProgressUpdate={()=>setProgress(loadProgress())} />}
         {mode === Mode.VOCAB           && <VocabMode onBack={back} />}
         {mode === Mode.LITERATURE      && <LiteratureMode onBack={back} />}
@@ -683,20 +685,31 @@ export default function App() {
           ))}
         </div>
 
-        {/* ── LIVE TEST FEATURE ── */}
-        <div onClick={()=>go(Mode.MOCK_TEST)} className="card-hover"
-          style={{ background:'linear-gradient(135deg,#7F1D1D,#450A0A)', border:'1px solid rgba(239,68,68,0.4)', borderRadius:22, padding:'20px 20px', cursor:'pointer', boxShadow:'0 6px 28px rgba(239,68,68,0.2)', marginBottom:16 }}>
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-            <div>
-              <div style={{ display:'inline-flex', alignItems:'center', gap:5, background:'rgba(239,68,68,0.2)', border:'1px solid rgba(239,68,68,0.4)', borderRadius:999, padding:'3px 10px', marginBottom:10 }}>
-                <div style={{ width:5, height:5, borderRadius:'50%', background:'#EF4444', animation:'pulse 2s infinite' }} />
-                <span style={{ fontSize:9, fontWeight:800, color:'#FCA5A5', textTransform:'uppercase' }}>LIVE TEST</span>
-              </div>
-              <div style={{ fontSize:'clamp(1.1rem,4vw,1.4rem)', fontWeight:900, color:'#fff' }}>Full Mock Test 📝</div>
-              <div style={{ fontSize:11, color:'#FCA5A5', fontWeight:700, marginTop:3 }}>100 प्रश्न · 2 तास · Timer</div>
+        {/* ── EXAM CARDS (Mock Test + OMR Simulator) ── */}
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:16 }}>
+
+          {/* Full Mock Test */}
+          <div onClick={()=>go(Mode.MOCK_TEST)} className="card-hover"
+            style={{ background:'linear-gradient(135deg,#7F1D1D,#450A0A)', border:'1px solid rgba(239,68,68,0.4)', borderRadius:22, padding:'18px 14px', cursor:'pointer', boxShadow:'0 6px 28px rgba(239,68,68,0.2)' }}>
+            <div style={{ display:'inline-flex', alignItems:'center', gap:5, background:'rgba(239,68,68,0.2)', border:'1px solid rgba(239,68,68,0.4)', borderRadius:999, padding:'3px 10px', marginBottom:10 }}>
+              <div style={{ width:5, height:5, borderRadius:'50%', background:'#EF4444', animation:'pulse 2s infinite' }} />
+              <span style={{ fontSize:9, fontWeight:800, color:'#FCA5A5', textTransform:'uppercase' }}>LIVE TEST</span>
             </div>
-            <ChevronRight size={20} style={{ color:'#FCA5A5' }} />
+            <div style={{ fontSize:'clamp(0.95rem,3.5vw,1.2rem)', fontWeight:900, color:'#fff', lineHeight:1.2, marginBottom:4 }}>Full Mock Test 📝</div>
+            <div style={{ fontSize:10, color:'#FCA5A5', fontWeight:700 }}>100 प्रश्न · 2 तास · Timer</div>
           </div>
+
+          {/* OMR Exam Simulator */}
+          <div onClick={()=>go(Mode.OMR_EXAM)} className="card-hover"
+            style={{ background:'linear-gradient(135deg,#0C2340,#0D4A6E)', border:'1px solid rgba(59,130,246,0.35)', borderRadius:22, padding:'18px 14px', cursor:'pointer', boxShadow:'0 6px 28px rgba(13,74,110,0.3)', position:'relative', overflow:'hidden' }}>
+            <div style={{ position:'absolute', top:0, left:0, right:0, height:2, background:'linear-gradient(90deg,#3B82F6,#F5C842,#3B82F6)', backgroundSize:'200%', animation:'mt-shimmer 2.5s infinite' }} />
+            <div style={{ display:'inline-flex', alignItems:'center', gap:5, background:'rgba(245,200,66,0.15)', border:'1px solid rgba(245,200,66,0.4)', borderRadius:999, padding:'3px 10px', marginBottom:10 }}>
+              <span style={{ fontSize:9, fontWeight:900, color:'#F5C842', textTransform:'uppercase', letterSpacing:'0.05em' }}>✦ NEW</span>
+            </div>
+            <div style={{ fontSize:'clamp(0.95rem,3.5vw,1.2rem)', fontWeight:900, color:'#fff', lineHeight:1.2, marginBottom:4 }}>OMR Simulator 📋</div>
+            <div style={{ fontSize:10, color:'rgba(255,255,255,0.6)', fontWeight:700 }}>Bubble Sheet · Negative Marking</div>
+          </div>
+
         </div>
 
         {/* ── SUBJECT SECTIONS ── */}
