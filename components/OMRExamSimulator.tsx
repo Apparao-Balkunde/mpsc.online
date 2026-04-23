@@ -8,7 +8,7 @@ import { supabase } from '../lib/supabase';
 import { LoadingState, QuizQuestion } from '../types';
 import {
   ArrowLeft, Clock, Send, AlertCircle, CheckCircle2,
-  XCircle, MinusCircle, BookOpen, Zap, Trophy,
+  XCircle, MinusCircle, BookOpen, Zap,
   ChevronLeft, ChevronRight, RotateCcw, Eye, Pencil,
   Flag, Info
 } from 'lucide-react';
@@ -145,7 +145,8 @@ export function OMRExamSimulator({ onBack }: OMRExamSimulatorProps) {
   const [timeLeft, setTimeLeft]     = useState(7200);
   const [showOMR, setShowOMR]       = useState(false); // mobile toggle
   const [showInstructions, setShowInstructions] = useState(false);
-  const timerRef = useRef<any>(null);
+  const timerRef      = useRef<any>(null);
+  const submitExamRef = useRef<() => void>(() => {});
 
   // ── Setup helpers ──────────────────────────────────────────────────────────
   const selectExam = (id: string) => {
@@ -177,7 +178,7 @@ export function OMRExamSimulator({ onBack }: OMRExamSimulatorProps) {
       setPhase('exam');
       timerRef.current = setInterval(() => {
         setTimeLeft(p => {
-          if (p <= 1) { submitExam(); return 0; }
+          if (p <= 1) { submitExamRef.current(); return 0; }
           return p - 1;
         });
       }, 1000);
@@ -191,18 +192,23 @@ export function OMRExamSimulator({ onBack }: OMRExamSimulatorProps) {
   const selectAnswer = useCallback((qIdx: number, optIdx: number) => {
     setAnswers(prev => {
       const n = [...prev];
-      n[qIdx] = n[qIdx] === optIdx ? -1 : optIdx; // toggle
+      const prevAns = n[qIdx];
+      const toggled = prevAns === optIdx ? -1 : optIdx;
+      n[qIdx] = toggled;
+
+      // Update markFlags immediately using the fresh prevAns — no stale closure
+      setMarkFlags(mPrev => {
+        const m = [...mPrev];
+        const isReview = m[qIdx] === 'review' || m[qIdx] === 'answered-review';
+        m[qIdx] = toggled === -1
+          ? (isReview ? 'review' : 'unattempted')
+          : (isReview ? 'answered-review' : 'answered');
+        return m;
+      });
+
       return n;
     });
-    setMarkFlags(prev => {
-      const n = [...prev];
-      const isReview = n[qIdx] === 'review' || n[qIdx] === 'answered-review';
-      n[qIdx] = answers[qIdx] === optIdx
-        ? (isReview ? 'review' : 'unattempted')
-        : (isReview ? 'answered-review' : 'answered');
-      return n;
-    });
-  }, [answers]);
+  }, []);
 
   const toggleReview = useCallback((qIdx: number) => {
     setMarkFlags(prev => {
@@ -222,6 +228,9 @@ export function OMRExamSimulator({ onBack }: OMRExamSimulatorProps) {
     setPhase('result');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
+
+  // Keep ref always pointing at latest submitExam (avoids stale closure in timer)
+  submitExamRef.current = submitExam;
 
   useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
 
@@ -410,7 +419,7 @@ export function OMRExamSimulator({ onBack }: OMRExamSimulatorProps) {
             </div>
 
             {/* Retry btn */}
-            <button onClick={() => { setPhase('setup'); setQuestions([]); setAnswers([]); }}
+            <button onClick={() => { setPhase('setup'); setQuestions([]); setAnswers([]); setMarkFlags([]); }}
               style={{ marginTop: 20, display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(232,103,26,0.08)', border: '1px solid rgba(232,103,26,0.2)', borderRadius: 12, padding: '10px 22px', color: '#E8671A', fontWeight: 900, fontSize: 13, cursor: 'pointer' }}>
               <RotateCcw size={14} /> पुन्हा परीक्षा द्या
             </button>
