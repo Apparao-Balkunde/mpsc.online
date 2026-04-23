@@ -18,7 +18,8 @@ export enum Mode {
   CHALLENGE = 'CHALLENGE',
   DAILY = 'DAILY',
   PLANNER = 'PLANNER',
-  AI_QUIZ = 'AI_QUIZ'
+  AI_QUIZ = 'AI_QUIZ',
+  OMR_EXAM = 'OMR_EXAM'
 }
 
 export interface MPSCQuestion {
